@@ -362,28 +362,36 @@ h1 {
 .control.verify { border-color: rgba(240, 193, 90, 0.48); }
 .control.later { border-color: rgba(143, 183, 255, 0.5); }
 
-/* VCO hardware-style rows: playable controls first, patch sockets second. */
-.vco-voice {
+/* Hardware-style rows: playable controls first, patch sockets second. */
+.vco-voice,
+.hardware-voice {
   padding: 10px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.075), transparent 70px),
     var(--panel-3);
 }
 
-.vco-voice h4 {
+.vco-voice h4,
+.hardware-voice h4 {
   margin-bottom: 9px;
   padding-bottom: 6px;
   border-bottom: 1px solid rgba(255,255,255,0.11);
   font-size: 0.78rem;
 }
 
-.vco-row {
+.vco-row,
+.hardware-row {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 6px;
 }
 
-.vco-row + .vco-row {
+.hardware-row.three-main {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.vco-row + .vco-row,
+.hardware-row + .hardware-row {
   margin-top: 7px;
   padding-top: 7px;
   border-top: 1px dashed rgba(255,255,255,0.11);
