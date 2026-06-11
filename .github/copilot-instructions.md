@@ -30,11 +30,30 @@ The audio/synth engine should be reusable by:
 
 Do not tightly couple DSP code to a specific UI framework.
 
-## Interface rule
+## Faceplate-first workflow
 
-Do not cram the whole MFOS Ultimate and Expander interface into the first build.
+This project uses a faceplate-first workflow.
 
-The final product may have a large grouped interface, but the first build should prove sound, MIDI, gate, envelope, filter, and output.
+It is acceptable to design the full interface early as:
+
+- component inventory
+- control grouping
+- faceplate / wireframe
+- signal-flow map
+- parameter list
+- implementation-status table
+
+The interface is the product map, not decoration.
+
+## Implementation rule
+
+Do not fully implement every interface control in code before the matching engine section exists.
+
+Controls may appear in design documents before they are functional.
+
+Unimplemented controls must be tracked clearly.
+
+When coding, build the engine and control mapping section by section.
 
 ## Reporting rule
 
