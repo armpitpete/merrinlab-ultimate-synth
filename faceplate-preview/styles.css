@@ -295,11 +295,6 @@ h1 {
   hyphens: none;
 }
 
-.vco .control b,
-.source-strip .control b {
-  font-size: 0.55rem;
-}
-
 .control span {
   display: block;
   position: relative;
@@ -367,8 +362,67 @@ h1 {
 .control.verify { border-color: rgba(240, 193, 90, 0.48); }
 .control.later { border-color: rgba(143, 183, 255, 0.5); }
 
+/* VCO hardware-style rows: playable controls first, patch sockets second. */
+.vco-voice {
+  padding: 10px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.075), transparent 70px),
+    var(--panel-3);
+}
+
+.vco-voice h4 {
+  margin-bottom: 9px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255,255,255,0.11);
+  font-size: 0.78rem;
+}
+
+.vco-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.vco-row + .vco-row {
+  margin-top: 7px;
+  padding-top: 7px;
+  border-top: 1px dashed rgba(255,255,255,0.11);
+}
+
+.play-row .control {
+  min-height: 78px;
+  background: rgba(255,255,255,0.018);
+}
+
+.patch-row .control {
+  min-height: 55px;
+  background: rgba(0,0,0,0.18);
+}
+
+.play-row .knob span {
+  width: 40px;
+  height: 40px;
+}
+
+.play-row .switch span {
+  margin-top: 8px;
+}
+
+.play-row .control b {
+  font-size: 0.58rem;
+}
+
+.patch-row .control b {
+  font-size: 0.54rem;
+  color: var(--muted);
+}
+
+.patch-row .jack span {
+  width: 24px;
+  height: 24px;
+}
+
 /* Expert layout fixes: make the playable sections feel dominant, and push utilities back. */
-.vco,
 .main-filter,
 .vca,
 .output,
