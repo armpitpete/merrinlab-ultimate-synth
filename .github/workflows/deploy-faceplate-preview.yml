@@ -1,0 +1,42 @@
+name: Deploy faceplate preview to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "faceplate-preview/**"
+      - ".github/workflows/deploy-faceplate-preview.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy static faceplate preview
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload static preview
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: faceplate-preview
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
