@@ -152,7 +152,7 @@ h1 {
 
 .synth-layout {
   display: grid;
-  grid-template-columns: 1.9fr 0.9fr 1.22fr 0.96fr;
+  grid-template-columns: 1.05fr 0.9fr 1.28fr 0.96fr;
   gap: 10px;
   align-items: start;
 }
@@ -175,7 +175,7 @@ h1 {
 
 .vco-bank {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 8px;
   align-items: start;
 }
@@ -220,6 +220,10 @@ h1 {
 .four-col { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .six-col { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 .compact { gap: 6px; }
+
+.zone-sources .source-strip .six-col {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
 
 .source-strip { margin-top: 0; }
 
@@ -459,6 +463,6 @@ h1 {
 
 @media (max-width: 1500px) {
   body { min-width: 1180px; }
-  .synth-layout { grid-template-columns: 1.75fr 0.92fr 1.2fr 0.95fr; }
+  .synth-layout { grid-template-columns: 1fr 0.92fr 1.22fr 0.95fr; }
   .mod-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
