@@ -28,15 +28,7 @@
           <h2>MerrinLab Ultimate Synth</h2>
         </div>
         <div class="route-strip" aria-label="Signal flow">
-          <span>Sound sources</span>
-          <strong>→</strong>
-          <span>Mix</span>
-          <strong>→</strong>
-          <span>Filter</span>
-          <strong>→</strong>
-          <span>VCA</span>
-          <strong>→</strong>
-          <span>Output</span>
+          <span>Sound sources</span><strong>→</strong><span>Mix</span><strong>→</strong><span>Filter</span><strong>→</strong><span>VCA</span><strong>→</strong><span>Output</span>
         </div>
       </header>
 
@@ -137,55 +129,63 @@
 
         <section class="zone zone-filter" aria-label="Filter section">
           <h3>Filter</h3>
-          <article class="panel-section filter main-filter">
+          <article class="panel-section filter main-filter hardware-voice">
             <h4>12DB/OCT Lowpass VCF</h4>
-            <div class="controls two-col">
-              <div class="control knob verified"><span></span><b>INITIAL CUTOFF</b></div>
-              <div class="control knob verified"><span></span><b>RESONANCE</b></div>
-              <div class="control knob verified"><span></span><b>AR MOD</b></div>
-              <div class="control knob verified"><span></span><b>LFO-1 MOD</b></div>
-              <div class="control jack verify"><span></span><b>EXT CV</b></div>
-              <div class="control jack verify"><span></span><b>VC-FILTER CV IN</b></div>
+            <div class="hardware-row play-row" aria-label="Lowpass filter playable controls">
+              <div class="control knob primary-control verified"><span></span><b>INITIAL CUTOFF</b></div>
+              <div class="control knob primary-control verified"><span></span><b>RESONANCE</b></div>
+              <div class="control knob primary-control verified"><span></span><b>AR MOD</b></div>
+              <div class="control knob primary-control verified"><span></span><b>LFO-1 MOD</b></div>
+            </div>
+            <div class="hardware-row patch-row" aria-label="Lowpass filter CV and patch sockets">
+              <div class="control jack patch-control verify"><span></span><b>EXT CV</b></div>
+              <div class="control jack patch-control verify"><span></span><b>VC-FILTER CV IN</b></div>
             </div>
           </article>
 
-          <article class="panel-section filter exp-filter">
+          <article class="panel-section filter exp-filter hardware-voice">
             <h4>State Variable VCF</h4>
-            <div class="controls three-col">
-              <div class="control knob verify"><span></span><b>INITIAL COF</b></div>
-              <div class="control knob verified"><span></span><b>RESONANCE</b></div>
-              <div class="control jack verify"><span></span><b>INPUT</b></div>
-              <div class="control jack verify"><span></span><b>CV1</b></div>
-              <div class="control jack verify"><span></span><b>CV2</b></div>
-              <div class="control jack verify"><span></span><b>RES-CV</b></div>
-              <div class="control jack verify"><span></span><b>HP-OUT</b></div>
-              <div class="control jack verify"><span></span><b>BP-OUT</b></div>
-              <div class="control jack verify"><span></span><b>LP-OUT</b></div>
+            <div class="hardware-row play-row three-main" aria-label="State variable filter playable controls">
+              <div class="control knob primary-control verify"><span></span><b>INITIAL COF</b></div>
+              <div class="control knob primary-control verified"><span></span><b>RESONANCE</b></div>
+              <div class="control jack patch-control verify"><span></span><b>INPUT</b></div>
+            </div>
+            <div class="hardware-row patch-row" aria-label="State variable filter CV and outputs">
+              <div class="control jack patch-control verify"><span></span><b>CV1</b></div>
+              <div class="control jack patch-control verify"><span></span><b>CV2</b></div>
+              <div class="control jack patch-control verify"><span></span><b>RES-CV</b></div>
+              <div class="control jack patch-control verify"><span></span><b>HP-OUT</b></div>
+              <div class="control jack patch-control verify"><span></span><b>BP-OUT</b></div>
+              <div class="control jack patch-control verify"><span></span><b>LP-OUT</b></div>
             </div>
           </article>
         </section>
 
         <section class="zone zone-vca" aria-label="VCA and output section">
           <h3>VCA / Output</h3>
-          <article class="panel-section vca">
+          <article class="panel-section vca hardware-voice">
             <h4>Amplitude</h4>
-            <div class="controls two-col">
-              <div class="control knob verified"><span></span><b>INITIAL LEVEL</b></div>
-              <div class="control knob verified"><span></span><b>AR MOD</b></div>
-              <div class="control knob verified"><span></span><b>LFO-2 MOD</b></div>
-              <div class="control jack verify"><span></span><b>EXT CV</b></div>
-              <div class="control knob verified"><span></span><b>INITIAL AMP</b></div>
-              <div class="control jack verify"><span></span><b>CV1 / CV2</b></div>
+            <div class="hardware-row play-row" aria-label="VCA playable controls">
+              <div class="control knob primary-control verified"><span></span><b>INITIAL LEVEL</b></div>
+              <div class="control knob primary-control verified"><span></span><b>AR MOD</b></div>
+              <div class="control knob primary-control verified"><span></span><b>LFO-2 MOD</b></div>
+              <div class="control knob primary-control verified"><span></span><b>INITIAL AMP</b></div>
+            </div>
+            <div class="hardware-row patch-row" aria-label="VCA CV and patch sockets">
+              <div class="control jack patch-control verify"><span></span><b>EXT CV</b></div>
+              <div class="control jack patch-control verify"><span></span><b>CV1 / CV2</b></div>
             </div>
           </article>
 
-          <article class="panel-section output">
+          <article class="panel-section output hardware-voice">
             <h4>Output</h4>
-            <div class="controls two-col">
-              <div class="control knob verified"><span></span><b>OUTPUT LEVEL</b></div>
-              <div class="control switch verify"><span></span><b>LINE OUT SELECT</b></div>
-              <div class="control jack verify"><span></span><b>LINE OUT</b></div>
-              <div class="control jack verify"><span></span><b>HEADPHONES</b></div>
+            <div class="hardware-row play-row three-main" aria-label="Output playable controls">
+              <div class="control knob primary-control verified"><span></span><b>OUTPUT LEVEL</b></div>
+              <div class="control switch primary-control verify"><span></span><b>LINE OUT SELECT</b></div>
+            </div>
+            <div class="hardware-row patch-row" aria-label="Output sockets">
+              <div class="control jack patch-control verify"><span></span><b>LINE OUT</b></div>
+              <div class="control jack patch-control verify"><span></span><b>HEADPHONES</b></div>
             </div>
           </article>
         </section>
