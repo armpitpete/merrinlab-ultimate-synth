@@ -41,4 +41,6 @@ A playable single-voice standalone synth with:
 
 Build in small controlled steps.
 
-Do not add a full interface before the basic audio engine works.
+Design documents, control inventories, wireframes, and interface maps are allowed now.
+
+Do not implement the full finished interface in code before the basic audio engine works.
