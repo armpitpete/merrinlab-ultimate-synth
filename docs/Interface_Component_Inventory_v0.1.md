@@ -20,20 +20,11 @@ This is a design scaffold that is now being corrected against the uploaded MFOS 
 | Engine later | Requires DSP/engine work before it can function |
 | Active later | Should become functional in a later build |
 
-## Source extraction used for this pass
-
-This pass uses:
+## Source extractions used
 
 ```text
 docs/Ultimate_Front_Panel_Label_Extraction_v0.1.md
-```
-
-Primary archive files behind that extraction:
-
-```text
-Sound Lab Ultimate/Panel And Wiring_files/front_panel_silk_990px.gif
-Sound Lab Ultimate/Panel And Wiring_files/panel_silk_correlation_500px.gif
-Sound Lab Ultimate/Panel And Wiring_files/aux_panel_silkscreen.gif
+docs/Expander_Panel_Label_Extraction_v0.1.md
 ```
 
 ## Current rule
@@ -53,7 +44,8 @@ Controls may appear in the design before they are functional, but unimplemented 
 | Global / Header | Presets, MIDI, panic, settings, master indicators | Planned |
 | Sound Lab Ultimate | Verified Ultimate front-panel source sections | Partly verified |
 | Sound Lab Ultimate Auxiliary Panel | External CV/audio connections | Verified labels |
-| Sound Lab Ultimate Expander | Extra routing, modulation, utility controls | Verify |
+| Sound Lab Ultimate Expander | Verified Expander source sections | Partly verified |
+| Sound Lab Ultimate Expander Auxiliary Panel | External expander connections | Verified labels |
 | Patch / Routing View | Software modulation and signal routing | Planned |
 | Preset Browser | Save, load, and manage patches | Planned |
 
@@ -295,30 +287,154 @@ These are software-product controls, not copied directly from the MFOS hardware 
 
 ---
 
-# 13. Sound Lab Ultimate Expander / Routing Section
+# 13. Sound Lab Ultimate Expander — Main Panel
 
-This section still represents the software version of the Expander concept. Exact controls must be checked against the original Expander panel before locking final counts.
+## 13.1 ADSR ENV. GEN.
 
-| Component | Type | Purpose | Status |
-|---|---|---|---|
-| Expander enable | Switch | Enables expander section | Planned |
-| Expander input source selector | Selector | Chooses source feeding expander processing/routing | Verify |
-| Expander level | Knob | Main expander level | Verify |
-| Expander filter CV amount | Knob | Extra filter modulation amount | Verify |
-| Expander VCA CV amount | Knob | Extra amplitude modulation amount | Verify |
-| Expander modulation source A | Selector | Chooses modulation source | Verify |
-| Expander modulation source B | Selector | Chooses modulation source | Verify |
-| Expander modulation depth A | Knob | Depth for source A | Verify |
-| Expander modulation depth B | Knob | Depth for source B | Verify |
-| Expander route to filter | Switch | Routes expander modulation to filter | Verify |
-| Expander route to oscillator | Switch | Routes expander modulation to pitch/PWM | Verify |
-| Expander route to VCA | Switch | Routes expander modulation to amplitude | Verify |
-| Expander output level | Knob | Output level from expander path | Verify |
-| Expander activity indicator | LED / indicator | Shows expander activity | Design only |
+| Visible panel label | Software component name | Type | Purpose / notes | Status |
+|---|---|---|---|---|
+| ADSR ENV. GEN. | ADSR envelope generator section | Label | Original Expander ADSR section | Verified |
+| ATTACK | ADSR attack | Knob | Attack stage | Verified |
+| DECAY | ADSR decay | Knob | Decay stage | Verified |
+| SUSTAIN | ADSR sustain | Knob | Sustain level | Verified |
+| RELEASE | ADSR release | Knob | Release stage | Verified |
+| GATE | ADSR gate socket | Jack / socket | Exact role needs wiring/schematic confirmation | Verified label / Verify role |
+| TRIG | ADSR trigger socket | Jack / socket | Exact role needs wiring/schematic confirmation | Verified label / Verify role |
+| MAN. | ADSR manual gate control | Switch / button | Manual gate marking | Verified label / Verify role |
+| GATE | ADSR manual gate label | Label | Label associated with manual gate marking | Verified label / Verify role |
+| ADSR RANGE | ADSR range switch | Switch | Range selector | Verified label / Verify role |
+| LONG | ADSR range long position | Label | Range switch position | Verified |
+| SHORT | ADSR range short position | Label | Range switch position | Verified |
+
+## 13.2 EXT. SIG. BUFFER
+
+| Visible panel label | Software component name | Type | Purpose / notes | Status |
+|---|---|---|---|---|
+| EXT. SIG. BUFFER | External signal buffer section | Label | External signal buffer | Verified |
+| SIGNAL BOOST | Signal boost | Knob | External signal boost amount | Verified |
+| OUT | External signal buffer output A | Jack / socket | Exact output role needs wiring/schematic confirmation | Verified label / Verify role |
+| OUT | External signal buffer output B | Jack / socket | Exact output role needs wiring/schematic confirmation | Verified label / Verify role |
+
+## 13.3 ANALOG MULTIPLIER
+
+| Visible panel label | Software component name | Type | Purpose / notes | Status |
+|---|---|---|---|---|
+| ANALOG MULTIPLIER | Analog multiplier section | Label | Original analog multiplier section | Verified |
+| X-IN | Analog multiplier X input | Jack / socket | X input | Verified label / Verify role |
+| Y-IN | Analog multiplier Y input | Jack / socket | Y input | Verified label / Verify role |
+| XY-OUT | Analog multiplier XY output | Jack / socket | Multiplied output | Verified label / Verify role |
+
+## 13.4 CV-INVERTER
+
+| Visible panel label | Software component name | Type | Purpose / notes | Status |
+|---|---|---|---|---|
+| CV-INVERTER | CV inverter section | Label | Control voltage inverter | Verified |
+| INPUT | CV inverter input | Jack / socket | Input | Verified label / Verify role |
+| OUT | CV inverter output | Jack / socket | Output | Verified label / Verify role |
+
+## 13.5 ATTENUATORS
+
+| Visible panel label | Software component name | Type | Purpose / notes | Status |
+|---|---|---|---|---|
+| ATTENUATORS | Expander attenuator section | Label | Two attenuator channels | Verified |
+| IN | Expander attenuator 1 input | Jack / socket | Channel 1 input | Verified label / Verify role |
+| OUT | Expander attenuator 1 output | Jack / socket | Channel 1 output | Verified label / Verify role |
+| unlabeled knob | Expander attenuator 1 amount | Knob | No individual text label visible | Verified visible layout / Verify role |
+| IN | Expander attenuator 2 input | Jack / socket | Channel 2 input | Verified label / Verify role |
+| OUT | Expander attenuator 2 output | Jack / socket | Channel 2 output | Verified label / Verify role |
+| unlabeled knob | Expander attenuator 2 amount | Knob | No individual text label visible | Verified visible layout / Verify role |
+
+## 13.6 VOLTAGE CONTROLLED AMPLIFIER
+
+| Visible panel label | Software component name | Type | Purpose / notes | Status |
+|---|---|---|---|---|
+| VOLTAGE CONTROLLED AMPLIFIER | Expander VCA section | Label | Original Expander VCA section | Verified |
+| INITIAL AMP | Expander VCA initial amp | Knob | Initial VCA amplification/amplitude control | Verified |
+| INPUT | Expander VCA input | Jack / socket | VCA input | Verified label / Verify role |
+| OUT | Expander VCA output | Jack / socket | VCA output | Verified label / Verify role |
+| CV1 | Expander VCA CV1 input | Jack / socket | VCA control input 1 | Verified label / Verify role |
+| CV2 | Expander VCA CV2 input | Jack / socket | VCA control input 2 | Verified label / Verify role |
+
+## 13.7 STATE VARIABLE VCF
+
+| Visible panel label | Software component name | Type | Purpose / notes | Status |
+|---|---|---|---|---|
+| STATE VARIABLE VCF | State variable VCF section | Label | Original Expander VCF section | Verified |
+| INITIAL COF | State variable VCF initial COF | Knob | Exact panel spelling preserved; likely cutoff-related | Verified label / Verify role |
+| RESONANCE | State variable VCF resonance | Knob | Resonance control | Verified |
+| INPUT | State variable VCF input A | Jack / socket | First visible filter input | Verified label / Verify role |
+| CV1 | State variable VCF CV1 input | Jack / socket | Filter CV input 1 | Verified label / Verify role |
+| CV2 | State variable VCF CV2 input | Jack / socket | Filter CV input 2 | Verified label / Verify role |
+| RES-CV | State variable VCF resonance CV input | Jack / socket | Resonance CV input | Verified label / Verify role |
+| INPUT | State variable VCF input B | Jack / socket | Second visible filter input | Verified label / Verify role |
+| HP-OUT | State variable VCF high-pass output | Jack / socket | High-pass output | Verified label / Verify role |
+| BP-OUT | State variable VCF band-pass output | Jack / socket | Band-pass output | Verified label / Verify role |
+| LP-OUT | State variable VCF low-pass output | Jack / socket | Low-pass output | Verified label / Verify role |
+
+## 13.8 SIGNAL MIXER
+
+| Visible panel label | Software component name | Type | Purpose / notes | Status |
+|---|---|---|---|---|
+| SIGNAL MIXER | Expander signal mixer section | Label | Four-channel signal mixer | Verified |
+| IN-1 | Signal mixer input 1 | Jack / socket | Mixer channel 1 input | Verified label / Verify role |
+| unlabeled knob | Signal mixer level 1 | Knob | Channel 1 level knob | Verified visible layout / Verify role |
+| IN-2 | Signal mixer input 2 | Jack / socket | Mixer channel 2 input | Verified label / Verify role |
+| unlabeled knob | Signal mixer level 2 | Knob | Channel 2 level knob | Verified visible layout / Verify role |
+| IN-3 | Signal mixer input 3 | Jack / socket | Mixer channel 3 input | Verified label / Verify role |
+| unlabeled knob | Signal mixer level 3 | Knob | Channel 3 level knob | Verified visible layout / Verify role |
+| IN-4 | Signal mixer input 4 | Jack / socket | Mixer channel 4 input | Verified label / Verify role |
+| unlabeled knob | Signal mixer level 4 | Knob | Channel 4 level knob | Verified visible layout / Verify role |
+| LINE OUT SELECT | Line out select switch | Switch | Selects line output source | Verified label / Verify role |
+| VCA | Line out select VCA position | Label | Source selection marking | Verified label / Verify role |
+| MIX | Line out select MIX position | Label | Source selection marking | Verified label / Verify role |
+| unlabeled connected sockets | Line-out-select connected sockets | Jack / socket group | Two sockets connected to line-out select marking; exact role to verify | Verify |
+
+## 13.9 ENVELOPE FOLLOWER
+
+| Visible panel label | Software component name | Type | Purpose / notes | Status |
+|---|---|---|---|---|
+| ENVELOPE FOLLOWER | Envelope follower section | Label | Original envelope follower section | Verified |
+| INPUT | Envelope follower input | Jack / socket | Input | Verified label / Verify role |
+| EF OUT | Envelope follower output | Jack / socket | Envelope follower output | Verified label / Verify role |
+| FOLLOWER LAG | Envelope follower lag | Knob | Lag/smoothing control | Verified |
+
+## 13.10 Bottom utility outputs and branding
+
+| Visible panel label | Software component name | Type | Purpose / notes | Status |
+|---|---|---|---|---|
+| ADSR OUT | ADSR output A | Jack / socket | ADSR output | Verified label / Verify role |
+| ADSR OUT | ADSR output B | Jack / socket | ADSR output | Verified label / Verify role |
+| ULTIMATE MIXER OUT | Ultimate mixer out sockets | Jack group / sockets | Two visible sockets under one label | Verified label / Verify role |
+| MFOS ULTIMATE EXPANDER | Expander panel title | Label | Original panel title | Verified |
 
 ---
 
-# 14. Patch / Routing View
+# 14. Sound Lab Ultimate Expander — Auxiliary Panel
+
+| Visible panel label | Software component name | Type | Purpose / notes | Status |
+|---|---|---|---|---|
+| MFOS ULTIMATE | Auxiliary left branding | Label | Left vertical branding | Verified |
+| EXPANDER | Auxiliary right branding | Label | Right vertical branding | Verified |
+| ADSR TRIG IN | Auxiliary ADSR trigger input | Jack / socket | ADSR trigger input | Verified label / Verify role |
+| ADSR GATE IN | Auxiliary ADSR gate input | Jack / socket | ADSR gate input | Verified label / Verify role |
+| FROM ULTIMATE | From Ultimate group label | Label | Source group from Ultimate | Verified |
+| MIXER OUT | From Ultimate mixer out | Jack / socket | Connection from Ultimate mixer out | Verified label / Verify role |
+| LINE OUT | From Ultimate line out | Jack / socket | Connection from Ultimate line out | Verified label / Verify role |
+| EXTERNAL SIGNAL IN | External signal input | Jack / socket | External signal input | Verified label / Verify role |
+| VC-FILTER CV IN | VC-filter CV input | Jack / socket | Voltage controlled filter CV input | Verified label / Verify role |
+| LEVEL | Auxiliary level control A | Knob | First visible level control | Verified label / Verify role |
+| LINE OUT | Auxiliary line out | Jack / socket | Expander line output | Verified label / Verify role |
+| HEADPHONES | Auxiliary headphones output | Jack / socket | Headphones output | Verified label / Verify role |
+| CV DISTRIBUTOR | CV distributor section | Label | CV distributor group | Verified |
+| CV IN | CV distributor input | Jack / socket | CV distributor input | Verified label / Verify role |
+| CV OUT | CV distributor output 1 | Jack / socket | CV distributor output | Verified label / Verify role |
+| CV OUT | CV distributor output 2 | Jack / socket | CV distributor output | Verified label / Verify role |
+| CV OUT | CV distributor output 3 | Jack / socket | CV distributor output | Verified label / Verify role |
+| LEVEL | Auxiliary level control B | Knob | Second visible level control | Verified label / Verify role |
+
+---
+
+# 15. Patch / Routing View
 
 The standalone/VST version does not need to copy every hardware jack directly onto the main performance view.
 
@@ -338,7 +454,7 @@ Patch points can become software routing slots, modulation matrix rows, or an ad
 
 ---
 
-# 15. Preset Browser
+# 16. Preset Browser
 
 | Component | Type | Purpose | Status |
 |---|---|---|---|
@@ -353,7 +469,7 @@ Patch points can become software routing slots, modulation matrix rows, or an ad
 
 ---
 
-# 16. Items to verify against source material
+# 17. Items to verify against source material
 
 Before the final faceplate is locked, verify:
 
@@ -364,7 +480,9 @@ Before the final faceplate is locked, verify:
 - exact VCA `EXT CV` socket roles
 - exact repeat gate jack directions
 - exact sample-and-hold socket roles
-- exact Ultimate Expander panel control names
+- exact Expander switch and jack electrical roles
+- exact Expander `INITIAL COF` meaning from schematics/wiring
+- exact Expander line-out-select socket behaviour
 - which controls are pots, switches, LEDs, and jacks on the original units
 - which hardware patch points should become visible main-panel controls
 - which patch points should move into an advanced routing view
@@ -373,7 +491,7 @@ Before the final faceplate is locked, verify:
 
 ---
 
-# 17. Current implementation status
+# 18. Current implementation status
 
 | Area | Design status | Engine status | UI code status |
 |---|---|---|---|
@@ -388,12 +506,25 @@ Before the final faceplate is locked, verify:
 | Ultimate Attenuators | Visible labels verified, roles verify | Not started | Not started |
 | Ultimate Sample & Hold | Visible labels verified, some sockets verify | Not started | Not started |
 | Ultimate Auxiliary Panel | Visible labels verified, roles verify | Not started | Not started |
-| Expander | Scaffolded, needs verification | Not started | Not started |
+| Expander ADSR | Visible labels verified, roles verify | Not started | Not started |
+| Expander external signal buffer | Visible labels verified, roles verify | Not started | Not started |
+| Expander analog multiplier | Visible labels verified, roles verify | Not started | Not started |
+| Expander CV inverter | Visible labels verified, roles verify | Not started | Not started |
+| Expander attenuators | Visible labels verified, roles verify | Not started | Not started |
+| Expander VCA | Visible labels verified, roles verify | Not started | Not started |
+| Expander state variable VCF | Visible labels verified, roles verify | Not started | Not started |
+| Expander signal mixer | Visible labels verified, roles verify | Not started | Not started |
+| Expander envelope follower | Visible labels verified, roles verify | Not started | Not started |
+| Expander auxiliary panel | Visible labels verified, roles verify | Not started | Not started |
 | Patch/Routing View | Scaffolded | Not started | Not started |
 | Preset Browser | Scaffolded | Not started | Not started |
 
 ## Next design task
 
-Extract exact labels from the Ultimate Expander panel drawings.
+Use this inventory to create the first static browser faceplate preview under:
 
-Then update the Expander section of this inventory with verified visible labels.
+```text
+faceplate-preview/
+```
+
+The preview should show section blocks and placeholder controls only. It should not include audio, JUCE, VST, or functional behaviour.
