@@ -22,7 +22,43 @@ Usable like software.
 
 Create a full software synth inspired by the MFOS Ultimate and MFOS Ultimate Expander, with one large coherent interface rather than separate cramped panels.
 
-## First build target
+## Design workflow
+
+Use a faceplate-first workflow.
+
+The final interface should be planned early as:
+
+- a full component inventory
+- a faceplate / wireframe
+- a signal-flow map
+- a parameter list
+- an implementation-status list
+
+The interface is the product map, not decoration.
+
+The engine and controls should then be implemented section by section.
+
+Controls may appear in the design before they are functional, but unimplemented controls must be tracked clearly.
+
+## First design target
+
+A complete interface map for the combined Ultimate and Expander concept.
+
+This map should show:
+
+- oscillators
+- mixer
+- noise source
+- filter
+- VCA/output
+- AR envelope
+- ADSR envelope
+- LFO/modulation
+- expander routing
+- patch/routing view
+- preset/browser area
+
+## First playable build target
 
 A playable standalone synth with:
 
@@ -61,6 +97,12 @@ The interface may use:
 - a modulation/routing view
 - a preset/browser view
 - zoom or scaling
+
+## Implementation rule
+
+Do not fully implement every interface control in code before the matching engine section exists.
+
+Design first. Implement gradually. Track what is real and what is planned.
 
 ## Engine rule
 
