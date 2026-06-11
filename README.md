@@ -26,9 +26,22 @@ Fresh project scaffold.
 
 No synth engine, UI framework, or plugin format has been selected yet.
 
-## First build target
+## First design target
 
-A playable single-voice standalone synth with:
+A complete faceplate and interface map for the combined MFOS Ultimate and MFOS Ultimate Expander concept.
+
+This includes:
+
+- full component inventory
+- control grouping
+- signal-flow map
+- wireframe / faceplate layout
+- parameter list
+- implementation status for each control
+
+## First playable build target
+
+A single-voice standalone synth with:
 
 - MIDI input
 - oscillator output
@@ -39,8 +52,12 @@ A playable single-voice standalone synth with:
 
 ## Development rule
 
-Build in small controlled steps.
+Use a faceplate-first workflow.
 
-Design documents, control inventories, wireframes, and interface maps are allowed now.
+Design the full interface early as a faceplate, wireframe, and component map.
 
-Do not implement the full finished interface in code before the basic audio engine works.
+Then implement the engine and controls section by section.
+
+Controls may appear in the design before they are functional, but unimplemented controls must be tracked clearly.
+
+Do not fully implement every interface control in code until the matching engine section exists.
