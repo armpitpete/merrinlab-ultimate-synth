@@ -6,17 +6,35 @@ This document is the first faceplate-first component inventory for MerrinLab Ult
 
 The goal is to list the planned interface components for a standalone/VST instrument that combines the MFOS Ultimate and MFOS Ultimate Expander concepts into one complete software interface.
 
-This is a design scaffold. It is not yet a verified clone of the original hardware panels.
+This is a design scaffold that is now being corrected against the uploaded MFOS source capture.
 
 ## Inventory status labels
 
 | Status | Meaning |
 |---|---|
-| Planned | Intended for the final software interface |
+| Verified | Visible label checked against the uploaded MFOS source capture |
+| Verified label / Verify role | Front-panel text is visible, but exact electrical role still needs wiring/schematic confirmation |
 | Verify | Needs checking against the original MFOS panel/schematic/documentation |
+| Planned | Intended for the final software interface |
 | Design only | May appear on the faceplate/wireframe before it is functional |
 | Engine later | Requires DSP/engine work before it can function |
 | Active later | Should become functional in a later build |
+
+## Source extraction used for this pass
+
+This pass uses:
+
+```text
+docs/Ultimate_Front_Panel_Label_Extraction_v0.1.md
+```
+
+Primary archive files behind that extraction:
+
+```text
+Sound Lab Ultimate/Panel And Wiring_files/front_panel_silk_990px.gif
+Sound Lab Ultimate/Panel And Wiring_files/panel_silk_correlation_500px.gif
+Sound Lab Ultimate/Panel And Wiring_files/aux_panel_silkscreen.gif
+```
 
 ## Current rule
 
@@ -33,19 +51,17 @@ Controls may appear in the design before they are functional, but unimplemented 
 | Zone | Purpose | Status |
 |---|---|---|
 | Global / Header | Presets, MIDI, panic, settings, master indicators | Planned |
-| Oscillators | Main sound sources | Planned |
-| Mixer | Combines oscillators, noise, and external/input sources | Planned |
-| Filter | Tone shaping and resonance | Planned |
-| VCA / Output | Final level and audio output | Planned |
-| Envelopes | AR and ADSR control shapes | Planned |
-| LFO / Modulation | Slow control signals and vibrato-style movement | Planned |
-| Expander | Extra routing, modulation, utility controls | Planned |
+| Sound Lab Ultimate | Verified Ultimate front-panel source sections | Partly verified |
+| Sound Lab Ultimate Auxiliary Panel | External CV/audio connections | Verified labels |
+| Sound Lab Ultimate Expander | Extra routing, modulation, utility controls | Verify |
 | Patch / Routing View | Software modulation and signal routing | Planned |
 | Preset Browser | Save, load, and manage patches | Planned |
 
 ---
 
 # 1. Global / Header Section
+
+These are software-product controls, not copied directly from the MFOS hardware panel.
 
 | Component | Type | Purpose | Status |
 |---|---|---|---|
@@ -64,167 +80,224 @@ Controls may appear in the design before they are functional, but unimplemented 
 
 ---
 
-# 2. Oscillator Section
+# 2. Sound Lab Ultimate — Main Front Panel
 
 ## 2.1 VCO 1
 
-| Component | Type | Purpose | Status |
-|---|---|---|---|
-| VCO 1 enable | Switch | Turns oscillator on/off | Planned |
-| VCO 1 coarse tune | Knob | Main pitch range | Planned |
-| VCO 1 fine tune | Knob | Small pitch adjustment | Planned |
-| VCO 1 waveform selector | Selector | Selects waveform | Planned |
-| VCO 1 pulse width | Knob | Sets pulse width when pulse wave is used | Engine later |
-| VCO 1 PWM amount | Knob | Amount of pulse width modulation | Engine later |
-| VCO 1 pitch modulation amount | Knob | Amount of pitch modulation | Engine later |
-| VCO 1 sync option | Switch | Hard/soft sync behaviour if implemented | Verify |
-| VCO 1 level to mixer | Knob | Sends VCO 1 to mixer | Planned |
-| VCO 1 status indicator | LED / indicator | Shows oscillator active state | Design only |
+| Visible panel label | Software component name | Type | Purpose / notes | Status |
+|---|---|---|---|---|
+| VCO 1 | VCO 1 section heading | Label | Oscillator 1 section | Verified |
+| COARSE FREQ | VCO 1 coarse frequency | Knob | Main oscillator tuning | Verified |
+| FINE FREQ | VCO 1 fine frequency | Knob | Fine oscillator tuning | Verified |
+| WAVEFORM | VCO 1 waveform selector | Selector / switch | Panel uses waveform icons rather than text values | Verified label / Verify role |
+| PULSE WIDTH % | VCO 1 pulse width | Knob | Pulse-width control, marked 10–90 | Verified |
+| waveform icon | VCO 1 waveform output A | Jack / socket | Output identified by icon, exact waveform to verify | Verify |
+| waveform icon | VCO 1 waveform output B | Jack / socket | Output identified by icon, exact waveform to verify | Verify |
+| PWM | VCO 1 PWM input | Jack / socket | Pulse-width modulation input | Verified label / Verify role |
+| SYNC | VCO 1 sync input | Jack / socket | Oscillator sync input | Verified label / Verify role |
+| LOG-CV | VCO 1 log CV input | Jack / socket | Logarithmic pitch/control-voltage input | Verified label / Verify role |
+| LIN-CV | VCO 1 linear CV input | Jack / socket | Linear pitch/control-voltage input | Verified label / Verify role |
+| unlabeled | VCO 1 unlabeled lower socket | Jack / socket | Visible but no readable front-panel label | Verify |
 
 ## 2.2 VCO 2
 
-| Component | Type | Purpose | Status |
-|---|---|---|---|
-| VCO 2 enable | Switch | Turns oscillator on/off | Planned |
-| VCO 2 coarse tune | Knob | Main pitch range | Planned |
-| VCO 2 fine tune | Knob | Small pitch adjustment | Planned |
-| VCO 2 waveform selector | Selector | Selects waveform | Planned |
-| VCO 2 pulse width | Knob | Sets pulse width when pulse wave is used | Engine later |
-| VCO 2 PWM amount | Knob | Amount of pulse width modulation | Engine later |
-| VCO 2 pitch modulation amount | Knob | Amount of pitch modulation | Engine later |
-| VCO 2 sync option | Switch | Hard/soft sync behaviour if implemented | Verify |
-| VCO 2 level to mixer | Knob | Sends VCO 2 to mixer | Planned |
-| VCO 2 status indicator | LED / indicator | Shows oscillator active state | Design only |
+| Visible panel label | Software component name | Type | Purpose / notes | Status |
+|---|---|---|---|---|
+| VCO 2 | VCO 2 section heading | Label | Oscillator 2 section | Verified |
+| COARSE FREQ | VCO 2 coarse frequency | Knob | Main oscillator tuning | Verified |
+| FINE FREQ | VCO 2 fine frequency | Knob | Fine oscillator tuning | Verified |
+| WAVEFORM | VCO 2 waveform selector | Selector / switch | Panel uses waveform icons rather than text values | Verified label / Verify role |
+| PULSE WIDTH % | VCO 2 pulse width | Knob | Pulse-width control, marked 10–90 | Verified |
+| waveform icon | VCO 2 waveform output A | Jack / socket | Output identified by icon, exact waveform to verify | Verify |
+| waveform icon | VCO 2 waveform output B | Jack / socket | Output identified by icon, exact waveform to verify | Verify |
+| PWM | VCO 2 PWM input | Jack / socket | Pulse-width modulation input | Verified label / Verify role |
+| SYNC | VCO 2 sync input | Jack / socket | Oscillator sync input | Verified label / Verify role |
+| LOG-CV | VCO 2 log CV input | Jack / socket | Logarithmic pitch/control-voltage input | Verified label / Verify role |
+| LIN-CV | VCO 2 linear CV input | Jack / socket | Linear pitch/control-voltage input | Verified label / Verify role |
+| unlabeled | VCO 2 unlabeled lower socket | Jack / socket | Visible but no readable front-panel label | Verify |
 
 ## 2.3 VCO 3
 
-| Component | Type | Purpose | Status |
-|---|---|---|---|
-| VCO 3 enable | Switch | Turns oscillator on/off | Planned |
-| VCO 3 coarse tune | Knob | Main pitch range | Planned |
-| VCO 3 fine tune | Knob | Small pitch adjustment | Planned |
-| VCO 3 waveform selector | Selector | Selects waveform | Planned |
-| VCO 3 pulse width | Knob | Sets pulse width when pulse wave is used | Engine later |
-| VCO 3 PWM amount | Knob | Amount of pulse width modulation | Engine later |
-| VCO 3 pitch modulation amount | Knob | Amount of pitch modulation | Engine later |
-| VCO 3 low-frequency mode | Switch | Lets VCO 3 act as a modulation oscillator if wanted | Verify |
-| VCO 3 level to mixer | Knob | Sends VCO 3 to mixer | Planned |
-| VCO 3 status indicator | LED / indicator | Shows oscillator active state | Design only |
+| Visible panel label | Software component name | Type | Purpose / notes | Status |
+|---|---|---|---|---|
+| VCO 3 | VCO 3 section heading | Label | Oscillator 3 section | Verified |
+| COARSE FREQ | VCO 3 coarse frequency | Knob | Main oscillator tuning | Verified |
+| FINE FREQ | VCO 3 fine frequency | Knob | Fine oscillator tuning | Verified |
+| WAVEFORM | VCO 3 waveform selector | Selector / switch | Panel uses waveform icons rather than text values | Verified label / Verify role |
+| PULSE WIDTH % | VCO 3 pulse width | Knob | Pulse-width control, marked 10–90 | Verified |
+| waveform icon | VCO 3 waveform output A | Jack / socket | Output identified by icon, exact waveform to verify | Verify |
+| waveform icon | VCO 3 waveform output B | Jack / socket | Output identified by icon, exact waveform to verify | Verify |
+| PWM | VCO 3 PWM input | Jack / socket | Pulse-width modulation input | Verified label / Verify role |
+| SYNC | VCO 3 sync input | Jack / socket | Oscillator sync input | Verified label / Verify role |
+| LOG-CV | VCO 3 log CV input | Jack / socket | Logarithmic pitch/control-voltage input | Verified label / Verify role |
+| LIN-CV | VCO 3 linear CV input | Jack / socket | Linear pitch/control-voltage input | Verified label / Verify role |
+| unlabeled | VCO 3 unlabeled lower socket | Jack / socket | Visible but no readable front-panel label | Verify |
 
 ---
 
-# 3. Noise / External Source Section
+# 3. Sound Lab Ultimate — Mixer / Noise / External Input
 
-| Component | Type | Purpose | Status |
-|---|---|---|---|
-| Noise enable | Switch | Turns noise source on/off | Planned |
-| Noise colour selector | Selector | Selects noise type if implemented | Verify |
-| Noise level to mixer | Knob | Sends noise to mixer | Planned |
-| External/input enable | Switch | Enables external/input source path | Verify |
-| External/input level | Knob | Sets external/input level | Planned |
-| External/input monitor | Button / switch | Audition or monitor external/input path | Design only |
-
----
-
-# 4. Mixer Section
-
-| Component | Type | Purpose | Status |
-|---|---|---|---|
-| VCO 1 mixer level | Knob | Controls VCO 1 level | Planned |
-| VCO 2 mixer level | Knob | Controls VCO 2 level | Planned |
-| VCO 3 mixer level | Knob | Controls VCO 3 level | Planned |
-| Noise mixer level | Knob | Controls noise level | Planned |
-| External/input mixer level | Knob | Controls external/input level | Planned |
-| Mixer drive | Knob | Adds saturation/drive if implemented | Engine later |
-| Mixer output level | Knob | Sets level into filter | Planned |
-| Mixer output meter | Meter | Shows mixer signal level | Design only |
+| Visible panel label | Software component name | Type | Purpose / notes | Status |
+|---|---|---|---|---|
+| MIXER | Mixer section heading | Label | Main signal mixer | Verified |
+| VCO 1 LEVEL | VCO 1 mixer level | Knob | Controls VCO 1 level into mixer | Verified |
+| VCO 2 LEVEL | VCO 2 mixer level | Knob | Controls VCO 2 level into mixer | Verified |
+| VCO 3 LEVEL | VCO 3 mixer level | Knob | Controls VCO 3 level into mixer | Verified |
+| EXT. IN LEVEL | External input mixer level | Knob | Controls external input level | Verified |
+| WHITE NS LEVEL | White noise mixer level | Knob | Controls white-noise level into mixer | Verified |
+| NOISE OUTPUTS | Noise output sockets | Jack group / sockets | Two visible noise output sockets; exact signal names need wiring/schematic confirmation | Verified label / Verify role |
 
 ---
 
-# 5. Filter Section
+# 4. Sound Lab Ultimate — Voltage Controlled Lowpass Filter
 
-| Component | Type | Purpose | Status |
-|---|---|---|---|
-| Filter enable / bypass | Switch | Turns filter processing on/off | Planned |
-| Filter cutoff | Knob | Main brightness/tone control | Planned |
-| Filter resonance | Knob | Emphasises cutoff frequency | Planned |
-| Filter mode selector | Selector | Low-pass/high-pass/band-pass if implemented | Verify |
-| Filter keyboard tracking | Knob / switch | Lets MIDI pitch affect cutoff | Engine later |
-| Filter envelope amount | Knob | Envelope modulation depth | Planned |
-| Filter LFO amount | Knob | LFO modulation depth | Planned |
-| Filter velocity amount | Knob | Velocity-to-cutoff depth | Engine later |
-| Filter input level | Knob | Level into filter | Planned |
-| Filter output level | Knob | Level out of filter | Planned |
-| Filter activity indicator | LED / indicator | Shows filter modulation/activity | Design only |
+| Visible panel label | Software component name | Type | Purpose / notes | Status |
+|---|---|---|---|---|
+| VOLTAGE CONTROLLED LOWPASS FILTER (12DB/OCT) | VCF section heading | Label | Original filter section title | Verified |
+| INITIAL CUTOFF | VCF initial cutoff | Knob | Main filter cutoff control | Verified |
+| AR MOD | VCF AR modulation amount | Knob | Attack/release envelope modulation depth | Verified |
+| LFO-1 MOD | VCF LFO 1 modulation amount | Knob | LFO 1 to cutoff modulation depth | Verified |
+| RESONANCE | VCF resonance | Knob | Resonance/emphasis control | Verified |
+| EXT CV | VCF external CV sockets | Jack group / sockets | Two visible external CV input sockets; exact roles need wiring/schematic confirmation | Verified label / Verify role |
 
 ---
 
-# 6. VCA / Output Section
+# 5. Sound Lab Ultimate — AR Generator
 
-| Component | Type | Purpose | Status |
-|---|---|---|---|
-| VCA level | Knob | Main amplitude level | Planned |
-| VCA envelope amount | Knob | Envelope-to-amplitude depth | Planned |
-| VCA velocity amount | Knob | Velocity-to-amplitude depth | Engine later |
-| VCA drone / hold mode | Switch | Allows continuous sound if implemented | Verify |
-| Final output level | Knob | Master signal level | Planned |
-| Output meter | Meter | Shows final output | Planned |
-| Clip indicator | LED / indicator | Shows output clipping | Engine later |
-| Headphone level | Knob | Separate headphone level if included | Verify |
-
----
-
-# 7. AR Envelope Section
-
-| Component | Type | Purpose | Status |
-|---|---|---|---|
-| AR enable | Switch | Enables AR envelope routing | Planned |
-| AR attack | Knob | Rise time | Planned |
-| AR release | Knob | Fall time | Planned |
-| AR gate/trigger mode | Switch | Selects gate or trigger behaviour | Verify |
-| AR repeat / cycle | Switch | Cycles envelope if implemented | Verify |
-| AR amount to filter | Knob | Sends AR to filter | Engine later |
-| AR amount to VCA | Knob | Sends AR to VCA | Engine later |
-| AR activity indicator | LED / indicator | Shows envelope movement | Design only |
+| Visible panel label | Software component name | Type | Purpose / notes | Status |
+|---|---|---|---|---|
+| AR GENERATOR | AR generator section heading | Label | Attack-release envelope section | Verified |
+| ATTACK | AR attack | Knob | Attack/rise time | Verified |
+| RELEASE | AR release | Knob | Release/fall time | Verified |
+| MODE | AR mode switch | Switch | Switch marked TRIG / GATE | Verified label / Verify role |
+| TRIG | AR mode position | Label | Trigger mode position | Verified |
+| GATE | AR mode position | Label | Gate mode position | Verified |
+| RANGE | AR range switch | Switch | Switch marked LONG / SHORT | Verified label / Verify role |
+| LONG | AR range position | Label | Long range position | Verified |
+| SHORT | AR range position | Label | Short range position | Verified |
+| MANUAL GATE | AR manual gate | Pushbutton / switch | Manual gate trigger | Verified label / Verify role |
+| GATE/TRIG IN | AR gate/trigger input | Jack / socket | Gate/trigger input | Verified label / Verify role |
+| AR OUTPUTS | AR output sockets | Jack group / sockets | Two visible AR output sockets; exact signal names need wiring/schematic confirmation | Verified label / Verify role |
 
 ---
 
-# 8. ADSR Envelope Section
+# 6. Sound Lab Ultimate — Voltage Controlled Amplifier
 
-| Component | Type | Purpose | Status |
-|---|---|---|---|
-| ADSR enable | Switch | Enables ADSR envelope routing | Planned |
-| ADSR attack | Knob | Attack time | Planned |
-| ADSR decay | Knob | Decay time | Planned |
-| ADSR sustain | Knob | Sustain level | Planned |
-| ADSR release | Knob | Release time | Planned |
-| ADSR gate source selector | Selector | Selects MIDI gate or other source | Verify |
-| ADSR amount to filter | Knob | Sends ADSR to filter | Planned |
-| ADSR amount to VCA | Knob | Sends ADSR to VCA | Planned |
-| ADSR activity indicator | LED / indicator | Shows envelope movement | Design only |
+| Visible panel label | Software component name | Type | Purpose / notes | Status |
+|---|---|---|---|---|
+| VOLTAGE CONTROLLED AMPLIFIER | VCA section heading | Label | Original VCA section title | Verified |
+| INITIAL LEVEL | VCA initial level | Knob | Base VCA level | Verified |
+| AR MOD | VCA AR modulation amount | Knob | AR envelope to amplitude modulation depth | Verified |
+| LFO-2 MOD | VCA LFO 2 modulation amount | Knob | LFO 2 to amplitude modulation depth | Verified |
+| EXT CV | VCA external CV sockets | Jack group / sockets | Two visible external CV input sockets; exact roles need wiring/schematic confirmation | Verified label / Verify role |
 
 ---
 
-# 9. LFO / Modulation Section
+# 7. Sound Lab Ultimate — Low Frequency Oscillators
 
-| Component | Type | Purpose | Status |
-|---|---|---|---|
-| LFO enable | Switch | Enables LFO | Planned |
-| LFO rate | Knob | LFO speed | Planned |
-| LFO depth | Knob | Overall modulation depth | Planned |
-| LFO waveform selector | Selector | Selects LFO shape | Planned |
-| LFO sync to tempo | Switch | Syncs LFO to host tempo if implemented | Engine later |
-| LFO fade-in | Knob | Delayed modulation depth rise | Verify |
-| Vibrato amount | Knob | Pitch modulation depth | Planned |
-| Filter modulation amount | Knob | Filter LFO depth | Planned |
-| PWM modulation amount | Knob | Pulse-width LFO depth | Engine later |
-| LFO activity indicator | LED / indicator | Shows LFO motion | Design only |
+## 7.1 LOW FREQUENCY OSC - 1
+
+| Visible panel label | Software component name | Type | Purpose / notes | Status |
+|---|---|---|---|---|
+| LOW FREQUENCY OSC - 1 | LFO 1 section heading | Label | Original LFO 1 section title | Verified |
+| RATE | LFO 1 rate | Knob | LFO speed | Verified |
+| RANGE | LFO 1 range switch | Switch | Switch marked HIGH / LOW | Verified label / Verify role |
+| HIGH | LFO 1 range position | Label | High range position | Verified |
+| LOW | LFO 1 range position | Label | Low range position | Verified |
+| waveform icons | LFO 1 waveform outputs | Jack group / sockets | Four waveform outputs marked by icons | Verify |
+| LFO-1 OUTPUTS | LFO 1 outputs group label | Label / jack group | Output group label | Verified |
+
+## 7.2 LOW FREQUENCY OSC - 2
+
+| Visible panel label | Software component name | Type | Purpose / notes | Status |
+|---|---|---|---|---|
+| LOW FREQUENCY OSC - 2 | LFO 2 section heading | Label | Original LFO 2 section title | Verified |
+| RATE | LFO 2 rate | Knob | LFO speed | Verified |
+| RANGE | LFO 2 range switch | Switch | Switch marked HIGH / LOW | Verified label / Verify role |
+| HIGH | LFO 2 range position | Label | High range position | Verified |
+| LOW | LFO 2 range position | Label | Low range position | Verified |
+| waveform icons | LFO 2 waveform outputs | Jack group / sockets | Four waveform outputs marked by icons | Verify |
+| LFO-2 OUTPUTS | LFO 2 outputs group label | Label / jack group | Output group label | Verified |
 
 ---
 
-# 10. Expander / Routing Section
+# 8. Sound Lab Ultimate — Repeat Gate Rate
 
-This section represents the software version of the Expander concept. Exact controls must be checked against the original Expander panel before locking final counts.
+| Visible panel label | Software component name | Type | Purpose / notes | Status |
+|---|---|---|---|---|
+| RPT. GATE RATE | Repeat gate rate | Knob | Repeat-gate speed/rate | Verified label / Verify role |
+| GATE | Repeat gate socket A | Jack / socket | Exact input/output role needs wiring/schematic confirmation | Verified label / Verify role |
+| GATE | Repeat gate socket B | Jack / socket | Exact input/output role needs wiring/schematic confirmation | Verified label / Verify role |
+| circle with X | Repeat gate indicator | LED / lamp | Indicator between the gate labels | Verify |
+
+---
+
+# 9. Sound Lab Ultimate — Attenuators
+
+| Visible panel label | Software component name | Type | Purpose / notes | Status |
+|---|---|---|---|---|
+| ATTENUATORS | Attenuator section heading | Label | Four attenuator channels | Verified |
+| IN | Attenuator 1 input | Jack / socket | Channel 1 input | Verified label / Verify role |
+| OUT | Attenuator 1 output | Jack / socket | Channel 1 output | Verified label / Verify role |
+| unlabeled knob | Attenuator 1 amount | Knob | No individual text label visible | Verified visible layout / Verify role |
+| IN | Attenuator 2 input | Jack / socket | Channel 2 input | Verified label / Verify role |
+| OUT | Attenuator 2 output | Jack / socket | Channel 2 output | Verified label / Verify role |
+| unlabeled knob | Attenuator 2 amount | Knob | No individual text label visible | Verified visible layout / Verify role |
+| IN | Attenuator 3 input | Jack / socket | Channel 3 input | Verified label / Verify role |
+| OUT | Attenuator 3 output | Jack / socket | Channel 3 output | Verified label / Verify role |
+| unlabeled knob | Attenuator 3 amount | Knob | No individual text label visible | Verified visible layout / Verify role |
+| IN | Attenuator 4 input | Jack / socket | Channel 4 input | Verified label / Verify role |
+| OUT | Attenuator 4 output | Jack / socket | Channel 4 output | Verified label / Verify role |
+| unlabeled knob | Attenuator 4 amount | Knob | No individual text label visible | Verified visible layout / Verify role |
+
+---
+
+# 10. Sound Lab Ultimate — Sample & Hold
+
+| Visible panel label | Software component name | Type | Purpose / notes | Status |
+|---|---|---|---|---|
+| SAMPLE & HOLD | Sample and hold section heading | Label | Original S&H section title | Verified |
+| INPUT | Sample and hold input | Jack / socket | S&H input | Verified label / Verify role |
+| CV-OUT | Sample and hold CV output | Jack / socket | S&H CV output | Verified label / Verify role |
+| TRIG | Sample and hold trigger socket | Jack / socket | Trigger role needs wiring/schematic confirmation | Verified label / Verify role |
+| SAMPLE RATE | Sample and hold sample rate | Knob | Sample/clock rate | Verified |
+| GLIDE | Sample and hold glide | Knob | Glide/slew amount | Verified |
+| circle with X | Sample and hold indicator | LED / lamp | Indicator under GLIDE | Verify |
+| unlabeled socket | Sample and hold unlabeled socket A | Jack / socket | Visible but no readable front-panel label | Verify |
+| unlabeled socket | Sample and hold unlabeled socket B | Jack / socket | Visible but no readable front-panel label | Verify |
+
+---
+
+# 11. Sound Lab Ultimate — Output / Branding
+
+| Visible panel label | Software component name | Type | Purpose / notes | Status |
+|---|---|---|---|---|
+| OUTPUT LEVEL | Output level | Knob | Main output level | Verified |
+| SOUND-LAB ULTIMATE | Hardware panel name | Branding / label | Original instrument name | Verified |
+| MFOS ELECTRONIC MUSIC | Source branding | Branding / label | Original MFOS brand label | Verified |
+
+---
+
+# 12. Sound Lab Ultimate — Auxiliary Panel
+
+| Visible panel label | Software component name | Type | Purpose / notes | Status |
+|---|---|---|---|---|
+| FRONT VIEW OF SOUND LAB ULTIMATE AUXILLIARY PANEL | Auxiliary panel title | Label | Original spelling appears as AUXILLIARY | Verified |
+| VCO 1 LOG-CV IN | Auxiliary VCO 1 log CV input | Jack / socket | External VCO 1 log CV input | Verified label / Verify role |
+| VCO 2 LOG-CV IN | Auxiliary VCO 2 log CV input | Jack / socket | External VCO 2 log CV input | Verified label / Verify role |
+| VCO 3 LOG-CV IN | Auxiliary VCO 3 log CV input | Jack / socket | External VCO 3 log CV input | Verified label / Verify role |
+| VC-FILTER LOG-CV IN | Auxiliary VCF log CV input | Jack / socket | External filter log CV input | Verified label / Verify role |
+| AR-EG GATE/TRIG IN | Auxiliary AR gate/trigger input | Jack / socket | External AR gate/trigger input | Verified label / Verify role |
+| EXT IN LINE-IN | Auxiliary external line input | Jack / socket | External line input | Verified label / Verify role |
+| OUTPUT LINE-OUT | Auxiliary line output | Jack / socket | Line output | Verified label / Verify role |
+| SOUND-LAB ULTIMATE | Auxiliary panel branding | Label | Original instrument name | Verified |
+| By MUSIC FROM OUTER SPACE | Auxiliary source branding | Label | Original source branding | Verified |
+
+---
+
+# 13. Sound Lab Ultimate Expander / Routing Section
+
+This section still represents the software version of the Expander concept. Exact controls must be checked against the original Expander panel before locking final counts.
 
 | Component | Type | Purpose | Status |
 |---|---|---|---|
@@ -245,7 +318,7 @@ This section represents the software version of the Expander concept. Exact cont
 
 ---
 
-# 11. Patch / Routing View
+# 14. Patch / Routing View
 
 The standalone/VST version does not need to copy every hardware jack directly onto the main performance view.
 
@@ -265,7 +338,7 @@ Patch points can become software routing slots, modulation matrix rows, or an ad
 
 ---
 
-# 12. Preset Browser
+# 15. Preset Browser
 
 | Component | Type | Purpose | Status |
 |---|---|---|---|
@@ -280,12 +353,18 @@ Patch points can become software routing slots, modulation matrix rows, or an ad
 
 ---
 
-# 13. Items to verify against source material
+# 16. Items to verify against source material
 
 Before the final faceplate is locked, verify:
 
-- exact Ultimate panel control names
-- exact Expander panel control names
+- exact roles of icon-only Ultimate waveform outputs
+- exact roles of unlabeled Ultimate jacks
+- exact noise output signal names
+- exact VCF `EXT CV` socket roles
+- exact VCA `EXT CV` socket roles
+- exact repeat gate jack directions
+- exact sample-and-hold socket roles
+- exact Ultimate Expander panel control names
 - which controls are pots, switches, LEDs, and jacks on the original units
 - which hardware patch points should become visible main-panel controls
 - which patch points should move into an advanced routing view
@@ -294,24 +373,27 @@ Before the final faceplate is locked, verify:
 
 ---
 
-# 14. Current implementation status
+# 17. Current implementation status
 
 | Area | Design status | Engine status | UI code status |
 |---|---|---|---|
 | Global/Header | Scaffolded | Not started | Not started |
-| Oscillators | Scaffolded | Not started | Not started |
-| Mixer | Scaffolded | Not started | Not started |
-| Filter | Scaffolded | Not started | Not started |
-| VCA/Output | Scaffolded | Not started | Not started |
-| AR Envelope | Scaffolded | Not started | Not started |
-| ADSR Envelope | Scaffolded | Not started | Not started |
-| LFO/Modulation | Scaffolded | Not started | Not started |
+| Ultimate VCOs | Visible labels verified, jack roles partly verify | Not started | Not started |
+| Ultimate Mixer | Visible labels verified | Not started | Not started |
+| Ultimate VCF | Visible labels verified, EXT CV roles verify | Not started | Not started |
+| Ultimate AR Generator | Visible labels verified, exact switch/jack roles verify | Not started | Not started |
+| Ultimate VCA | Visible labels verified, EXT CV roles verify | Not started | Not started |
+| Ultimate LFOs | Visible labels verified, waveform outputs verify | Not started | Not started |
+| Ultimate Repeat Gate | Visible labels verified, roles verify | Not started | Not started |
+| Ultimate Attenuators | Visible labels verified, roles verify | Not started | Not started |
+| Ultimate Sample & Hold | Visible labels verified, some sockets verify | Not started | Not started |
+| Ultimate Auxiliary Panel | Visible labels verified, roles verify | Not started | Not started |
 | Expander | Scaffolded, needs verification | Not started | Not started |
 | Patch/Routing View | Scaffolded | Not started | Not started |
 | Preset Browser | Scaffolded | Not started | Not started |
 
 ## Next design task
 
-Replace scaffold names with verified component names from the Ultimate and Expander source drawings/panel references.
+Extract exact labels from the Ultimate Expander panel drawings.
 
-Then make the first rough faceplate/wireframe from this inventory.
+Then update the Expander section of this inventory with verified visible labels.
