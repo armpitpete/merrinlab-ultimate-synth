@@ -143,15 +143,13 @@ h1 {
   background: rgba(0, 0, 0, 0.18);
 }
 
-.route-strip strong {
-  color: #efe4cf;
-}
+.route-strip strong { color: #efe4cf; }
 
 .synth-layout {
   display: grid;
   grid-template-columns: 2.15fr 1fr 1.34fr 1fr;
   gap: 14px;
-  align-items: stretch;
+  align-items: start;
 }
 
 .zone {
@@ -174,20 +172,16 @@ h1 {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
+  align-items: start;
 }
 
-.zone-sources {
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  gap: 10px;
-}
-
+.zone-sources,
 .zone-mix,
 .zone-filter,
 .zone-vca {
   display: grid;
-  grid-template-rows: auto 1fr 1fr;
   gap: 10px;
+  align-content: start;
 }
 
 .panel-section {
@@ -201,7 +195,7 @@ h1 {
 }
 
 .panel-section h4 {
-  min-height: 2.25em;
+  min-height: 1.2em;
   margin-bottom: 11px;
   color: #fff7e9;
   font-size: 0.78rem;
@@ -222,9 +216,7 @@ h1 {
 .six-col { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 .compact { gap: 8px 6px; }
 
-.source-strip {
-  margin-top: 0;
-}
+.source-strip { margin-top: 0; }
 
 .modulation-board {
   margin-top: 14px;
@@ -253,29 +245,48 @@ h1 {
   display: grid;
   grid-template-columns: 1.15fr 1.45fr 1.3fr 1.35fr 1.35fr 1fr;
   gap: 10px;
+  align-items: start;
 }
 
 .control {
+  position: relative;
   display: grid;
   justify-items: center;
   gap: 5px;
   min-width: 0;
-  padding: 6px 3px;
+  min-height: 74px;
+  padding: 8px 5px 7px;
   border-radius: 10px;
   border: 1px solid transparent;
   background: rgba(0, 0, 0, 0.13);
 }
 
+.control::after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.control.verified::after { background: var(--verified); }
+.control.verify::after { background: var(--verify); }
+.control.later::after { background: var(--later); }
+
 .control b {
   display: block;
   max-width: 100%;
   color: var(--text);
-  font-size: 0.54rem;
-  line-height: 1.05;
-  letter-spacing: 0.05em;
+  font-size: 0.63rem;
+  line-height: 1.08;
+  letter-spacing: 0.045em;
   text-align: center;
   text-transform: uppercase;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
 }
 
 .control span {
@@ -344,30 +355,6 @@ h1 {
 .control.verified { border-color: rgba(127, 211, 127, 0.55); }
 .control.verify { border-color: rgba(240, 193, 90, 0.58); }
 .control.later { border-color: rgba(143, 183, 255, 0.62); }
-
-.control.verified b::after,
-.control.verify b::after,
-.control.later b::after {
-  display: block;
-  margin-top: 4px;
-  font-size: 0.48rem;
-  letter-spacing: 0.08em;
-}
-
-.control.verified b::after {
-  content: "VERIFIED";
-  color: var(--verified);
-}
-
-.control.verify b::after {
-  content: "VERIFY";
-  color: var(--verify);
-}
-
-.control.later b::after {
-  content: "ENGINE LATER";
-  color: var(--later);
-}
 
 @media (max-width: 1500px) {
   body { min-width: 1180px; }
