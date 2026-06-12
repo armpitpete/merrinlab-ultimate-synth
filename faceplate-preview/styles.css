@@ -26,10 +26,14 @@ body {
   font-family: Inter, Arial, Helvetica, sans-serif;
 }
 
-body { min-width: 1280px; }
+body {
+  min-width: 1540px;
+  overflow-x: auto;
+}
 
 .app-shell {
-  width: min(1500px, calc(100vw - 24px));
+  width: 1500px;
+  max-width: none;
   margin: 12px auto;
   padding: 10px;
   border: 1px solid #120f0c;
@@ -320,14 +324,4 @@ body { min-width: 1280px; }
 .preset-display .display-box {
   min-height: 56px;
   font-size: 1rem;
-}
-
-@media (max-width: 1450px) {
-  body { min-width: 1180px; }
-  .main-grid,
-  .second-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-  .module { min-height: 360px; }
-  .compact-module { min-height: 280px; }
 }
