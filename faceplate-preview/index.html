@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>MerrinLab Ultimate Synth — Dark Preview</title>
-  <link rel="stylesheet" href="styles.css?v=issue5-lowpass-strip-1">
+  <link rel="stylesheet" href="styles.css?v=issue5-ar-strip-1">
 </head>
 <body>
   <main class="app-shell">
@@ -103,16 +103,17 @@
         </div>
       </article>
 
-      <article class="module ar-module compact-source-module">
-        <div class="module-header"><span class="status-light"></span><h2>AR Generator</h2></div>
-        <div class="control-grid two-up">
-          <div class="control"><div class="control-label">Attack</div><div class="knob"></div></div>
-          <div class="control"><div class="control-label">Release</div><div class="knob"></div></div>
-          <div class="control"><div class="control-label">Mode</div><div class="switch-control">Trig / Gate</div></div>
-          <div class="control"><div class="control-label">Range</div><div class="switch-control">Long / Short</div></div>
-          <div class="control"><div class="control-label">Manual Gate</div><div class="jack-socket"></div></div>
-          <div class="control"><div class="control-label">AR Outputs</div><div class="jack-socket"></div></div>
+      <article class="module ar-module ar-strip compact-source-module">
+        <div class="module-header ar-title"><span class="status-light"></span><h2>AR Generator</h2></div>
+        <div class="control ar-main-control"><div class="control-label">Attack</div><div class="knob"></div></div>
+        <div class="control ar-main-control"><div class="control-label">Release</div><div class="knob"></div></div>
+        <div class="ar-switch-row">
+          <div class="control"><div class="control-label">Mode<br>Trig</div><div class="switch-control compact-switch">Gate</div></div>
+          <div class="control"><div class="control-label">Range<br>Long</div><div class="switch-control compact-switch">Short</div></div>
         </div>
+        <div class="control ar-jack-control"><div class="control-label">Manual Gate</div><div class="jack-socket"></div></div>
+        <div class="control ar-jack-control"><div class="control-label">Gate/Trig In</div><div class="jack-socket"></div></div>
+        <div class="control ar-jack-control"><div class="control-label">AR Outputs</div><div class="dual-jacks"><div class="jack-socket"></div><div class="jack-socket"></div></div></div>
       </article>
 
       <article class="module vca-module compact-source-module">
