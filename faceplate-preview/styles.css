@@ -139,7 +139,7 @@ body {
     "vcos mixer filter filter filter sh"
     "vcos mixer ar     vca    vca    sh"
     "vcos mixer ar     lfo1   lfo2   output"
-    "vcos mixer repeat atten  atten  atten";
+    "vcos mixer ar     repeat atten  atten";
   gap: 10px;
 }
 
