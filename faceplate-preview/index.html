@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>MerrinLab Ultimate Synth — Dark Preview</title>
-  <link rel="stylesheet" href="styles.css?v=issue5-six-attenuators-1">
+  <link rel="stylesheet" href="styles.css?v=issue5-adsr-under-vcos-1">
 </head>
 <body>
   <main class="app-shell">
@@ -130,6 +130,23 @@
         <div class="module-header"><span class="status-light"></span><h2>Output Level</h2></div>
         <div class="control-grid two-up"><div class="control"><div class="control-label">Output Level</div><div class="knob knob-large"></div></div><div class="control"><div class="control-label">Phones</div><div class="mini-display">Phones</div></div></div>
         <div class="brand-mark">SOUND-LAB<br>ULTIMATE</div>
+      </article>
+
+      <article class="module adsr-module compact-source-module">
+        <div class="module-header adsr-title"><span class="status-light"></span><h2>ADSR Env. Gen.</h2></div>
+        <div class="adsr-knob-row">
+          <div class="control"><div class="control-label">Attack</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">Decay</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">Sustain</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">Release</div><div class="knob"></div></div>
+        </div>
+        <div class="adsr-io-row">
+          <div class="control"><div class="control-label">Man. Gate</div><div class="jack-socket"></div></div>
+          <div class="control"><div class="control-label">Gate</div><div class="jack-socket"></div></div>
+          <div class="control"><div class="control-label">ADSR Range</div><div class="switch-control compact-switch">Long / Short</div></div>
+          <div class="control"><div class="control-label">Trig</div><div class="jack-socket"></div></div>
+          <div class="control adsr-out"><div class="control-label">ADSR Out</div><div class="dual-jacks"><div class="jack-socket"></div><div class="jack-socket"></div></div></div>
+        </div>
       </article>
 
       <article class="module repeat-module compact-source-module">
