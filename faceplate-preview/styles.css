@@ -134,12 +134,13 @@ body {
 .ultimate-grid {
   display: grid;
   grid-template-columns: 3.25fr 0.95fr 1.15fr 1.15fr 1.15fr 1.05fr;
-  grid-template-rows: 190px 145px 250px 165px;
+  grid-template-rows: 190px 145px 250px 185px 120px;
   grid-template-areas:
     "vcos mixer filter filter filter sh"
     "vcos mixer ar     vca    vca    sh"
     "vcos mixer ar     lfo1   lfo2   output"
-    "vcos mixer ar     repeat atten  atten";
+    "vcos mixer ar     atten  atten  atten"
+    ".    .     .      repeat repeat repeat";
   gap: 10px;
 }
 
@@ -248,7 +249,8 @@ body {
 
 .lowpass-title,
 .vca-title,
-.lfo-title {
+.lfo-title,
+.atten-title {
   justify-content: center;
   margin-bottom: 10px;
 }
@@ -285,6 +287,11 @@ body {
 .lfo-title h2 {
   font-size: 0.78rem;
   letter-spacing: 0.08em;
+}
+
+.atten-title h2 {
+  font-size: 0.84rem;
+  letter-spacing: 0.1em;
 }
 
 .expander-grid .module-header h2 {
@@ -383,6 +390,27 @@ body {
 .lfo-range { grid-area: range; }
 .lfo-outputs { grid-area: outputs; }
 
+.attenuator-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+.attenuator-channel {
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.attenuator-io {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+
 .control {
   display: grid;
   justify-items: center;
@@ -413,10 +441,16 @@ body {
   min-height: 18px;
 }
 
-.lfo-module .control-label {
+.lfo-module .control-label,
+.attenuators-module .control-label {
   font-size: 0.61rem;
   letter-spacing: 0.025em;
   min-height: 15px;
+}
+
+.atten-number {
+  font-size: 0.72rem;
+  margin-bottom: 1px;
 }
 
 .vertical-control,
@@ -569,6 +603,11 @@ body {
   height: 58px;
 }
 
+.attenuator-channel .knob {
+  width: 54px;
+  height: 54px;
+}
+
 .utility-module .knob,
 .utility-module .knob-small {
   width: 42px;
@@ -606,7 +645,8 @@ body {
   height: 31px;
 }
 
-.lfo-module .jack-socket {
+.lfo-module .jack-socket,
+.attenuator-channel .jack-socket {
   width: 28px;
   height: 28px;
 }
