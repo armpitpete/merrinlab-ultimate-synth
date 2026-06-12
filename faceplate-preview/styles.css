@@ -202,6 +202,12 @@ body {
   padding: 12px 10px;
 }
 
+.lowpass-strip {
+  display: grid;
+  align-content: start;
+  padding: 10px 12px;
+}
+
 .utility-module {
   min-height: 225px;
   padding: 11px;
@@ -228,6 +234,11 @@ body {
   margin-bottom: 14px;
 }
 
+.lowpass-title {
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
 .module-header h2 {
   margin: 0;
   font-size: 0.82rem;
@@ -240,6 +251,17 @@ body {
 .vco-module .module-header h2,
 .mixer-module .module-header h2 {
   font-size: 0.9rem;
+}
+
+.lowpass-title h2 {
+  font-size: 0.86rem;
+  letter-spacing: 0.085em;
+  white-space: nowrap;
+}
+
+.lowpass-title h2 span {
+  font-size: 0.76rem;
+  letter-spacing: 0.06em;
 }
 
 .expander-grid .module-header h2 {
@@ -309,6 +331,13 @@ body {
 .four-up { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .five-up { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 
+.lowpass-control-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr) 0.55fr;
+  gap: 12px;
+  align-items: start;
+}
+
 .control {
   display: grid;
   justify-items: center;
@@ -330,6 +359,12 @@ body {
 .vco-module .control-label {
   font-size: 0.66rem;
   letter-spacing: 0.03em;
+}
+
+.lowpass-strip .control-label {
+  font-size: 0.69rem;
+  letter-spacing: 0.04em;
+  min-height: 18px;
 }
 
 .vertical-control,
@@ -379,6 +414,13 @@ body {
   justify-items: center;
   gap: 14px;
   width: 100%;
+}
+
+.jack-stack {
+  display: grid;
+  gap: 16px;
+  justify-items: center;
+  margin-top: 2px;
 }
 
 .compact-source-module .control-label,
@@ -436,6 +478,11 @@ body {
   height: 60px;
 }
 
+.lowpass-strip .knob {
+  width: 62px;
+  height: 62px;
+}
+
 .utility-module .knob,
 .utility-module .knob-small {
   width: 42px;
@@ -464,6 +511,11 @@ body {
 .utility-module .jack-socket {
   width: 30px;
   height: 30px;
+}
+
+.lowpass-ext-cv .jack-socket {
+  width: 31px;
+  height: 31px;
 }
 
 .switch-control {
