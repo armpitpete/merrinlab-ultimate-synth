@@ -134,7 +134,8 @@ body {
 }
 
 .main-grid,
-.second-grid {
+.second-grid,
+.third-grid {
   display: grid;
   gap: 12px;
 }
@@ -148,6 +149,11 @@ body {
   margin-top: 12px;
 }
 
+.third-grid {
+  grid-template-columns: 1.45fr 1fr 1.1fr 1fr 1fr 1fr;
+  margin-top: 12px;
+}
+
 .module {
   min-height: 420px;
   padding: 14px;
@@ -158,6 +164,18 @@ body {
 }
 
 .compact-module { min-height: 300px; }
+
+.utility-module {
+  min-height: 300px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), transparent 100%),
+    linear-gradient(180deg, rgba(0,0,0,0.12), rgba(0,0,0,0.2)),
+    #2c2824;
+}
+
+.wide-module {
+  min-width: 0;
+}
 
 .module-header {
   display: flex;
@@ -220,14 +238,20 @@ body {
   opacity: 0.6;
 }
 
-.second-grid .module-divider { margin: 14px 0; }
+.second-grid .module-divider,
+.third-grid .module-divider {
+  margin: 14px 0;
+}
 
 .control-grid {
   display: grid;
   gap: 16px 10px;
 }
 
-.second-grid .control-grid { gap: 14px 10px; }
+.second-grid .control-grid,
+.third-grid .control-grid {
+  gap: 14px 10px;
+}
 
 .two-up { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .three-up { grid-template-columns: repeat(3, minmax(0, 1fr)); }
