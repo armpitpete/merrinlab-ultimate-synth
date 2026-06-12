@@ -137,10 +137,10 @@ body {
   grid-template-rows: 190px 145px 250px 185px 170px;
   grid-template-areas:
     "vcos mixer filter filter filter sh"
-    "vcos mixer ar     vca    vca    sh"
+    "vcos mixer ar     .      .      sh"
     "vcos mixer ar     lfo1   lfo2   output"
     "vcos mixer ar     atten  atten  atten"
-    "adsr .     .      repeat repeat repeat";
+    "adsr vca   vca    repeat repeat repeat";
   gap: 10px;
 }
 
@@ -372,12 +372,21 @@ body {
   align-items: start;
 }
 
-.vca-control-row {
+.expander-vca-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr) 0.55fr;
-  gap: 13px;
-  align-items: start;
+  grid-template-columns: 0.75fr 0.75fr 1.05fr;
+  grid-template-areas:
+    "out input amp"
+    "cv2 cv1 amp";
+  gap: 12px 14px;
+  align-items: center;
 }
+
+.vca-out { grid-area: out; }
+.vca-input { grid-area: input; }
+.vca-cv2 { grid-area: cv2; }
+.vca-cv1 { grid-area: cv1; }
+.vca-initial-amp { grid-area: amp; }
 
 .lfo-source-grid {
   display: grid;
@@ -616,8 +625,7 @@ body {
   height: 60px;
 }
 
-.lowpass-strip .knob,
-.vca-strip .knob {
+.lowpass-strip .knob {
   width: 62px;
   height: 62px;
 }
@@ -632,7 +640,8 @@ body {
   height: 54px;
 }
 
-.adsr-module .knob {
+.adsr-module .knob,
+.vca-module .knob {
   width: 47px;
   height: 47px;
 }
@@ -668,15 +677,10 @@ body {
   height: 30px;
 }
 
-.lowpass-ext-cv .jack-socket,
-.vca-ext-cv .jack-socket {
-  width: 31px;
-  height: 31px;
-}
-
 .lfo-module .jack-socket,
 .attenuator-channel .jack-socket,
-.adsr-module .jack-socket {
+.adsr-module .jack-socket,
+.vca-module .jack-socket {
   width: 28px;
   height: 28px;
 }
