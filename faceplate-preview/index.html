@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>MerrinLab Ultimate Synth — Dark Preview</title>
-  <link rel="stylesheet" href="styles.css?v=issue5-mixer-strip-1">
+  <link rel="stylesheet" href="styles.css?v=issue5-lowpass-strip-1">
 </head>
 <body>
   <main class="app-shell">
@@ -80,14 +80,14 @@
         </div>
       </article>
 
-      <article class="module filter-lp-module">
-        <div class="module-header"><span class="status-light"></span><h2>Voltage Controlled Lowpass Filter</h2></div>
-        <div class="control-grid five-up">
+      <article class="module filter-lp-module lowpass-strip">
+        <div class="module-header lowpass-title"><span class="status-light"></span><h2>Voltage Controlled Lowpass Filter <span>(12dB/Oct)</span></h2></div>
+        <div class="lowpass-control-row">
           <div class="control"><div class="control-label">Initial Cutoff</div><div class="knob"></div></div>
           <div class="control"><div class="control-label">AR Mod</div><div class="knob"></div></div>
           <div class="control"><div class="control-label">LFO-1 Mod</div><div class="knob"></div></div>
           <div class="control"><div class="control-label">Resonance</div><div class="knob"></div></div>
-          <div class="control"><div class="control-label">Ext CV</div><div class="jack-socket"></div></div>
+          <div class="control lowpass-ext-cv"><div class="control-label">Ext CV</div><div class="jack-stack"><div class="jack-socket"></div><div class="jack-socket"></div></div></div>
         </div>
       </article>
 
