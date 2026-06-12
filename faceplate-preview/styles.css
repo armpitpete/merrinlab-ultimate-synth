@@ -181,9 +181,7 @@ body {
   background: linear-gradient(180deg, rgba(255,255,255,0.025), transparent 100%);
 }
 
-.vco-strip:last-child {
-  border-right: 0;
-}
+.vco-strip:last-child { border-right: 0; }
 
 .mixer-module { grid-area: mixer; }
 .filter-lp-module { grid-area: filter; }
@@ -202,13 +200,20 @@ body {
   padding: 12px 10px;
 }
 
-.lowpass-strip {
+.lowpass-strip,
+.vca-strip {
   display: grid;
   align-content: start;
   padding: 10px 12px;
 }
 
 .ar-strip {
+  display: grid;
+  align-content: start;
+  padding: 10px 11px;
+}
+
+.lfo-module {
   display: grid;
   align-content: start;
   padding: 10px 11px;
@@ -241,10 +246,14 @@ body {
   margin-bottom: 14px;
 }
 
-.lowpass-title {
+.lowpass-title,
+.vca-title,
+.lfo-title {
   justify-content: center;
   margin-bottom: 10px;
 }
+
+.lfo-title { margin-bottom: 8px; }
 
 .module-header h2 {
   margin: 0;
@@ -261,7 +270,8 @@ body {
   font-size: 0.9rem;
 }
 
-.lowpass-title h2 {
+.lowpass-title h2,
+.vca-title h2 {
   font-size: 0.86rem;
   letter-spacing: 0.085em;
   white-space: nowrap;
@@ -270,6 +280,11 @@ body {
 .lowpass-title h2 span {
   font-size: 0.76rem;
   letter-spacing: 0.06em;
+}
+
+.lfo-title h2 {
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
 }
 
 .expander-grid .module-header h2 {
@@ -346,6 +361,28 @@ body {
   align-items: start;
 }
 
+.vca-control-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr) 0.55fr;
+  gap: 13px;
+  align-items: start;
+}
+
+.lfo-source-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    "rate shape"
+    "range outputs";
+  gap: 8px 10px;
+  align-items: start;
+}
+
+.lfo-rate { grid-area: rate; }
+.lfo-shape-bank { grid-area: shape; display: grid; gap: 7px; justify-items: stretch; }
+.lfo-range { grid-area: range; }
+.lfo-outputs { grid-area: outputs; }
+
 .control {
   display: grid;
   justify-items: center;
@@ -369,10 +406,17 @@ body {
   letter-spacing: 0.03em;
 }
 
-.lowpass-strip .control-label {
+.lowpass-strip .control-label,
+.vca-strip .control-label {
   font-size: 0.69rem;
   letter-spacing: 0.04em;
   min-height: 18px;
+}
+
+.lfo-module .control-label {
+  font-size: 0.61rem;
+  letter-spacing: 0.025em;
+  min-height: 15px;
 }
 
 .vertical-control,
@@ -514,9 +558,15 @@ body {
   height: 60px;
 }
 
-.lowpass-strip .knob {
+.lowpass-strip .knob,
+.vca-strip .knob {
   width: 62px;
   height: 62px;
+}
+
+.lfo-module .knob {
+  width: 58px;
+  height: 58px;
 }
 
 .utility-module .knob,
@@ -550,9 +600,15 @@ body {
   height: 30px;
 }
 
-.lowpass-ext-cv .jack-socket {
+.lowpass-ext-cv .jack-socket,
+.vca-ext-cv .jack-socket {
   width: 31px;
   height: 31px;
+}
+
+.lfo-module .jack-socket {
+  width: 28px;
+  height: 28px;
 }
 
 .switch-control {
@@ -566,6 +622,15 @@ body {
 
 .compact-switch {
   min-height: 34px;
+}
+
+.lfo-module .wave-box {
+  height: 36px;
+}
+
+.lfo-module .compact-switch {
+  min-height: 30px;
+  font-size: 0.58rem;
 }
 
 .led-light {
