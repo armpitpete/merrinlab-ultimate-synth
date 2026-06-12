@@ -3,129 +3,99 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MerrinLab Ultimate Synth — MFOS-Style Faceplate Preview</title>
+  <title>MerrinLab Ultimate Synth — Faceplate Preview</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <main class="page-shell">
     <header class="project-header">
-      <div>
-        <p class="eyebrow">Static design preview · no audio · no functional controls</p>
-        <h1>MerrinLab Ultimate Synth</h1>
-        <p class="summary">One software instrument, shown as two linked MFOS-style faceplates: Sound Lab Ultimate plus Ultimate Expander.</p>
-      </div>
-      <aside class="legend" aria-label="Status legend">
-        <span><i class="status-dot verified"></i>Verified label</span>
-        <span><i class="status-dot verify"></i>Verify role</span>
-        <span><i class="status-dot later"></i>Engine later</span>
-      </aside>
+      <h1>MerrinLab Ultimate Synth</h1>
+      <p>Clean MFOS-style layout map. Static preview only.</p>
     </header>
 
-    <section class="instrument-stack" aria-label="MerrinLab Ultimate Synth faceplate stack">
-      <section class="mfos-panel ultimate-panel" aria-label="Sound Lab Ultimate faceplate preview">
-        <header class="panel-title-row">
-          <p>MFOS-style main faceplate</p>
-          <h2>SOUND-LAB ULTIMATE</h2>
-        </header>
+    <section class="panel-card">
+      <svg class="faceplate-svg" viewBox="0 0 990 560" role="img" aria-label="Sound Lab Ultimate layout preview">
+        <rect class="outer" x="2" y="2" width="986" height="556"></rect>
+        <text class="brand-small" x="12" y="22">SOUND-LAB ULTIMATE STYLE MAIN PANEL</text>
+        <line class="heavy" x1="125" y1="2" x2="125" y2="558"></line>
+        <line class="heavy" x1="250" y1="2" x2="250" y2="558"></line>
+        <line class="heavy" x1="375" y1="2" x2="375" y2="558"></line>
+        <line class="heavy" x1="505" y1="2" x2="505" y2="558"></line>
+        <line class="heavy" x1="820" y1="2" x2="820" y2="408"></line>
+        <line class="heavy" x1="2" y1="408" x2="988" y2="408"></line>
+        <line class="heavy" x1="505" y1="112" x2="820" y2="112"></line>
+        <line class="heavy" x1="505" y1="292" x2="988" y2="292"></line>
+        <line class="heavy" x1="640" y1="112" x2="640" y2="408"></line>
+        <line class="heavy" x1="730" y1="292" x2="730" y2="408"></line>
+        <line class="heavy" x1="820" y1="246" x2="988" y2="246"></line>
+        <line class="heavy" x1="820" y1="408" x2="820" y2="558"></line>
 
-        <div class="ultimate-grid">
-          <article class="module vco vco1">
-            <h3>VCO 1</h3>
-            <div class="vertical-controls">
-              <div class="control knob verified"><span></span><b>COARSE FREQ</b></div>
-              <div class="control knob verified"><span></span><b>FINE FREQ</b></div>
-              <div class="control switch verify"><span></span><b>WAVEFORM</b></div>
-              <div class="control knob verified"><span></span><b>PULSE WIDTH %</b></div>
-              <div class="mini-jacks two"><div class="control jack verify"><span></span><b>PWM</b></div><div class="control jack verify"><span></span><b>SYNC</b></div><div class="control jack verify"><span></span><b>LOG-CV</b></div><div class="control jack verify"><span></span><b>LIN-CV</b></div></div>
-            </div>
-          </article>
+        <text class="module-title" x="62" y="48">VCO 1</text>
+        <text class="module-title" x="187" y="48">VCO 2</text>
+        <text class="module-title" x="312" y="48">VCO 3</text>
+        <text class="module-title" x="440" y="48">MIXER</text>
+        <text class="module-title" x="662" y="48">VOLTAGE CONTROLLED LOWPASS FILTER</text>
+        <text class="module-title" x="904" y="48">SAMPLE &amp; HOLD</text>
+        <text class="module-title" x="572" y="138">AR GENERATOR</text>
+        <text class="module-title" x="730" y="138">VOLTAGE CONTROLLED AMPLIFIER</text>
+        <text class="module-title" x="685" y="320">LOW FREQUENCY OSC - 1</text>
+        <text class="module-title" x="775" y="320">LOW FREQUENCY OSC - 2</text>
+        <text class="module-title" x="572" y="434">RPT. GATE RATE</text>
+        <text class="module-title" x="812" y="434">ATTENUATORS</text>
+        <text class="module-title" x="904" y="318">OUTPUT LEVEL</text>
 
-          <article class="module vco vco2">
-            <h3>VCO 2</h3>
-            <div class="vertical-controls">
-              <div class="control knob verified"><span></span><b>COARSE FREQ</b></div>
-              <div class="control knob verified"><span></span><b>FINE FREQ</b></div>
-              <div class="control switch verify"><span></span><b>WAVEFORM</b></div>
-              <div class="control knob verified"><span></span><b>PULSE WIDTH %</b></div>
-              <div class="mini-jacks two"><div class="control jack verify"><span></span><b>PWM</b></div><div class="control jack verify"><span></span><b>SYNC</b></div><div class="control jack verify"><span></span><b>LOG-CV</b></div><div class="control jack verify"><span></span><b>LIN-CV</b></div></div>
-            </div>
-          </article>
+        <g class="control-dots">
+          <circle cx="62" cy="96" r="20"></circle><circle cx="62" cy="176" r="20"></circle><circle cx="62" cy="276" r="20"></circle><circle cx="32" cy="374" r="10"></circle><circle cx="92" cy="374" r="10"></circle><circle cx="32" cy="434" r="10"></circle><circle cx="92" cy="434" r="10"></circle>
+          <circle cx="187" cy="96" r="20"></circle><circle cx="187" cy="176" r="20"></circle><circle cx="187" cy="276" r="20"></circle><circle cx="157" cy="374" r="10"></circle><circle cx="217" cy="374" r="10"></circle><circle cx="157" cy="434" r="10"></circle><circle cx="217" cy="434" r="10"></circle>
+          <circle cx="312" cy="96" r="20"></circle><circle cx="312" cy="176" r="20"></circle><circle cx="312" cy="276" r="20"></circle><circle cx="282" cy="374" r="10"></circle><circle cx="342" cy="374" r="10"></circle><circle cx="282" cy="434" r="10"></circle><circle cx="342" cy="434" r="10"></circle>
+          <circle cx="440" cy="96" r="20"></circle><circle cx="440" cy="176" r="20"></circle><circle cx="440" cy="256" r="20"></circle><circle cx="440" cy="336" r="20"></circle><circle cx="440" cy="416" r="20"></circle>
+          <circle cx="585" cy="96" r="20"></circle><circle cx="690" cy="96" r="20"></circle><circle cx="795" cy="96" r="20"></circle><circle cx="900" cy="96" r="20"></circle>
+          <circle cx="540" cy="190" r="20"></circle><circle cx="604" cy="190" r="20"></circle><circle cx="675" cy="190" r="20"></circle><circle cx="765" cy="190" r="20"></circle><circle cx="855" cy="190" r="20"></circle>
+          <circle cx="685" cy="365" r="20"></circle><circle cx="775" cy="365" r="20"></circle><circle cx="904" cy="88" r="20"></circle><circle cx="944" cy="170" r="20"></circle><circle cx="904" cy="350" r="20"></circle>
+          <circle cx="572" cy="486" r="20"></circle><circle cx="670" cy="486" r="20"></circle><circle cx="760" cy="486" r="20"></circle><circle cx="850" cy="486" r="20"></circle><circle cx="940" cy="486" r="20"></circle>
+        </g>
+        <text class="brand" x="905" y="384">SOUND-LAB<tspan x="905" dy="30">ULTIMATE</tspan></text>
+      </svg>
+    </section>
 
-          <article class="module vco vco3">
-            <h3>VCO 3</h3>
-            <div class="vertical-controls">
-              <div class="control knob verified"><span></span><b>COARSE FREQ</b></div>
-              <div class="control knob verified"><span></span><b>FINE FREQ</b></div>
-              <div class="control switch verify"><span></span><b>WAVEFORM</b></div>
-              <div class="control knob verified"><span></span><b>PULSE WIDTH %</b></div>
-              <div class="mini-jacks two"><div class="control jack verify"><span></span><b>PWM</b></div><div class="control jack verify"><span></span><b>SYNC</b></div><div class="control jack verify"><span></span><b>LOG-CV</b></div><div class="control jack verify"><span></span><b>LIN-CV</b></div></div>
-            </div>
-          </article>
+    <section class="panel-card">
+      <svg class="faceplate-svg expander-svg" viewBox="0 0 720 620" role="img" aria-label="Ultimate Expander layout preview">
+        <rect class="outer" x="2" y="2" width="716" height="616"></rect>
+        <line class="heavy" x1="70" y1="2" x2="70" y2="618"></line>
+        <text class="vertical-brand" x="38" y="310" transform="rotate(-90 38 310)">MFOS ULTIMATE EXPANDER</text>
+        <line class="heavy" x1="70" y1="90" x2="520" y2="90"></line>
+        <line class="heavy" x1="70" y1="230" x2="520" y2="230"></line>
+        <line class="heavy" x1="70" y1="390" x2="520" y2="390"></line>
+        <line class="heavy" x1="70" y1="520" x2="520" y2="520"></line>
+        <line class="heavy" x1="210" y1="2" x2="210" y2="90"></line>
+        <line class="heavy" x1="360" y1="2" x2="360" y2="90"></line>
+        <line class="heavy" x1="520" y1="2" x2="520" y2="618"></line>
+        <line class="heavy" x1="260" y1="230" x2="260" y2="520"></line>
+        <line class="heavy" x1="70" y1="560" x2="520" y2="560"></line>
 
-          <article class="module mixer">
-            <h3>MIXER</h3>
-            <div class="vertical-controls">
-              <div class="control knob verified"><span></span><b>VCO 1 LEVEL</b></div>
-              <div class="control knob verified"><span></span><b>VCO 2 LEVEL</b></div>
-              <div class="control knob verified"><span></span><b>VCO 3 LEVEL</b></div>
-              <div class="control knob verified"><span></span><b>EXT. IN LEVEL</b></div>
-              <div class="control knob verified"><span></span><b>WHITE NS LEVEL</b></div>
-              <div class="mini-jacks two"><div class="control jack verify"><span></span><b>NOISE</b></div><div class="control jack verify"><span></span><b>OUTPUTS</b></div></div>
-            </div>
-          </article>
+        <text class="module-title" x="140" y="28">CV-INVERTER</text>
+        <text class="module-title" x="285" y="28">ANALOG MULTIPLIER</text>
+        <text class="module-title" x="440" y="28">EXT. SIG. BUFFER</text>
+        <text class="module-title" x="620" y="28">ADSR ENV. GEN.</text>
+        <text class="module-title" x="240" y="116">ATTENUATORS</text>
+        <text class="module-title" x="165" y="254">SIGNAL MIXER</text>
+        <text class="module-title" x="390" y="254">VOLTAGE CONTROLLED AMPLIFIER</text>
+        <text class="module-title" x="390" y="414">STATE VARIABLE VCF</text>
+        <text class="module-title" x="165" y="546">ENVELOPE FOLLOWER</text>
+        <text class="module-title" x="390" y="546">UTILITY OUTPUTS</text>
 
-          <article class="module filter-lp">
-            <h3>VOLTAGE CONTROLLED LOWPASS FILTER <small>(12DB/OCT)</small></h3>
-            <div class="horizontal-controls four">
-              <div class="control knob verified"><span></span><b>INITIAL CUTOFF</b></div>
-              <div class="control knob verified"><span></span><b>AR MOD</b></div>
-              <div class="control knob verified"><span></span><b>LFO-1 MOD</b></div>
-              <div class="control knob verified"><span></span><b>RESONANCE</b></div>
-            </div>
-            <div class="mini-jacks side"><div class="control jack verify"><span></span><b>EXT CV</b></div><div class="control jack verify"><span></span><b>EXT CV</b></div></div>
-          </article>
-
-          <article class="module ar">
-            <h3>AR GENERATOR</h3>
-            <div class="horizontal-controls two"><div class="control knob verified"><span></span><b>ATTACK</b></div><div class="control knob verified"><span></span><b>RELEASE</b></div></div>
-            <div class="horizontal-controls three"><div class="control switch verify"><span></span><b>MODE</b></div><div class="control switch verify"><span></span><b>RANGE</b></div><div class="control switch verify"><span></span><b>MANUAL GATE</b></div></div>
-            <div class="mini-jacks two"><div class="control jack verify"><span></span><b>GATE/TRIG IN</b></div><div class="control jack verify"><span></span><b>AR OUTPUTS</b></div></div>
-          </article>
-
-          <article class="module vca-main">
-            <h3>VOLTAGE CONTROLLED AMPLIFIER</h3>
-            <div class="horizontal-controls three"><div class="control knob verified"><span></span><b>INITIAL LEVEL</b></div><div class="control knob verified"><span></span><b>AR MOD</b></div><div class="control knob verified"><span></span><b>LFO-2 MOD</b></div></div>
-            <div class="mini-jacks side"><div class="control jack verify"><span></span><b>EXT CV</b></div><div class="control jack verify"><span></span><b>EXT CV</b></div></div>
-          </article>
-
-          <article class="module lfo1"><h3>LOW FREQUENCY OSC - 1</h3><div class="horizontal-controls two"><div class="control knob verified"><span></span><b>RATE</b></div><div class="control switch verify"><span></span><b>RANGE</b></div></div><div class="mini-jacks two"><div class="control jack verify"><span></span><b>LFO-1 OUTPUTS</b></div><div class="control jack verify"><span></span><b>LFO-1 OUTPUTS</b></div></div></article>
-          <article class="module lfo2"><h3>LOW FREQUENCY OSC - 2</h3><div class="horizontal-controls two"><div class="control knob verified"><span></span><b>RATE</b></div><div class="control switch verify"><span></span><b>RANGE</b></div></div><div class="mini-jacks two"><div class="control jack verify"><span></span><b>LFO-2 OUTPUTS</b></div><div class="control jack verify"><span></span><b>LFO-2 OUTPUTS</b></div></div></article>
-          <article class="module sample-hold"><h3>SAMPLE &amp; HOLD</h3><div class="horizontal-controls two"><div class="control knob verified"><span></span><b>SAMPLE RATE</b></div><div class="control knob verified"><span></span><b>GLIDE</b></div></div><div class="mini-jacks two"><div class="control jack verify"><span></span><b>INPUT</b></div><div class="control jack verify"><span></span><b>CV-OUT</b></div><div class="control jack verify"><span></span><b>TRIG</b></div><div class="control led verify"><span></span><b>LED</b></div></div></article>
-          <article class="module repeat"><h3>RPT. GATE RATE</h3><div class="control knob verify"><span></span><b>RATE</b></div><div class="mini-jacks two"><div class="control jack verify"><span></span><b>GATE</b></div><div class="control jack verify"><span></span><b>GATE</b></div></div></article>
-          <article class="module output"><h3>OUTPUT LEVEL</h3><div class="control knob verified"><span></span><b>OUTPUT LEVEL</b></div><strong>SOUND-LAB<br>ULTIMATE</strong></article>
-          <article class="module attenuators"><h3>ATTENUATORS</h3><div class="horizontal-controls four"><div class="control knob verify"><span></span><b>1</b></div><div class="control knob verify"><span></span><b>2</b></div><div class="control knob verify"><span></span><b>3</b></div><div class="control knob verify"><span></span><b>4</b></div></div><div class="mini-jacks four"><div class="control jack verify"><span></span><b>IN</b></div><div class="control jack verify"><span></span><b>OUT</b></div><div class="control jack verify"><span></span><b>IN</b></div><div class="control jack verify"><span></span><b>OUT</b></div></div></article>
-        </div>
-      </section>
-
-      <section class="mfos-panel expander-panel" aria-label="Ultimate Expander faceplate preview">
-        <header class="panel-title-row compact-title">
-          <p>MFOS-style expander faceplate</p>
-          <h2>MFOS ULTIMATE EXPANDER</h2>
-        </header>
-
-        <div class="expander-grid">
-          <article class="module cv-inverter"><h3>CV-INVERTER</h3><div class="mini-jacks two"><div class="control jack verify"><span></span><b>OUT</b></div><div class="control jack verify"><span></span><b>INPUT</b></div></div></article>
-          <article class="module multiplier"><h3>ANALOG MULTIPLIER</h3><div class="mini-jacks three"><div class="control jack verify"><span></span><b>XY-OUT</b></div><div class="control jack verify"><span></span><b>Y-IN</b></div><div class="control jack verify"><span></span><b>X-IN</b></div></div></article>
-          <article class="module buffer"><h3>EXT. SIG. BUFFER</h3><div class="control knob verified"><span></span><b>SIGNAL BOOST</b></div><div class="mini-jacks two"><div class="control jack verify"><span></span><b>OUT</b></div><div class="control jack verify"><span></span><b>OUT</b></div></div></article>
-          <article class="module adsr"><h3>ADSR ENV. GEN.</h3><div class="vertical-controls"><div class="control knob verified"><span></span><b>ATTACK</b></div><div class="control knob verified"><span></span><b>DECAY</b></div><div class="control knob verified"><span></span><b>SUSTAIN</b></div><div class="control knob verified"><span></span><b>RELEASE</b></div><div class="horizontal-controls two"><div class="control switch verify"><span></span><b>MAN. GATE</b></div><div class="control switch verify"><span></span><b>ADSR RANGE</b></div></div><div class="mini-jacks two"><div class="control jack verify"><span></span><b>GATE</b></div><div class="control jack verify"><span></span><b>TRIG</b></div></div></div></article>
-          <article class="module exp-attenuators"><h3>ATTENUATORS</h3><div class="horizontal-controls two"><div class="control knob verify"><span></span><b>1</b></div><div class="control knob verify"><span></span><b>2</b></div></div><div class="mini-jacks four"><div class="control jack verify"><span></span><b>IN</b></div><div class="control jack verify"><span></span><b>OUT</b></div><div class="control jack verify"><span></span><b>IN</b></div><div class="control jack verify"><span></span><b>OUT</b></div></div></article>
-          <article class="module signal-mixer"><h3>SIGNAL MIXER</h3><div class="vertical-controls"><div class="control knob verify"><span></span><b>LEVEL 1</b></div><div class="control knob verify"><span></span><b>LEVEL 2</b></div><div class="control knob verify"><span></span><b>LEVEL 3</b></div><div class="control knob verify"><span></span><b>LEVEL 4</b></div></div><div class="mini-jacks two"><div class="control jack verify"><span></span><b>IN-1</b></div><div class="control jack verify"><span></span><b>IN-2</b></div><div class="control jack verify"><span></span><b>IN-3</b></div><div class="control jack verify"><span></span><b>IN-4</b></div></div></article>
-          <article class="module exp-vca"><h3>VOLTAGE CONTROLLED AMPLIFIER</h3><div class="control knob verified"><span></span><b>INITIAL AMP</b></div><div class="mini-jacks four"><div class="control jack verify"><span></span><b>OUT</b></div><div class="control jack verify"><span></span><b>INPUT</b></div><div class="control jack verify"><span></span><b>CV2</b></div><div class="control jack verify"><span></span><b>CV1</b></div></div></article>
-          <article class="module svf"><h3>STATE VARIABLE VCF</h3><div class="horizontal-controls two"><div class="control knob verified"><span></span><b>RESONANCE</b></div><div class="control knob verify"><span></span><b>INITIAL COF</b></div></div><div class="mini-jacks four"><div class="control jack verify"><span></span><b>RES-CV</b></div><div class="control jack verify"><span></span><b>CV2</b></div><div class="control jack verify"><span></span><b>CV1</b></div><div class="control jack verify"><span></span><b>INPUT</b></div><div class="control jack verify"><span></span><b>LP-OUT</b></div><div class="control jack verify"><span></span><b>BP-OUT</b></div><div class="control jack verify"><span></span><b>HP-OUT</b></div><div class="control jack verify"><span></span><b>INPUT</b></div></div></article>
-          <article class="module follower"><h3>ENVELOPE FOLLOWER</h3><div class="control knob verified"><span></span><b>FOLLOWER LAG</b></div><div class="mini-jacks two"><div class="control jack verify"><span></span><b>INPUT</b></div><div class="control jack verify"><span></span><b>EF OUT</b></div></div></article>
-          <article class="module bottom-outs"><h3>UTILITY OUTPUTS</h3><div class="mini-jacks four"><div class="control jack verify"><span></span><b>ULTIMATE MIXER OUT</b></div><div class="control jack verify"><span></span><b>ULTIMATE MIXER OUT</b></div><div class="control jack verify"><span></span><b>ADSR OUT</b></div><div class="control jack verify"><span></span><b>ADSR OUT</b></div></div></article>
-        </div>
-      </section>
+        <g class="control-dots">
+          <circle cx="115" cy="58" r="10"></circle><circle cx="165" cy="58" r="10"></circle>
+          <circle cx="245" cy="58" r="10"></circle><circle cx="285" cy="58" r="10"></circle><circle cx="325" cy="58" r="10"></circle>
+          <circle cx="440" cy="62" r="20"></circle><circle cx="410" cy="80" r="10"></circle><circle cx="470" cy="80" r="10"></circle>
+          <circle cx="620" cy="76" r="20"></circle><circle cx="620" cy="166" r="20"></circle><circle cx="620" cy="256" r="20"></circle><circle cx="620" cy="346" r="20"></circle><circle cx="590" cy="470" r="10"></circle><circle cx="650" cy="470" r="10"></circle><circle cx="590" cy="550" r="10"></circle><circle cx="650" cy="550" r="10"></circle>
+          <circle cx="180" cy="168" r="20"></circle><circle cx="350" cy="168" r="20"></circle><circle cx="115" cy="210" r="10"></circle><circle cx="245" cy="210" r="10"></circle><circle cx="315" cy="210" r="10"></circle><circle cx="455" cy="210" r="10"></circle>
+          <circle cx="165" cy="310" r="20"></circle><circle cx="165" cy="390" r="20"></circle><circle cx="165" cy="470" r="20"></circle><circle cx="110" cy="495" r="10"></circle><circle cx="220" cy="495" r="10"></circle>
+          <circle cx="390" cy="310" r="20"></circle><circle cx="305" cy="360" r="10"></circle><circle cx="365" cy="360" r="10"></circle><circle cx="430" cy="360" r="10"></circle><circle cx="490" cy="360" r="10"></circle>
+          <circle cx="330" cy="462" r="20"></circle><circle cx="450" cy="462" r="20"></circle><circle cx="300" cy="500" r="10"></circle><circle cx="360" cy="500" r="10"></circle><circle cx="420" cy="500" r="10"></circle><circle cx="480" cy="500" r="10"></circle>
+          <circle cx="165" cy="586" r="20"></circle><circle cx="300" cy="586" r="10"></circle><circle cx="370" cy="586" r="10"></circle><circle cx="440" cy="586" r="10"></circle><circle cx="500" cy="586" r="10"></circle>
+        </g>
+      </svg>
     </section>
   </main>
 </body>
