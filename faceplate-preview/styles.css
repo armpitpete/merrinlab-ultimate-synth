@@ -196,6 +196,12 @@ body {
 .repeat-module { grid-area: repeat; }
 .attenuators-module { grid-area: atten; }
 
+.mixer-strip {
+  display: grid;
+  align-content: start;
+  padding: 12px 10px;
+}
+
 .utility-module {
   min-height: 225px;
   padding: 11px;
@@ -216,7 +222,8 @@ body {
   margin-bottom: 10px;
 }
 
-.vco-strip .module-header {
+.vco-strip .module-header,
+.mixer-strip .module-header {
   justify-content: center;
   margin-bottom: 14px;
 }
@@ -325,15 +332,21 @@ body {
   letter-spacing: 0.03em;
 }
 
-.vertical-control {
+.vertical-control,
+.mixer-control {
   margin-bottom: 23px;
 }
 
-.vertical-control .control-label {
+.vertical-control .control-label,
+.mixer-control .control-label {
   min-height: auto;
   margin-bottom: 6px;
   font-size: 0.72rem;
   letter-spacing: 0.04em;
+}
+
+.mixer-control .control-label {
+  line-height: 1.08;
 }
 
 .vco-jack-grid {
@@ -347,6 +360,25 @@ body {
   min-height: auto;
   font-size: 0.66rem;
   letter-spacing: 0.03em;
+}
+
+.mixer-noise-outputs {
+  margin-top: 4px;
+}
+
+.mixer-noise-outputs .control-label {
+  min-height: auto;
+  margin-bottom: 8px;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+}
+
+.dual-jacks {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  justify-items: center;
+  gap: 14px;
+  width: 100%;
 }
 
 .compact-source-module .control-label,
@@ -393,7 +425,8 @@ body {
   height: 60px;
 }
 
-.vco-module .knob {
+.vco-module .knob,
+.mixer-control .knob {
   width: 64px;
   height: 64px;
 }
@@ -427,6 +460,7 @@ body {
 }
 
 .vco-module .jack-socket,
+.mixer-noise-outputs .jack-socket,
 .utility-module .jack-socket {
   width: 30px;
   height: 30px;
