@@ -208,6 +208,12 @@ body {
   padding: 10px 12px;
 }
 
+.ar-strip {
+  display: grid;
+  align-content: start;
+  padding: 10px 11px;
+}
+
 .utility-module {
   min-height: 225px;
   padding: 11px;
@@ -229,7 +235,8 @@ body {
 }
 
 .vco-strip .module-header,
-.mixer-strip .module-header {
+.mixer-strip .module-header,
+.ar-title {
   justify-content: center;
   margin-bottom: 14px;
 }
@@ -249,7 +256,8 @@ body {
 }
 
 .vco-module .module-header h2,
-.mixer-module .module-header h2 {
+.mixer-module .module-header h2,
+.ar-module .module-header h2 {
   font-size: 0.9rem;
 }
 
@@ -368,20 +376,47 @@ body {
 }
 
 .vertical-control,
-.mixer-control {
+.mixer-control,
+.ar-main-control {
   margin-bottom: 23px;
 }
 
 .vertical-control .control-label,
-.mixer-control .control-label {
+.mixer-control .control-label,
+.ar-main-control .control-label {
   min-height: auto;
   margin-bottom: 6px;
   font-size: 0.72rem;
   letter-spacing: 0.04em;
 }
 
-.mixer-control .control-label {
+.mixer-control .control-label,
+.ar-main-control .control-label {
   line-height: 1.08;
+}
+
+.ar-switch-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin: 0 0 18px;
+}
+
+.ar-switch-row .control-label {
+  min-height: 28px;
+  font-size: 0.62rem;
+  letter-spacing: 0.03em;
+}
+
+.ar-jack-control {
+  margin-bottom: 15px;
+}
+
+.ar-jack-control .control-label {
+  min-height: auto;
+  margin-bottom: 7px;
+  font-size: 0.66rem;
+  letter-spacing: 0.035em;
 }
 
 .vco-jack-grid {
@@ -468,7 +503,8 @@ body {
 }
 
 .vco-module .knob,
-.mixer-control .knob {
+.mixer-control .knob,
+.ar-main-control .knob {
   width: 64px;
   height: 64px;
 }
@@ -508,6 +544,7 @@ body {
 
 .vco-module .jack-socket,
 .mixer-noise-outputs .jack-socket,
+.ar-jack-control .jack-socket,
 .utility-module .jack-socket {
   width: 30px;
   height: 30px;
