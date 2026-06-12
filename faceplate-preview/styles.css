@@ -138,7 +138,7 @@ body {
   grid-template-areas:
     "vcos mixer filter filter filter sh"
     "vcos mixer ar     vca    vca    sh"
-    "vcos mixer lfo1   lfo2   output output"
+    "vcos mixer ar     lfo1   lfo2   output"
     "vcos mixer repeat atten  atten  atten";
   gap: 10px;
 }
