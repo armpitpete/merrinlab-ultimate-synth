@@ -445,3 +445,42 @@ body {
   width: 30px;
   height: 30px;
 }
+
+/* Label readability polish pass: typography only. */
+.control-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.052em;
+}
+
+.main-grid > .module:nth-child(-n+3) .control-label {
+  font-size: 0.6rem;
+  letter-spacing: 0.028em;
+  line-height: 1.08;
+}
+
+.main-grid > .module:nth-child(-n+3) .three-up .control-label {
+  white-space: nowrap;
+}
+
+.main-grid > .module:nth-child(-n+3) > .control-grid[style] .control-label {
+  font-size: 0.58rem;
+  letter-spacing: 0.018em;
+}
+
+.second-grid .control-label {
+  font-size: 0.66rem;
+  letter-spacing: 0.04em;
+}
+
+.second-grid .four-up .control-label {
+  min-height: 20px;
+  font-size: 0.55rem;
+  letter-spacing: 0.005em;
+  white-space: nowrap;
+}
+
+.filter-module .selector {
+  font-size: 0.9rem;
+  line-height: 1.08;
+  letter-spacing: 0.01em;
+}
