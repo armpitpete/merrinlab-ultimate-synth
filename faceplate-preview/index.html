@@ -3,99 +3,197 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MerrinLab Ultimate Synth — Faceplate Preview</title>
+  <title>MerrinLab Ultimate Synth — Dark Preview</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <main class="page-shell">
-    <header class="project-header">
-      <h1>MerrinLab Ultimate Synth</h1>
-      <p>Clean MFOS-style layout map. Static preview only.</p>
+  <main class="app-shell">
+    <header class="top-bar">
+      <div class="brand-block">
+        <div class="brand-title">MerrinLab Ultimate Synth</div>
+        <div class="brand-subtitle">Static design preview · no audio · no functional controls</div>
+      </div>
+
+      <div class="top-controls">
+        <div class="top-control preset-display">
+          <span class="top-label">Preset</span>
+          <div class="display-box">INIT PATCH</div>
+        </div>
+        <div class="top-control small-control">
+          <span class="top-label">Master</span>
+          <div class="knob knob-large"></div>
+        </div>
+        <div class="top-control small-control">
+          <span class="top-label">Tune</span>
+          <div class="display-box small-display">440</div>
+        </div>
+        <div class="top-control small-control">
+          <span class="top-label">Output</span>
+          <div class="knob knob-large"></div>
+        </div>
+        <div class="top-control small-control">
+          <span class="top-label">Settings</span>
+          <div class="menu-button">☰</div>
+        </div>
+      </div>
     </header>
 
-    <section class="panel-card">
-      <svg class="faceplate-svg" viewBox="0 0 990 560" role="img" aria-label="Sound Lab Ultimate layout preview">
-        <rect class="outer" x="2" y="2" width="986" height="556"></rect>
-        <text class="brand-small" x="12" y="22">SOUND-LAB ULTIMATE STYLE MAIN PANEL</text>
-        <line class="heavy" x1="125" y1="2" x2="125" y2="558"></line>
-        <line class="heavy" x1="250" y1="2" x2="250" y2="558"></line>
-        <line class="heavy" x1="375" y1="2" x2="375" y2="558"></line>
-        <line class="heavy" x1="505" y1="2" x2="505" y2="558"></line>
-        <line class="heavy" x1="820" y1="2" x2="820" y2="408"></line>
-        <line class="heavy" x1="2" y1="408" x2="988" y2="408"></line>
-        <line class="heavy" x1="505" y1="112" x2="820" y2="112"></line>
-        <line class="heavy" x1="505" y1="292" x2="988" y2="292"></line>
-        <line class="heavy" x1="640" y1="112" x2="640" y2="408"></line>
-        <line class="heavy" x1="730" y1="292" x2="730" y2="408"></line>
-        <line class="heavy" x1="820" y1="246" x2="988" y2="246"></line>
-        <line class="heavy" x1="820" y1="408" x2="820" y2="558"></line>
+    <section class="main-grid" aria-label="Main sound row">
+      <article class="module">
+        <div class="module-header"><span class="status-light"></span><h2>VCO 1</h2></div>
+        <div class="module-row waveform-row"><div class="wave-box">SAW</div><div class="selector">Sawtooth</div></div>
+        <div class="module-divider"></div>
+        <div class="control-grid three-up">
+          <div class="control"><div class="control-label">Coarse</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">Fine</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">Waveform</div><div class="knob"></div></div>
+        </div>
+        <div class="module-divider"></div>
+        <div class="control-grid four-up">
+          <div class="control"><div class="control-label">Pulse Width</div><div class="knob knob-small"></div></div>
+          <div class="control"><div class="control-label">PWM</div><div class="jack-socket"></div></div>
+          <div class="control"><div class="control-label">Sync</div><div class="jack-socket"></div></div>
+          <div class="control"><div class="control-label">CV In</div><div class="jack-socket"></div></div>
+        </div>
+      </article>
 
-        <text class="module-title" x="62" y="48">VCO 1</text>
-        <text class="module-title" x="187" y="48">VCO 2</text>
-        <text class="module-title" x="312" y="48">VCO 3</text>
-        <text class="module-title" x="440" y="48">MIXER</text>
-        <text class="module-title" x="662" y="48">VOLTAGE CONTROLLED LOWPASS FILTER</text>
-        <text class="module-title" x="904" y="48">SAMPLE &amp; HOLD</text>
-        <text class="module-title" x="572" y="138">AR GENERATOR</text>
-        <text class="module-title" x="730" y="138">VOLTAGE CONTROLLED AMPLIFIER</text>
-        <text class="module-title" x="685" y="320">LOW FREQUENCY OSC - 1</text>
-        <text class="module-title" x="775" y="320">LOW FREQUENCY OSC - 2</text>
-        <text class="module-title" x="572" y="434">RPT. GATE RATE</text>
-        <text class="module-title" x="812" y="434">ATTENUATORS</text>
-        <text class="module-title" x="904" y="318">OUTPUT LEVEL</text>
+      <article class="module">
+        <div class="module-header"><span class="status-light"></span><h2>VCO 2</h2></div>
+        <div class="module-row waveform-row"><div class="wave-box">SAW</div><div class="selector">Sawtooth</div></div>
+        <div class="module-divider"></div>
+        <div class="control-grid three-up">
+          <div class="control"><div class="control-label">Coarse</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">Fine</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">Waveform</div><div class="knob"></div></div>
+        </div>
+        <div class="module-divider"></div>
+        <div class="control-grid four-up">
+          <div class="control"><div class="control-label">Pulse Width</div><div class="knob knob-small"></div></div>
+          <div class="control"><div class="control-label">PWM</div><div class="jack-socket"></div></div>
+          <div class="control"><div class="control-label">Sync</div><div class="jack-socket"></div></div>
+          <div class="control"><div class="control-label">CV In</div><div class="jack-socket"></div></div>
+        </div>
+      </article>
 
-        <g class="control-dots">
-          <circle cx="62" cy="96" r="20"></circle><circle cx="62" cy="176" r="20"></circle><circle cx="62" cy="276" r="20"></circle><circle cx="32" cy="374" r="10"></circle><circle cx="92" cy="374" r="10"></circle><circle cx="32" cy="434" r="10"></circle><circle cx="92" cy="434" r="10"></circle>
-          <circle cx="187" cy="96" r="20"></circle><circle cx="187" cy="176" r="20"></circle><circle cx="187" cy="276" r="20"></circle><circle cx="157" cy="374" r="10"></circle><circle cx="217" cy="374" r="10"></circle><circle cx="157" cy="434" r="10"></circle><circle cx="217" cy="434" r="10"></circle>
-          <circle cx="312" cy="96" r="20"></circle><circle cx="312" cy="176" r="20"></circle><circle cx="312" cy="276" r="20"></circle><circle cx="282" cy="374" r="10"></circle><circle cx="342" cy="374" r="10"></circle><circle cx="282" cy="434" r="10"></circle><circle cx="342" cy="434" r="10"></circle>
-          <circle cx="440" cy="96" r="20"></circle><circle cx="440" cy="176" r="20"></circle><circle cx="440" cy="256" r="20"></circle><circle cx="440" cy="336" r="20"></circle><circle cx="440" cy="416" r="20"></circle>
-          <circle cx="585" cy="96" r="20"></circle><circle cx="690" cy="96" r="20"></circle><circle cx="795" cy="96" r="20"></circle><circle cx="900" cy="96" r="20"></circle>
-          <circle cx="540" cy="190" r="20"></circle><circle cx="604" cy="190" r="20"></circle><circle cx="675" cy="190" r="20"></circle><circle cx="765" cy="190" r="20"></circle><circle cx="855" cy="190" r="20"></circle>
-          <circle cx="685" cy="365" r="20"></circle><circle cx="775" cy="365" r="20"></circle><circle cx="904" cy="88" r="20"></circle><circle cx="944" cy="170" r="20"></circle><circle cx="904" cy="350" r="20"></circle>
-          <circle cx="572" cy="486" r="20"></circle><circle cx="670" cy="486" r="20"></circle><circle cx="760" cy="486" r="20"></circle><circle cx="850" cy="486" r="20"></circle><circle cx="940" cy="486" r="20"></circle>
-        </g>
-        <text class="brand" x="905" y="384">SOUND-LAB<tspan x="905" dy="30">ULTIMATE</tspan></text>
-      </svg>
+      <article class="module">
+        <div class="module-header"><span class="status-light"></span><h2>VCO 3</h2></div>
+        <div class="module-row waveform-row"><div class="wave-box">PULSE</div><div class="selector">Pulse / LFO mode</div></div>
+        <div class="module-divider"></div>
+        <div class="control-grid three-up">
+          <div class="control"><div class="control-label">Coarse</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">Fine</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">Waveform</div><div class="knob"></div></div>
+        </div>
+        <div class="module-divider"></div>
+        <div class="control-grid four-up">
+          <div class="control"><div class="control-label">Pulse Width</div><div class="knob knob-small"></div></div>
+          <div class="control"><div class="control-label">PWM</div><div class="jack-socket"></div></div>
+          <div class="control"><div class="control-label">Sync</div><div class="jack-socket"></div></div>
+          <div class="control"><div class="control-label">CV In</div><div class="jack-socket"></div></div>
+        </div>
+      </article>
+
+      <article class="module">
+        <div class="module-header"><span class="status-light"></span><h2>Mixer</h2></div>
+        <div class="control-grid two-up">
+          <div class="control"><div class="control-label">VCO 1 Level</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">VCO 2 Level</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">VCO 3 Level</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">Ext. In</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">White Noise</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">Mixer Out</div><div class="jack-socket"></div></div>
+        </div>
+      </article>
+
+      <article class="module filter-module">
+        <div class="module-header"><span class="status-light"></span><h2>Filter</h2></div>
+        <div class="module-row"><div class="selector wide-selector">12dB/Oct Lowpass VCF</div></div>
+        <div class="module-divider"></div>
+        <div class="control-grid two-up">
+          <div class="control"><div class="control-label">Cutoff</div><div class="knob knob-large"></div></div>
+          <div class="control"><div class="control-label">Resonance</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">AR Mod</div><div class="knob knob-small"></div></div>
+          <div class="control"><div class="control-label">LFO Mod</div><div class="knob knob-small"></div></div>
+        </div>
+      </article>
+
+      <article class="module">
+        <div class="module-header"><span class="status-light"></span><h2>VCA / Output</h2></div>
+        <div class="control-grid two-up">
+          <div class="control"><div class="control-label">Initial Level</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">AR Mod</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">LFO Mod</div><div class="knob knob-small"></div></div>
+          <div class="control"><div class="control-label">Output Level</div><div class="knob knob-large"></div></div>
+        </div>
+        <div class="module-divider"></div>
+        <div class="module-row output-row"><div class="mini-display">Line Out</div><div class="mini-display">Phones</div></div>
+      </article>
     </section>
 
-    <section class="panel-card">
-      <svg class="faceplate-svg expander-svg" viewBox="0 0 720 620" role="img" aria-label="Ultimate Expander layout preview">
-        <rect class="outer" x="2" y="2" width="716" height="616"></rect>
-        <line class="heavy" x1="70" y1="2" x2="70" y2="618"></line>
-        <text class="vertical-brand" x="38" y="310" transform="rotate(-90 38 310)">MFOS ULTIMATE EXPANDER</text>
-        <line class="heavy" x1="70" y1="90" x2="520" y2="90"></line>
-        <line class="heavy" x1="70" y1="230" x2="520" y2="230"></line>
-        <line class="heavy" x1="70" y1="390" x2="520" y2="390"></line>
-        <line class="heavy" x1="70" y1="520" x2="520" y2="520"></line>
-        <line class="heavy" x1="210" y1="2" x2="210" y2="90"></line>
-        <line class="heavy" x1="360" y1="2" x2="360" y2="90"></line>
-        <line class="heavy" x1="520" y1="2" x2="520" y2="618"></line>
-        <line class="heavy" x1="260" y1="230" x2="260" y2="520"></line>
-        <line class="heavy" x1="70" y1="560" x2="520" y2="560"></line>
+    <section class="second-grid" aria-label="Modulation and movement row">
+      <article class="module compact-module">
+        <div class="module-header"><span class="status-light"></span><h2>LFO 1</h2></div>
+        <div class="module-row waveform-row"><div class="wave-box">LFO</div><div class="selector">Low Frequency Osc - 1</div></div>
+        <div class="module-divider"></div>
+        <div class="control-grid three-up">
+          <div class="control"><div class="control-label">Rate</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">Range</div><div class="switch-control">High / Low</div></div>
+          <div class="control"><div class="control-label">Outputs</div><div class="jack-socket"></div></div>
+        </div>
+      </article>
 
-        <text class="module-title" x="140" y="28">CV-INVERTER</text>
-        <text class="module-title" x="285" y="28">ANALOG MULTIPLIER</text>
-        <text class="module-title" x="440" y="28">EXT. SIG. BUFFER</text>
-        <text class="module-title" x="620" y="28">ADSR ENV. GEN.</text>
-        <text class="module-title" x="240" y="116">ATTENUATORS</text>
-        <text class="module-title" x="165" y="254">SIGNAL MIXER</text>
-        <text class="module-title" x="390" y="254">VOLTAGE CONTROLLED AMPLIFIER</text>
-        <text class="module-title" x="390" y="414">STATE VARIABLE VCF</text>
-        <text class="module-title" x="165" y="546">ENVELOPE FOLLOWER</text>
-        <text class="module-title" x="390" y="546">UTILITY OUTPUTS</text>
+      <article class="module compact-module">
+        <div class="module-header"><span class="status-light"></span><h2>LFO 2</h2></div>
+        <div class="module-row waveform-row"><div class="wave-box">LFO</div><div class="selector">Low Frequency Osc - 2</div></div>
+        <div class="module-divider"></div>
+        <div class="control-grid three-up">
+          <div class="control"><div class="control-label">Rate</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">Range</div><div class="switch-control">High / Low</div></div>
+          <div class="control"><div class="control-label">Outputs</div><div class="jack-socket"></div></div>
+        </div>
+      </article>
 
-        <g class="control-dots">
-          <circle cx="115" cy="58" r="10"></circle><circle cx="165" cy="58" r="10"></circle>
-          <circle cx="245" cy="58" r="10"></circle><circle cx="285" cy="58" r="10"></circle><circle cx="325" cy="58" r="10"></circle>
-          <circle cx="440" cy="62" r="20"></circle><circle cx="410" cy="80" r="10"></circle><circle cx="470" cy="80" r="10"></circle>
-          <circle cx="620" cy="76" r="20"></circle><circle cx="620" cy="166" r="20"></circle><circle cx="620" cy="256" r="20"></circle><circle cx="620" cy="346" r="20"></circle><circle cx="590" cy="470" r="10"></circle><circle cx="650" cy="470" r="10"></circle><circle cx="590" cy="550" r="10"></circle><circle cx="650" cy="550" r="10"></circle>
-          <circle cx="180" cy="168" r="20"></circle><circle cx="350" cy="168" r="20"></circle><circle cx="115" cy="210" r="10"></circle><circle cx="245" cy="210" r="10"></circle><circle cx="315" cy="210" r="10"></circle><circle cx="455" cy="210" r="10"></circle>
-          <circle cx="165" cy="310" r="20"></circle><circle cx="165" cy="390" r="20"></circle><circle cx="165" cy="470" r="20"></circle><circle cx="110" cy="495" r="10"></circle><circle cx="220" cy="495" r="10"></circle>
-          <circle cx="390" cy="310" r="20"></circle><circle cx="305" cy="360" r="10"></circle><circle cx="365" cy="360" r="10"></circle><circle cx="430" cy="360" r="10"></circle><circle cx="490" cy="360" r="10"></circle>
-          <circle cx="330" cy="462" r="20"></circle><circle cx="450" cy="462" r="20"></circle><circle cx="300" cy="500" r="10"></circle><circle cx="360" cy="500" r="10"></circle><circle cx="420" cy="500" r="10"></circle><circle cx="480" cy="500" r="10"></circle>
-          <circle cx="165" cy="586" r="20"></circle><circle cx="300" cy="586" r="10"></circle><circle cx="370" cy="586" r="10"></circle><circle cx="440" cy="586" r="10"></circle><circle cx="500" cy="586" r="10"></circle>
-        </g>
-      </svg>
+      <article class="module compact-module">
+        <div class="module-header"><span class="status-light"></span><h2>AR</h2></div>
+        <div class="control-grid two-up">
+          <div class="control"><div class="control-label">Attack</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">Release</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">Mode</div><div class="switch-control">Gate / Trig</div></div>
+          <div class="control"><div class="control-label">Range</div><div class="switch-control">Long / Short</div></div>
+        </div>
+      </article>
+
+      <article class="module compact-module">
+        <div class="module-header"><span class="status-light"></span><h2>ADSR</h2></div>
+        <div class="control-grid four-up">
+          <div class="control"><div class="control-label">Attack</div><div class="knob knob-small"></div></div>
+          <div class="control"><div class="control-label">Decay</div><div class="knob knob-small"></div></div>
+          <div class="control"><div class="control-label">Sustain</div><div class="knob knob-small"></div></div>
+          <div class="control"><div class="control-label">Release</div><div class="knob knob-small"></div></div>
+        </div>
+        <div class="module-divider"></div>
+        <div class="module-row output-row"><div class="mini-display">Gate</div><div class="mini-display">Trig</div></div>
+      </article>
+
+      <article class="module compact-module">
+        <div class="module-header"><span class="status-light"></span><h2>Sample & Hold</h2></div>
+        <div class="control-grid two-up">
+          <div class="control"><div class="control-label">Sample Rate</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">Glide</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">Input</div><div class="jack-socket"></div></div>
+          <div class="control"><div class="control-label">CV Out</div><div class="jack-socket"></div></div>
+        </div>
+      </article>
+
+      <article class="module compact-module">
+        <div class="module-header"><span class="status-light"></span><h2>Repeat Gate</h2></div>
+        <div class="control-grid two-up">
+          <div class="control"><div class="control-label">Gate Rate</div><div class="knob knob-large"></div></div>
+          <div class="control"><div class="control-label">Gate LED</div><div class="led-light"></div></div>
+        </div>
+        <div class="module-divider"></div>
+        <div class="module-row output-row"><div class="mini-display">Gate</div><div class="mini-display">Gate</div></div>
+      </article>
     </section>
   </main>
 </body>
