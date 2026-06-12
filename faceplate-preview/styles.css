@@ -420,3 +420,28 @@ body {
   min-height: 56px;
   font-size: 1rem;
 }
+
+/* VCO patch-label accuracy fix: keep LOG-CV and LIN-CV without crushing the row. */
+.main-grid > .module:nth-child(-n+3) > .control-grid[style] {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 12px 6px;
+}
+
+.main-grid > .module:nth-child(-n+3) > .control-grid[style] .control:first-child {
+  grid-column: 1 / -1;
+}
+
+.main-grid > .module:nth-child(-n+3) > .control-grid[style] .control:first-child .control-label {
+  min-height: 18px;
+}
+
+.main-grid > .module:nth-child(-n+3) > .control-grid[style] .control-label {
+  min-height: 24px;
+  font-size: 0.62rem;
+  letter-spacing: 0.045em;
+}
+
+.main-grid > .module:nth-child(-n+3) > .control-grid[style] .jack-socket {
+  width: 30px;
+  height: 30px;
+}
