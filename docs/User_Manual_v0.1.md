@@ -2,7 +2,7 @@
 
 **Project:** MerrinLab Ultimate Synth  
 **Manual status:** Living manual  
-**Current playable state:** First browser voice with VCO 1 and white noise  
+**Current playable state:** First browser voice with VCO 1 and selectable noise  
 
 ## 1. What this is
 
@@ -17,7 +17,7 @@ It is not a VST. It is not a JUCE app. It is not a full MFOS hardware emulation.
 The current goal is simple:
 
 ```text
-Make one safe, shaped, filterable sound using VCO 1 and white noise.
+Make one safe, shaped, filterable sound using VCO 1 and selectable noise.
 ```
 
 ## 2. What works now
@@ -25,7 +25,7 @@ Make one safe, shaped, filterable sound using VCO 1 and white noise.
 The working part is the floating panel called:
 
 ```text
-First Voice v0.3
+First Voice v0.4
 ```
 
 This panel controls the current playable voice.
@@ -43,7 +43,8 @@ Current working controls:
 | Waveform | Chooses the active VCO 1 waveform. |
 | Pulse Width % | Changes Pulse waveform shape only. |
 | VCO 1 Level | Sets how much VCO 1 enters the signal path. |
-| White NS Level | Sets how much white noise enters the signal path. |
+| Noise Type | Selects the noise colour: White, Pink, or Brown. |
+| White NS Level | Sets how much selected noise enters the signal path. |
 | Filter Cutoff | Changes the brightness of VCO 1 and noise. |
 | Resonance | Emphasises the sound around the filter cutoff point. |
 | Attack | Sets how quickly the note opens after Gate Note. |
@@ -57,7 +58,7 @@ The current audio path is:
 ```text
 VCO 1 ─────────┐
                ↓
-White Noise ─→ simple mixer stage
+Selected Noise → simple mixer stage
                ↓
 Low-pass filter
                ↓
@@ -76,23 +77,24 @@ Simple envelope
 Main VCA
 ```
 
-Only VCO 1 and white noise make sound.
+Only VCO 1 and the selected noise source make sound.
 
 ## 4. How to make a sound safely
 
 Use this order:
 
 1. Open the live preview page.
-2. Find the floating **First Voice v0.3** panel.
+2. Find the floating **First Voice v0.4** panel.
 3. Keep **Output** low at first.
 4. Keep **White NS Level** at 0 at first.
-5. Press **Start Audio**.
-6. Press **Gate Note**.
-7. Adjust **VCO 1 Level** if the oscillator is too quiet.
-8. Raise **White NS Level** slowly if you want noise.
-9. Adjust **Filter Cutoff** to hear the sound get darker or brighter.
-10. Press **Release** to let the sound fade.
-11. Press **Panic Stop** if anything behaves unexpectedly.
+5. Choose a **Noise Type** if you want to test noise.
+6. Press **Start Audio**.
+7. Press **Gate Note**.
+8. Adjust **VCO 1 Level** if the oscillator is too quiet.
+9. Raise **White NS Level** slowly if you want noise.
+10. Adjust **Filter Cutoff** to hear the sound get darker or brighter.
+11. Press **Release** to let the sound fade.
+12. Press **Panic Stop** if anything behaves unexpectedly.
 
 ## 5. How to stop the sound
 
@@ -103,7 +105,7 @@ Use **Panic Stop** when you want immediate silence.
 **Panic Stop** does four important things:
 
 - closes the note level immediately
-- silences the white noise level
+- silences the noise level
 - sets the output to silent
 - closes the browser audio context
 
@@ -153,18 +155,30 @@ It changes the shape of the pulse wave.
 
 If the waveform is Saw, Square, Triangle, or Sine, Pulse Width % should not be treated as active sound control.
 
-## 7. Testing white noise
+## 7. Testing noise
 
-White noise now works as a second source.
+Noise now works as a second source.
 
-Use **White NS Level** to bring it in.
+Use **Noise Type** to choose the noise colour.
+
+Current options:
+
+| Noise Type | What to expect |
+|---|---|
+| White | Bright, full-range noise. Strong for filter testing. |
+| Pink | Softer and darker than white noise. |
+| Brown | Deeper and darker than pink noise. |
+
+Use **White NS Level** to bring the selected noise in.
+
+The name still says **White NS Level** because it matches the visible faceplate label, but in the First Voice panel it controls the amount of whichever noise type is selected.
 
 Start with a low value. Noise can feel louder than an oscillator because it fills a wide frequency range.
 
-White noise follows the same path as VCO 1:
+All noise types follow the same path as VCO 1:
 
 ```text
-White Noise
+Selected Noise
   ↓
 Low-pass filter
   ↓
@@ -181,11 +195,11 @@ This means:
 - **Resonance** colours the filtered noise.
 - **Panic Stop** silences it.
 
-White noise is useful for testing the filter because it contains many frequencies at once.
+Noise is useful for testing the filter because it contains many frequencies at once.
 
 ## 8. Testing the filter
 
-Use Saw, Square, Pulse, or White Noise when testing the filter.
+Use Saw, Square, Pulse, White Noise, Pink Noise, or Brown Noise when testing the filter.
 
 These sources contain enough frequency material for the low-pass filter to remove.
 
@@ -195,7 +209,7 @@ Lower cutoff should make the sound darker.
 
 Higher cutoff should make the sound brighter.
 
-White noise should make this especially obvious.
+Noise should make this especially obvious.
 
 ### Resonance
 
@@ -223,6 +237,8 @@ To test the filter clearly, use:
 - Square
 - Pulse
 - White Noise
+- Pink Noise
+- Brown Noise
 
 ## 10. What is still visual-only
 
@@ -293,6 +309,7 @@ Waveform: Saw
 Coarse Freq: around 220 Hz
 Fine Freq: 0 cent
 VCO 1 Level: low to medium
+Noise Type: White
 White NS Level: 0 at first
 Filter Cutoff: middle
 Resonance: low to medium
@@ -308,11 +325,12 @@ Then test:
 3. Change **Waveform** to Square.
 4. Change **Waveform** to Pulse.
 5. Move **Pulse Width %** while Pulse is selected.
-6. Raise **White NS Level** slowly.
-7. Move **Filter Cutoff** while noise is audible.
-8. Try **Sine**, but expect subtler filter changes.
-9. Press **Release**.
-10. Press **Panic Stop**.
+6. Choose **Noise Type: White** and raise **White NS Level** slowly.
+7. Change **Noise Type** to Pink, then Brown.
+8. Move **Filter Cutoff** while noise is audible.
+9. Try **Sine**, but expect subtler filter changes.
+10. Press **Release**.
+11. Press **Panic Stop**.
 
 ## 13. Manual update rule
 
