@@ -87,3 +87,86 @@
     0 0 8px rgba(118, 178, 93, 0.38),
     0 0 1px rgba(255, 255, 255, 0.2);
 }
+
+/* =========================================================
+   Issue #16: spacing and alignment polish only.
+   CSS-only. Same module grid, same labels, same controls.
+   ========================================================= */
+
+.compact-source-module,
+.utility-module {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.compact-source-module .module-header,
+.utility-module .module-header {
+  margin-bottom: 12px;
+}
+
+.control {
+  gap: 7px;
+}
+
+.control-grid {
+  gap: 13px 10px;
+}
+
+.utility-module .control-grid {
+  gap: 14px 12px;
+}
+
+.utility-module .module-row {
+  gap: 10px;
+}
+
+.utility-module .module-divider {
+  margin: 14px 0;
+}
+
+.expander-grid .selector,
+.expander-grid .mini-display,
+.expander-grid .switch-control,
+.expander-grid .wave-box {
+  min-height: 38px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.lfo-source-grid {
+  gap: 11px 12px;
+}
+
+.lfo-shape-bank {
+  gap: 9px;
+}
+
+.adsr-knob-row {
+  gap: 11px;
+}
+
+.adsr-io-row {
+  gap: 9px;
+  margin-top: 13px;
+}
+
+.attenuator-grid {
+  gap: 16px;
+}
+
+.attenuator-channel {
+  gap: 8px;
+}
+
+.attenuator-io {
+  gap: 9px;
+}
+
+.ar-switch-row {
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.jack-stack {
+  gap: 17px;
+}
