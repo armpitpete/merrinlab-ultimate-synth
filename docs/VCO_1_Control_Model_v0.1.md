@@ -31,7 +31,7 @@ The faceplate exposes these VCO concepts:
 |---|---|---|
 | Coarse Freq | Main VCO 1 pitch in Hz over a safe test range. | Active |
 | Fine Freq | Fine detune in cents around the coarse pitch. | Active |
-| Waveform | Basic oscillator waveform choice: Saw, Square, Triangle, Pulse. | Active |
+| Waveform | Basic oscillator waveform choice: Saw, Square, Triangle, Sine, Pulse. | Active |
 | Pulse Width % | Changes duty/timbre only when the Pulse waveform is selected. | Active for Pulse only |
 | PWM | Not implemented yet. | Later |
 | SYNC | Not implemented yet. | Later |
@@ -40,13 +40,13 @@ The faceplate exposes these VCO concepts:
 
 ## Sine decision
 
-Sine is excluded from this VCO 1 pass.
+Sine is included in the active VCO 1 waveform list.
 
-Reason:
+Important limitation:
 
-A near-pure sine gives the low-pass filter almost no harmonic material to remove. That made the filter cutoff appear broken during testing. For this stage, the active VCO choices should demonstrate the filter and resonance behaviour clearly.
+A near-pure sine gives the low-pass filter almost no harmonic material to remove. Filter cutoff and resonance changes are therefore naturally subtler on sine than on saw, square, triangle, or pulse.
 
-If a sine-like output is needed later, it should be added deliberately and documented as a separate waveform decision, not slipped into the first VCO test model.
+Use saw, square, or pulse when testing whether the filter and resonance are working clearly.
 
 ## Current safety boundary
 
@@ -82,7 +82,7 @@ VCO 1 is now shaped like the MFOS-facing control model:
 - coarse pitch and fine pitch are separate
 - waveform choice is explicit
 - pulse width belongs to pulse behaviour only
-- sine is excluded from this pass because it obscures filter testing
+- sine is included but documented as a poor filter-test waveform
 - inactive VCO inputs are documented as later work
 
 That is enough before adding more sound sources.
