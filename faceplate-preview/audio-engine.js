@@ -13,6 +13,8 @@
     whiteNoiseLevel: 0,
     cutoff: 900,
     resonance: 0.7,
+    lfo1Rate: 0.8,
+    lfo1Mod: 0,
     attack: 0.03,
     release: 0.45,
     output: 0.08,
@@ -23,6 +25,8 @@
   let vcoGain = null;
   let noiseSource = null;
   let noiseGain = null;
+  let lfo1Oscillator = null;
+  let lfo1Gain = null;
   let filter = null;
   let mainVca = null;
   let masterGain = null;
@@ -37,6 +41,8 @@
     whiteNoiseLevel: [0, 0.35],
     cutoff: [120, 6500],
     resonance: [0.1, 12],
+    lfo1Rate: [0.05, 12],
+    lfo1Mod: [0, 1],
     attack: [0.005, 1.5],
     release: [0.02, 2.5],
     output: [0, 0.16],
@@ -52,6 +58,8 @@
     whiteNoiseLevel: "White NS Level",
     cutoff: "Filter Cutoff",
     resonance: "Resonance",
+    lfo1Rate: "LFO 1 Rate",
+    lfo1Mod: "LFO-1 Mod",
     attack: "Attack",
     release: "Release",
     output: "Output",
@@ -65,6 +73,8 @@
     whiteNoiseLevel: "",
     cutoff: "Hz",
     resonance: "Q",
+    lfo1Rate: "Hz",
+    lfo1Mod: "%",
     attack: "s",
     release: "s",
     output: "",
@@ -99,6 +109,26 @@
     const fine = clamp(state.fineCents, "fineCents");
     const frequency = coarse * Math.pow(2, fine / 1200);
     return Math.min(1200, Math.max(40, frequency));
+  }
+
+  function getSafeLfoDepth() {
+    const baseCutoff = clamp(state.cutoff, "cutoff");
+    const modAmount = clamp(state.lfo1Mod, "lfo1Mod");
+    const requestedDepth = modAmount * 1800;
+    const lowHeadroom = Math.max(0, baseCutoff - limits.cutoff[0]);
+    const highHeadroom = Math.max(0, limits.cutoff[1] - baseCutoff);
+    return Math.min(requestedDepth, lowHeadroom, highHeadroom);
+  }
+
+  function applyFilterCutoffAndLfo() {
+    if (!audioContext || !filter) return;
+
+    const now = audioContext.currentTime;
+    safeRamp(filter.frequency, clamp(state.cutoff, "cutoff"), now, 0.025);
+
+    if (lfo1Gain) {
+      safeRamp(lfo1Gain.gain, getSafeLfoDepth(), now, 0.04);
+    }
   }
 
   function createPulseWave(dutyPercent) {
@@ -237,6 +267,13 @@
     filter.frequency.value = state.cutoff;
     filter.Q.value = state.resonance;
 
+    lfo1Oscillator = audioContext.createOscillator();
+    lfo1Oscillator.type = "sine";
+    lfo1Oscillator.frequency.value = state.lfo1Rate;
+
+    lfo1Gain = audioContext.createGain();
+    lfo1Gain.gain.value = getSafeLfoDepth();
+
     mainVca = audioContext.createGain();
     mainVca.gain.value = 0;
 
@@ -256,6 +293,9 @@
     noiseSource.connect(noiseGain);
     noiseGain.connect(filter);
 
+    lfo1Oscillator.connect(lfo1Gain);
+    lfo1Gain.connect(filter.frequency);
+
     filter.connect(mainVca);
     mainVca.connect(masterGain);
     masterGain.connect(limiter);
@@ -263,6 +303,7 @@
 
     oscillator.start();
     noiseSource.start();
+    lfo1Oscillator.start();
     return true;
   }
 
@@ -274,7 +315,7 @@
     }
 
     document.body.classList.add("is-audio-started");
-    setStatus(`Audio ready · VCO 1 + ${state.noiseType} noise · press Gate Note`);
+    setStatus(`Audio ready · VCO 1 + ${state.noiseType} noise · LFO 1 filter mod available`);
     applyAllParameters();
   }
 
@@ -322,6 +363,11 @@
       noiseGain.gain.setValueAtTime(0, audioContext.currentTime);
     }
 
+    if (lfo1Gain && audioContext) {
+      lfo1Gain.gain.cancelScheduledValues(audioContext.currentTime);
+      lfo1Gain.gain.setValueAtTime(0, audioContext.currentTime);
+    }
+
     if (masterGain && audioContext) {
       masterGain.gain.cancelScheduledValues(audioContext.currentTime);
       masterGain.gain.setValueAtTime(0, audioContext.currentTime);
@@ -340,6 +386,12 @@
     }
 
     try {
+      if (lfo1Oscillator) lfo1Oscillator.stop();
+    } catch (_error) {
+      // LFO may already be stopped. Panic still succeeds.
+    }
+
+    try {
       if (audioContext && audioContext.state !== "closed") {
         await audioContext.close();
       }
@@ -352,6 +404,8 @@
     vcoGain = null;
     noiseSource = null;
     noiseGain = null;
+    lfo1Oscillator = null;
+    lfo1Gain = null;
     filter = null;
     mainVca = null;
     masterGain = null;
@@ -371,6 +425,8 @@
     applyParameter("whiteNoiseLevel");
     applyParameter("cutoff");
     applyParameter("resonance");
+    applyParameter("lfo1Rate");
+    applyParameter("lfo1Mod");
     applyParameter("output");
   }
 
@@ -399,12 +455,20 @@
       safeRamp(noiseGain.gain, clamp(state.whiteNoiseLevel, "whiteNoiseLevel"), now, 0.02);
     }
 
-    if (key === "cutoff" && filter) {
-      safeRamp(filter.frequency, clamp(state.cutoff, "cutoff"), now, 0.025);
+    if (key === "cutoff") {
+      applyFilterCutoffAndLfo();
     }
 
     if (key === "resonance" && filter) {
       safeRamp(filter.Q, clamp(state.resonance, "resonance"), now, 0.025);
+    }
+
+    if (key === "lfo1Rate" && lfo1Oscillator) {
+      safeRamp(lfo1Oscillator.frequency, clamp(state.lfo1Rate, "lfo1Rate"), now, 0.04);
+    }
+
+    if (key === "lfo1Mod") {
+      applyFilterCutoffAndLfo();
     }
 
     if (key === "output" && masterGain) {
@@ -421,6 +485,8 @@
     if (key === "coarseFreq" || key === "cutoff") return `${Math.round(value)} ${units[key]}`;
     if (key === "fineCents") return `${Number(value).toFixed(0)} ${units[key]}`;
     if (key === "pulseWidth") return `${Number(value).toFixed(0)} ${units[key]}`;
+    if (key === "lfo1Rate") return `${Number(value).toFixed(2)} ${units[key]}`;
+    if (key === "lfo1Mod") return `${Math.round(Number(value) * 100)} ${units[key]}`;
     if (key === "attack" || key === "release") return `${Number(value).toFixed(2)} ${units[key]}`;
     if (key === "resonance") return `${Number(value).toFixed(1)} ${units[key]}`;
     return Number(value).toFixed(2);
@@ -551,6 +617,7 @@
 
       body.is-audio-started .vco-bank .vco-module:first-child .status-light,
       body.is-audio-started .mixer-module .status-light,
+      body.is-audio-started .lfo1-module .status-light,
       body.is-audio-started .filter-lp-module .status-light,
       body.is-audio-started .main-vca-module .status-light,
       body.is-audio-started .output-module .status-light {
@@ -568,8 +635,8 @@
     panel.className = "audio-voice-panel";
     panel.setAttribute("aria-label", "First safe audible voice controls");
     panel.innerHTML = `
-      <h2>First Voice v0.4</h2>
-      <p data-audio-status>Stopped · VCO 1 + selectable noise · safe output</p>
+      <h2>First Voice v0.5</h2>
+      <p data-audio-status>Stopped · VCO 1 + noise + LFO 1 filter mod · safe output</p>
       <div class="audio-button-row">
         <button type="button" data-audio-action="start">Start Audio</button>
         <button type="button" data-audio-action="gate-on">Gate Note</button>
@@ -588,6 +655,8 @@
       createSlider("whiteNoiseLevel", 0, 0.35, 0.005),
       createSlider("cutoff", 120, 6500, 1),
       createSlider("resonance", 0.1, 12, 0.1),
+      createSlider("lfo1Rate", 0.05, 12, 0.01),
+      createSlider("lfo1Mod", 0, 1, 0.01),
       createSlider("attack", 0.005, 1.5, 0.005),
       createSlider("release", 0.02, 2.5, 0.01),
       createSlider("output", 0, 0.16, 0.005),
@@ -595,7 +664,7 @@
 
     const note = document.createElement("small");
     note.className = "audio-note";
-    note.textContent = "VCO 1 and selectable noise only. White NS Level controls all noise types. Noise follows the same filter, VCA, output, and Panic Stop safety path.";
+    note.textContent = "VCO 1, selectable noise, and LFO 1 filter modulation only. LFO-1 Mod defaults to 0 and moves the low-pass cutoff around the Filter Cutoff base value.";
     panel.append(note);
 
     document.head.append(style);
