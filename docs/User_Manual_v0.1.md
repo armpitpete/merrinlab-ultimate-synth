@@ -2,7 +2,7 @@
 
 **Project:** MerrinLab Ultimate Synth  
 **Manual status:** Living manual  
-**Current playable state:** First browser voice  
+**Current playable state:** First browser voice with VCO 1 and white noise  
 
 ## 1. What this is
 
@@ -17,7 +17,7 @@ It is not a VST. It is not a JUCE app. It is not a full MFOS hardware emulation.
 The current goal is simple:
 
 ```text
-Make one safe, shaped, filterable sound.
+Make one safe, shaped, filterable sound using VCO 1 and white noise.
 ```
 
 ## 2. What works now
@@ -25,10 +25,10 @@ Make one safe, shaped, filterable sound.
 The working part is the floating panel called:
 
 ```text
-First Voice v0.2
+First Voice v0.3
 ```
 
-This panel controls the first playable voice.
+This panel controls the current playable voice.
 
 Current working controls:
 
@@ -43,7 +43,8 @@ Current working controls:
 | Waveform | Chooses the active VCO 1 waveform. |
 | Pulse Width % | Changes Pulse waveform shape only. |
 | VCO 1 Level | Sets how much VCO 1 enters the signal path. |
-| Filter Cutoff | Changes the brightness of the sound. |
+| White NS Level | Sets how much white noise enters the signal path. |
+| Filter Cutoff | Changes the brightness of VCO 1 and noise. |
 | Resonance | Emphasises the sound around the filter cutoff point. |
 | Attack | Sets how quickly the note opens after Gate Note. |
 | Release | Sets how quickly the note fades after Release. |
@@ -54,14 +55,14 @@ Current working controls:
 The current audio path is:
 
 ```text
-VCO 1
-  ↓
-VCO 1 Level
-  ↓
+VCO 1 ─────────┐
+               ↓
+White Noise ─→ simple mixer stage
+               ↓
 Low-pass filter
-  ↓
+               ↓
 Main VCA
-  ↓
+               ↓
 Safe output
 ```
 
@@ -75,21 +76,23 @@ Simple envelope
 Main VCA
 ```
 
-Only VCO 1 makes sound.
+Only VCO 1 and white noise make sound.
 
 ## 4. How to make a sound safely
 
 Use this order:
 
 1. Open the live preview page.
-2. Find the floating **First Voice v0.2** panel.
+2. Find the floating **First Voice v0.3** panel.
 3. Keep **Output** low at first.
-4. Press **Start Audio**.
-5. Press **Gate Note**.
-6. Adjust **VCO 1 Level** if the sound is too quiet.
-7. Adjust **Filter Cutoff** to hear the sound get darker or brighter.
-8. Press **Release** to let the sound fade.
-9. Press **Panic Stop** if anything behaves unexpectedly.
+4. Keep **White NS Level** at 0 at first.
+5. Press **Start Audio**.
+6. Press **Gate Note**.
+7. Adjust **VCO 1 Level** if the oscillator is too quiet.
+8. Raise **White NS Level** slowly if you want noise.
+9. Adjust **Filter Cutoff** to hear the sound get darker or brighter.
+10. Press **Release** to let the sound fade.
+11. Press **Panic Stop** if anything behaves unexpectedly.
 
 ## 5. How to stop the sound
 
@@ -97,9 +100,10 @@ Use **Release** for normal note ending.
 
 Use **Panic Stop** when you want immediate silence.
 
-**Panic Stop** does three important things:
+**Panic Stop** does four important things:
 
 - closes the note level immediately
+- silences the white noise level
 - sets the output to silent
 - closes the browser audio context
 
@@ -149,11 +153,41 @@ It changes the shape of the pulse wave.
 
 If the waveform is Saw, Square, Triangle, or Sine, Pulse Width % should not be treated as active sound control.
 
-## 7. Testing the filter
+## 7. Testing white noise
 
-Use Saw, Square, or Pulse when testing the filter.
+White noise now works as a second source.
 
-These waveforms contain enough harmonic material for the low-pass filter to remove.
+Use **White NS Level** to bring it in.
+
+Start with a low value. Noise can feel louder than an oscillator because it fills a wide frequency range.
+
+White noise follows the same path as VCO 1:
+
+```text
+White Noise
+  ↓
+Low-pass filter
+  ↓
+Main VCA
+  ↓
+Safe output
+```
+
+This means:
+
+- **Gate Note** must be open before you hear it.
+- **Release** fades it out.
+- **Filter Cutoff** changes its brightness clearly.
+- **Resonance** colours the filtered noise.
+- **Panic Stop** silences it.
+
+White noise is useful for testing the filter because it contains many frequencies at once.
+
+## 8. Testing the filter
+
+Use Saw, Square, Pulse, or White Noise when testing the filter.
+
+These sources contain enough frequency material for the low-pass filter to remove.
 
 ### Filter Cutoff
 
@@ -161,13 +195,15 @@ Lower cutoff should make the sound darker.
 
 Higher cutoff should make the sound brighter.
 
+White noise should make this especially obvious.
+
 ### Resonance
 
 Resonance emphasises the area around the cutoff point.
 
 At this stage, resonance is capped for safety. It should colour the sound, but it should not run away or self-oscillate.
 
-## 8. Why sine behaves differently
+## 9. Why sine behaves differently
 
 Sine is included because it is a useful basic waveform.
 
@@ -186,8 +222,9 @@ To test the filter clearly, use:
 - Saw
 - Square
 - Pulse
+- White Noise
 
-## 9. What is still visual-only
+## 10. What is still visual-only
 
 Most of the large faceplate is still visual-only.
 
@@ -197,7 +234,6 @@ These are not active yet:
 - VCO 3
 - VCO 2 Level
 - VCO 3 Level
-- White NS Level
 - Ext. In Level
 - PWM
 - SYNC
@@ -228,12 +264,11 @@ These controls are visible because the faceplate is being built toward the large
 
 They should not be expected to affect sound yet.
 
-## 10. What not to expect yet
+## 11. What not to expect yet
 
 Do not expect:
 
 - full three-oscillator sound
-- white noise
 - external input
 - real patch cables
 - modulation routing
@@ -249,7 +284,7 @@ Do not expect:
 - VST plugin behaviour
 - exact MFOS hardware emulation
 
-## 11. Current safe test patch
+## 12. Current safe test patch
 
 Use this simple patch for testing:
 
@@ -258,6 +293,7 @@ Waveform: Saw
 Coarse Freq: around 220 Hz
 Fine Freq: 0 cent
 VCO 1 Level: low to medium
+White NS Level: 0 at first
 Filter Cutoff: middle
 Resonance: low to medium
 Attack: short
@@ -272,11 +308,13 @@ Then test:
 3. Change **Waveform** to Square.
 4. Change **Waveform** to Pulse.
 5. Move **Pulse Width %** while Pulse is selected.
-6. Try **Sine**, but expect subtler filter changes.
-7. Press **Release**.
-8. Press **Panic Stop**.
+6. Raise **White NS Level** slowly.
+7. Move **Filter Cutoff** while noise is audible.
+8. Try **Sine**, but expect subtler filter changes.
+9. Press **Release**.
+10. Press **Panic Stop**.
 
-## 12. Manual update rule
+## 13. Manual update rule
 
 This is a living manual.
 
@@ -285,7 +323,6 @@ Every time playable behaviour changes, update this manual.
 Examples:
 
 - If VCO 2 becomes active, add a VCO 2 section.
-- If noise becomes active, add a noise section.
 - If LFO 1 begins modulating the filter, add an LFO section.
 - If MIDI input is added, add a MIDI section.
 - If a visible control begins working, move it from visual-only to active.
