@@ -17,8 +17,13 @@
     lfo1Mod: 0,
     lfo2Rate: 1.2,
     lfo2Mod: 0,
+    envelopeMode: "ar",
     attack: 0.03,
     release: 0.45,
+    adsrAttack: 0.05,
+    adsrDecay: 0.25,
+    adsrSustain: 0.65,
+    adsrRelease: 0.5,
     output: 0.08,
   };
 
@@ -53,6 +58,10 @@
     lfo2Mod: [0, 1],
     attack: [0.005, 1.5],
     release: [0.02, 2.5],
+    adsrAttack: [0.005, 2],
+    adsrDecay: [0.005, 3],
+    adsrSustain: [0, 1],
+    adsrRelease: [0.02, 4],
     output: [0, 0.16],
   };
 
@@ -70,8 +79,13 @@
     lfo1Mod: "LFO-1 Mod",
     lfo2Rate: "LFO 2 Rate",
     lfo2Mod: "LFO-2 Mod",
-    attack: "Attack",
-    release: "Release",
+    envelopeMode: "Envelope Mode",
+    attack: "AR Attack",
+    release: "AR Release",
+    adsrAttack: "ADSR Attack",
+    adsrDecay: "ADSR Decay",
+    adsrSustain: "ADSR Sustain",
+    adsrRelease: "ADSR Release",
     output: "Output",
   };
 
@@ -89,6 +103,10 @@
     lfo2Mod: "%",
     attack: "s",
     release: "s",
+    adsrAttack: "s",
+    adsrDecay: "s",
+    adsrSustain: "%",
+    adsrRelease: "s",
     output: "",
   };
 
@@ -104,6 +122,11 @@
     ["white", "White"],
     ["pink", "Pink"],
     ["brown", "Brown"],
+  ];
+
+  const envelopeModes = [
+    ["ar", "AR"],
+    ["adsr", "ADSR"],
   ];
 
   function clamp(value, key) {
@@ -360,7 +383,7 @@
     }
 
     document.body.classList.add("is-audio-started");
-    setStatus(`Audio ready · VCO 1 + ${state.noiseType} noise · LFO 1/2 mod available`);
+    setStatus(`Audio ready · VCO 1 + ${state.noiseType} noise · AR/ADSR envelope available`);
     applyAllParameters();
   }
 
@@ -370,28 +393,41 @@
 
     const now = audioContext.currentTime;
     const target = 0.55;
-    const attack = clamp(state.attack, "attack");
 
     isGateOpen = true;
     document.body.classList.add("is-audio-gated");
     mainVca.gain.cancelScheduledValues(now);
     mainVca.gain.setValueAtTime(Math.max(0.0001, mainVca.gain.value), now);
+
+    if (state.envelopeMode === "adsr") {
+      const attack = clamp(state.adsrAttack, "adsrAttack");
+      const decay = clamp(state.adsrDecay, "adsrDecay");
+      const sustain = clamp(state.adsrSustain, "adsrSustain") * target;
+      mainVca.gain.linearRampToValueAtTime(target, now + attack);
+      mainVca.gain.linearRampToValueAtTime(sustain, now + attack + decay);
+      setStatus("Gate open · ADSR envelope active");
+      return;
+    }
+
+    const attack = clamp(state.attack, "attack");
     mainVca.gain.linearRampToValueAtTime(target, now + attack);
-    setStatus("Gate open · safe output active");
+    setStatus("Gate open · AR envelope active");
   }
 
   function gateOff() {
     if (!audioContext || !mainVca) return;
 
     const now = audioContext.currentTime;
-    const release = clamp(state.release, "release");
+    const release = state.envelopeMode === "adsr"
+      ? clamp(state.adsrRelease, "adsrRelease")
+      : clamp(state.release, "release");
 
     isGateOpen = false;
     document.body.classList.remove("is-audio-gated");
     mainVca.gain.cancelScheduledValues(now);
     mainVca.gain.setValueAtTime(Math.max(0.0001, mainVca.gain.value), now);
     mainVca.gain.linearRampToValueAtTime(0.0001, now + release);
-    setStatus("Gate released");
+    setStatus(state.envelopeMode === "adsr" ? "Gate released · ADSR release" : "Gate released · AR release");
   }
 
   async function panicStop() {
@@ -505,6 +541,7 @@
     applyParameter("lfo1Mod");
     applyParameter("lfo2Rate");
     applyParameter("lfo2Mod");
+    applyParameter("envelopeMode");
     applyParameter("output");
   }
 
@@ -557,6 +594,10 @@
       applyLfo2Tremolo();
     }
 
+    if (key === "envelopeMode") {
+      setStatus(`Envelope mode changed · ${state.envelopeMode.toUpperCase()}`);
+    }
+
     if (key === "output" && masterGain) {
       safeRamp(masterGain.gain, clamp(state.output, "output"), now, 0.02);
     }
@@ -572,8 +613,8 @@
     if (key === "fineCents") return `${Number(value).toFixed(0)} ${units[key]}`;
     if (key === "pulseWidth") return `${Number(value).toFixed(0)} ${units[key]}`;
     if (key === "lfo1Rate" || key === "lfo2Rate") return `${Number(value).toFixed(2)} ${units[key]}`;
-    if (key === "lfo1Mod" || key === "lfo2Mod") return `${Math.round(Number(value) * 100)} ${units[key]}`;
-    if (key === "attack" || key === "release") return `${Number(value).toFixed(2)} ${units[key]}`;
+    if (key === "lfo1Mod" || key === "lfo2Mod" || key === "adsrSustain") return `${Math.round(Number(value) * 100)} ${units[key]}`;
+    if (key === "attack" || key === "release" || key === "adsrAttack" || key === "adsrDecay" || key === "adsrRelease") return `${Number(value).toFixed(2)} ${units[key]}`;
     if (key === "resonance") return `${Number(value).toFixed(1)} ${units[key]}`;
     return Number(value).toFixed(2);
   }
@@ -722,8 +763,8 @@
     panel.className = "audio-voice-panel";
     panel.setAttribute("aria-label", "First safe audible voice controls");
     panel.innerHTML = `
-      <h2>First Voice v0.6</h2>
-      <p data-audio-status>Stopped · VCO 1 + noise + LFO 1/2 mod · safe output</p>
+      <h2>First Voice v0.7</h2>
+      <p data-audio-status>Stopped · VCO 1 + noise + LFO 1/2 + AR/ADSR · safe output</p>
       <div class="audio-button-row">
         <button type="button" data-audio-action="start">Start Audio</button>
         <button type="button" data-audio-action="gate-on">Gate Note</button>
@@ -746,14 +787,19 @@
       createSlider("lfo1Mod", 0, 1, 0.01),
       createSlider("lfo2Rate", 0.05, 12, 0.01),
       createSlider("lfo2Mod", 0, 1, 0.01),
+      createSelect("envelopeMode", envelopeModes),
       createSlider("attack", 0.005, 1.5, 0.005),
       createSlider("release", 0.02, 2.5, 0.01),
+      createSlider("adsrAttack", 0.005, 2, 0.005),
+      createSlider("adsrDecay", 0.005, 3, 0.005),
+      createSlider("adsrSustain", 0, 1, 0.01),
+      createSlider("adsrRelease", 0.02, 4, 0.01),
       createSlider("output", 0, 0.16, 0.005),
     );
 
     const note = document.createElement("small");
     note.className = "audio-note";
-    note.textContent = "VCO 1, selectable noise, LFO 1 filter movement, and LFO 2 tremolo only. LFO-2 Mod defaults to 0 and stays inside the safe VCA/output path.";
+    note.textContent = "Envelope Mode selects the simple AR path or ADSR. Gate Note starts the envelope, Release releases it, and LFO 2 tremolo remains after the envelope path.";
     panel.append(note);
 
     document.head.append(style);
