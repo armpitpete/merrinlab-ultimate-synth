@@ -552,7 +552,190 @@ It does not change pitch. It is not a sequencer. It is not patchable yet.
 | Repeat Gate Rate | Controls how often the envelope is triggered. |
 | Envelope Mode | Chooses whether Repeat Gate triggers AR or ADSR behaviour. |
 
-## 18. Why sine behaves differently
+## 18. First simple patch list
+
+These are not saved presets. They are manual settings for testing the current First Voice v1.2 panel by hand.
+
+Use them when you need a known starting point.
+
+### Patch 1 — Plain VCO 1 test
+
+**Purpose:** confirm the basic oscillator → filter → envelope → output path.
+
+Starting settings:
+
+```text
+VCO 1 Waveform: Saw
+VCO 1 Coarse Freq: 220 Hz
+VCO 1 Fine Freq: 0 cent
+VCO 1 Level: 0.30
+VCO 2 Level: 0
+VCO 3 Level: 0
+White NS Level: 0
+Filter Cutoff: 2500 Hz
+Resonance: low
+LFO-1 Mod: 0
+S&H Mod: 0
+S&H Pitch Mod: 0
+LFO-2 Mod: 0
+Envelope Mode: AR
+Repeat Gate: Off
+Output: low
+```
+
+Listen for a plain VCO 1 sound with no movement.
+
+Safety note: start here after any confusing patch.
+
+### Patch 2 — Three-oscillator unison
+
+**Purpose:** confirm VCO 1, VCO 2, and VCO 3 blend through the same sound path.
+
+Starting settings:
+
+```text
+VCO 1 Waveform: Saw
+VCO 1 Coarse Freq: 220 Hz
+VCO 1 Fine Freq: 0 cent
+VCO 1 Level: 0.25
+VCO 2 Waveform: Saw
+VCO 2 Coarse Freq: 220 Hz
+VCO 2 Fine Freq: -4 cent
+VCO 2 Level: 0.12
+VCO 3 Waveform: Saw
+VCO 3 Coarse Freq: 220 Hz
+VCO 3 Fine Freq: +4 cent
+VCO 3 Level: 0.12
+White NS Level: 0
+Filter Cutoff: 3000 Hz
+Resonance: low
+S&H Pitch Mod: 0
+Repeat Gate: Off
+Output: low
+```
+
+Listen for a thicker sound than VCO 1 alone.
+
+Safety note: keep levels low. Three oscillators get loud quickly.
+
+### Patch 3 — Slow filter movement
+
+**Purpose:** confirm LFO 1 is moving the low-pass filter cutoff smoothly.
+
+Starting settings:
+
+```text
+VCO 1 Waveform: Saw
+VCO 1 Coarse Freq: 220 Hz
+VCO 1 Level: 0.30
+VCO 2 Level: 0
+VCO 3 Level: 0
+White NS Level: 0
+Filter Cutoff: 1800 Hz
+Resonance: medium-low
+LFO 1 Rate: 0.30 Hz
+LFO-1 Mod: 0.35
+S&H Mod: 0
+S&H Pitch Mod: 0
+LFO-2 Mod: 0
+Repeat Gate: Off
+Output: low
+```
+
+Listen for the sound getting brighter and darker smoothly.
+
+Safety note: use Saw, Square, Pulse, or noise for clear filter testing. Sine will sound subtle.
+
+### Patch 4 — Stepped filter movement
+
+**Purpose:** confirm Sample & Hold can move the low-pass filter cutoff separately from pitch.
+
+Starting settings:
+
+```text
+VCO 1 Waveform: Saw
+VCO 1 Coarse Freq: 220 Hz
+VCO 1 Level: 0.25
+VCO 2 Level: 0
+VCO 3 Level: 0
+Noise Type: White
+White NS Level: 0.05
+Filter Cutoff: 1800 Hz
+Resonance: medium-low
+LFO-1 Mod: 0
+S&H Rate: 2.00 Hz
+S&H Mod: 0.35
+S&H Pitch Mod: 0
+LFO-2 Mod: 0
+Repeat Gate: Off
+Output: low
+```
+
+Listen for stepped random brightness changes.
+
+Safety note: keep **S&H Pitch Mod** at 0 so this patch tests filter movement only.
+
+### Patch 5 — Random VCO 1 pitch movement
+
+**Purpose:** confirm S&H Pitch Mod moves VCO 1 pitch only.
+
+Starting settings:
+
+```text
+VCO 1 Waveform: Square
+VCO 1 Coarse Freq: 220 Hz
+VCO 1 Fine Freq: 0 cent
+VCO 1 Level: 0.30
+VCO 2 Level: 0
+VCO 3 Level: 0
+White NS Level: 0
+Filter Cutoff: 3000 Hz
+Resonance: low
+S&H Rate: 1.50 Hz
+S&H Mod: 0
+S&H Pitch Mod: 0.20
+LFO-1 Mod: 0
+LFO-2 Mod: 0
+Repeat Gate: Off
+Output: low
+```
+
+Listen for stepped random VCO 1 pitch movement.
+
+Safety note: keep the amount low at first. High pitch movement becomes chaotic quickly.
+
+### Patch 6 — Repeat Gate pulse test
+
+**Purpose:** confirm Repeat Gate repeatedly triggers the current AR or ADSR envelope.
+
+Starting settings:
+
+```text
+VCO 1 Waveform: Pulse
+VCO 1 Coarse Freq: 220 Hz
+VCO 1 Pulse Width %: 50
+VCO 1 Level: 0.25
+VCO 2 Level: 0
+VCO 3 Level: 0
+White NS Level: 0
+Filter Cutoff: 2500 Hz
+Resonance: low
+Envelope Mode: AR
+AR Attack: short
+AR Release: medium
+Repeat Gate: On
+Repeat Gate Rate: 2.00 Hz
+S&H Mod: 0
+S&H Pitch Mod: 0
+LFO-2 Mod: 0
+Output: low
+```
+
+Listen for repeated envelope pulses.
+
+Safety note: turn **Repeat Gate** Off before changing many other controls.
+
+## 19. Why sine behaves differently
 
 Sine is included because it is a useful basic waveform.
 
@@ -577,7 +760,7 @@ To test the filter clearly, use:
 - Pink Noise
 - Brown Noise
 
-## 19. What is still visual-only
+## 20. What is still visual-only
 
 Most of the large faceplate is still visual-only.
 
@@ -606,7 +789,7 @@ These are not active yet:
 
 The **VCO 1**, **VCO 2**, **VCO 3**, **ADSR Env. Gen.**, **Sample & Hold**, and **Repeat Gate** concepts have now started to become active through the First Voice panel, but they are not yet patchable modules.
 
-## 20. What not to expect yet
+## 21. What not to expect yet
 
 Do not expect:
 
@@ -632,7 +815,7 @@ Do not expect:
 - VST plugin behaviour
 - exact MFOS hardware emulation
 
-## 21. Current safe test patch
+## 22. Current safe test patch
 
 Use this simple patch for testing:
 
@@ -691,7 +874,7 @@ Then test:
 15. Turn **Repeat Gate** Off.
 16. Press **Panic Stop**.
 
-## 22. Manual update rule
+## 23. Manual update rule
 
 This is a living manual.
 
