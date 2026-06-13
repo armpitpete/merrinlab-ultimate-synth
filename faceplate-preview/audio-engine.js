@@ -14,6 +14,11 @@
     vco2Waveform: "sawtooth",
     vco2PulseWidth: 50,
     vco2Level: 0,
+    vco3CoarseFreq: 220,
+    vco3FineCents: 0,
+    vco3Waveform: "sawtooth",
+    vco3PulseWidth: 50,
+    vco3Level: 0,
     noiseType: "white",
     whiteNoiseLevel: 0,
     cutoff: 900,
@@ -41,6 +46,8 @@
   let vcoGain = null;
   let oscillator2 = null;
   let vco2Gain = null;
+  let oscillator3 = null;
+  let vco3Gain = null;
   let noiseSource = null;
   let noiseGain = null;
   let lfo1Oscillator = null;
@@ -70,6 +77,10 @@
     vco2FineCents: [-100, 100],
     vco2PulseWidth: [10, 90],
     vco2Level: [0, 0.45],
+    vco3CoarseFreq: [55, 880],
+    vco3FineCents: [-100, 100],
+    vco3PulseWidth: [10, 90],
+    vco3Level: [0, 0.4],
     whiteNoiseLevel: [0, 0.35],
     cutoff: [120, 6500],
     resonance: [0.1, 12],
@@ -100,6 +111,11 @@
     vco2Waveform: "VCO 2 Waveform",
     vco2PulseWidth: "VCO 2 Pulse Width %",
     vco2Level: "VCO 2 Level",
+    vco3CoarseFreq: "VCO 3 Coarse Freq",
+    vco3FineCents: "VCO 3 Fine Freq",
+    vco3Waveform: "VCO 3 Waveform",
+    vco3PulseWidth: "VCO 3 Pulse Width %",
+    vco3Level: "VCO 3 Level",
     noiseType: "Noise Type",
     whiteNoiseLevel: "White NS Level",
     cutoff: "Filter Cutoff",
@@ -131,6 +147,10 @@
     vco2FineCents: "cent",
     vco2PulseWidth: "%",
     vco2Level: "",
+    vco3CoarseFreq: "Hz",
+    vco3FineCents: "cent",
+    vco3PulseWidth: "%",
+    vco3Level: "",
     whiteNoiseLevel: "",
     cutoff: "Hz",
     resonance: "Q",
@@ -197,6 +217,10 @@
 
   function getVco2Frequency() {
     return getOscillatorFrequency("vco2CoarseFreq", "vco2FineCents");
+  }
+
+  function getVco3Frequency() {
+    return getOscillatorFrequency("vco3CoarseFreq", "vco3FineCents");
   }
 
   function getFilterHeadroom() {
@@ -443,6 +467,10 @@
     applyOscillatorWaveform(oscillator2, state.vco2Waveform, state.vco2PulseWidth, "vco2PulseWidth");
   }
 
+  function applyVco3Waveform() {
+    applyOscillatorWaveform(oscillator3, state.vco3Waveform, state.vco3PulseWidth, "vco3PulseWidth");
+  }
+
   function createAudioGraph() {
     if (!AudioContextClass) {
       setStatus("Web Audio unavailable in this browser");
@@ -468,6 +496,13 @@
 
     vco2Gain = audioContext.createGain();
     vco2Gain.gain.value = state.vco2Level;
+
+    oscillator3 = audioContext.createOscillator();
+    oscillator3.frequency.value = getVco3Frequency();
+    applyVco3Waveform();
+
+    vco3Gain = audioContext.createGain();
+    vco3Gain.gain.value = state.vco3Level;
 
     noiseSource = createNoiseSource();
     noiseGain = audioContext.createGain();
@@ -520,6 +555,9 @@
     oscillator2.connect(vco2Gain);
     vco2Gain.connect(filter);
 
+    oscillator3.connect(vco3Gain);
+    vco3Gain.connect(filter);
+
     noiseSource.connect(noiseGain);
     noiseGain.connect(filter);
 
@@ -539,6 +577,7 @@
 
     oscillator.start();
     oscillator2.start();
+    oscillator3.start();
     noiseSource.start();
     lfo1Oscillator.start();
     sampleHoldSource.start();
@@ -556,7 +595,7 @@
     }
 
     document.body.classList.add("is-audio-started");
-    setStatus(`Audio ready · VCO 1 + VCO 2 + ${state.noiseType} noise · safe output`);
+    setStatus(`Audio ready · VCO 1 + VCO 2 + VCO 3 + ${state.noiseType} noise · safe output`);
     applyAllParameters();
   }
 
@@ -672,6 +711,12 @@
     }
 
     try {
+      if (oscillator3) oscillator3.stop();
+    } catch (_error) {
+      // Oscillator may already be stopped. Panic still succeeds.
+    }
+
+    try {
       if (noiseSource) noiseSource.stop();
     } catch (_error) {
       // Noise may already be stopped. Panic still succeeds.
@@ -714,6 +759,8 @@
     vcoGain = null;
     oscillator2 = null;
     vco2Gain = null;
+    oscillator3 = null;
+    vco3Gain = null;
     noiseSource = null;
     noiseGain = null;
     lfo1Oscillator = null;
@@ -744,6 +791,11 @@
     applyParameter("vco2Waveform");
     applyParameter("vco2PulseWidth");
     applyParameter("vco2Level");
+    applyParameter("vco3CoarseFreq");
+    applyParameter("vco3FineCents");
+    applyParameter("vco3Waveform");
+    applyParameter("vco3PulseWidth");
+    applyParameter("vco3Level");
     applyParameter("noiseType");
     applyParameter("whiteNoiseLevel");
     applyParameter("cutoff");
@@ -772,12 +824,20 @@
       safeRamp(oscillator2.frequency, getVco2Frequency(), now, 0.015);
     }
 
+    if ((key === "vco3CoarseFreq" || key === "vco3FineCents") && oscillator3) {
+      safeRamp(oscillator3.frequency, getVco3Frequency(), now, 0.015);
+    }
+
     if (key === "waveform" || key === "pulseWidth") {
       applyWaveform();
     }
 
     if (key === "vco2Waveform" || key === "vco2PulseWidth") {
       applyVco2Waveform();
+    }
+
+    if (key === "vco3Waveform" || key === "vco3PulseWidth") {
+      applyVco3Waveform();
     }
 
     if (key === "noiseType") {
@@ -791,6 +851,10 @@
 
     if (key === "vco2Level" && vco2Gain) {
       safeRamp(vco2Gain.gain, clamp(state.vco2Level, "vco2Level"), now, 0.02);
+    }
+
+    if (key === "vco3Level" && vco3Gain) {
+      safeRamp(vco3Gain.gain, clamp(state.vco3Level, "vco3Level"), now, 0.02);
     }
 
     if (key === "whiteNoiseLevel" && noiseGain) {
@@ -861,9 +925,9 @@
   }
 
   function formatValue(key, value) {
-    if (key === "coarseFreq" || key === "vco2CoarseFreq" || key === "cutoff") return `${Math.round(value)} ${units[key]}`;
-    if (key === "fineCents" || key === "vco2FineCents") return `${Number(value).toFixed(0)} ${units[key]}`;
-    if (key === "pulseWidth" || key === "vco2PulseWidth") return `${Number(value).toFixed(0)} ${units[key]}`;
+    if (key === "coarseFreq" || key === "vco2CoarseFreq" || key === "vco3CoarseFreq" || key === "cutoff") return `${Math.round(value)} ${units[key]}`;
+    if (key === "fineCents" || key === "vco2FineCents" || key === "vco3FineCents") return `${Number(value).toFixed(0)} ${units[key]}`;
+    if (key === "pulseWidth" || key === "vco2PulseWidth" || key === "vco3PulseWidth") return `${Number(value).toFixed(0)} ${units[key]}`;
     if (key === "lfo1Rate" || key === "lfo2Rate" || key === "sampleHoldRate" || key === "repeatGateRate") return `${Number(value).toFixed(2)} ${units[key]}`;
     if (key === "lfo1Mod" || key === "lfo2Mod" || key === "sampleHoldMod" || key === "adsrSustain") return `${Math.round(Number(value) * 100)} ${units[key]}`;
     if (key === "attack" || key === "release" || key === "adsrAttack" || key === "adsrDecay" || key === "adsrRelease") return `${Number(value).toFixed(2)} ${units[key]}`;
@@ -1035,6 +1099,7 @@
 
       body.is-audio-started .vco-bank .vco-module:first-child .status-light,
       body.is-audio-started .vco-bank .vco-module:nth-child(2) .status-light,
+      body.is-audio-started .vco-bank .vco-module:nth-child(3) .status-light,
       body.is-audio-started .mixer-module .status-light,
       body.is-audio-started .lfo1-module .status-light,
       body.is-audio-started .lfo2-module .status-light,
@@ -1057,8 +1122,8 @@
     panel.className = "audio-voice-panel";
     panel.setAttribute("aria-label", "First safe audible voice controls");
     panel.innerHTML = `
-      <h2>First Voice v1.0</h2>
-      <p data-audio-status>Stopped · VCO 1 + VCO 2 + noise + LFO/S&H + AR/ADSR + Repeat Gate · safe output</p>
+      <h2>First Voice v1.1</h2>
+      <p data-audio-status>Stopped · VCO 1 + VCO 2 + VCO 3 + noise + LFO/S&H + AR/ADSR + Repeat Gate · safe output</p>
     `;
 
     panel.append(
@@ -1081,6 +1146,14 @@
         createSelect("vco2Waveform", waveforms),
         createSlider("vco2PulseWidth", 10, 90, 1),
         createSlider("vco2Level", 0, 0.45, 0.01),
+      ),
+      createGroup(
+        "VCO 3",
+        createSlider("vco3CoarseFreq", 55, 880, 1),
+        createSlider("vco3FineCents", -100, 100, 1),
+        createSelect("vco3Waveform", waveforms),
+        createSlider("vco3PulseWidth", 10, 90, 1),
+        createSlider("vco3Level", 0, 0.4, 0.01),
       ),
       createGroup(
         "Noise",
@@ -1124,7 +1197,7 @@
 
     const note = document.createElement("small");
     note.className = "audio-note";
-    note.textContent = "Controls are grouped for testing only. VCO 2 still follows the same filter, envelope, modulation, Repeat Gate, and safe output path as VCO 1.";
+    note.textContent = "VCO 3 is a third oscillator source only. It follows the same filter, envelope, modulation, Repeat Gate, and safe output path as VCO 1 and VCO 2.";
     panel.append(note);
 
     document.head.append(style);
