@@ -20,6 +20,49 @@ The current goal is simple:
 Make one safe, shaped, filterable sound using VCO 1, VCO 2, selectable noise, filter movement, level movement, optional envelope shaping, simple stepped S&H filter movement, and Repeat Gate envelope triggering.
 ```
 
+## Quick-start test route
+
+Use this route when you only want to check that First Voice v1.0 still works.
+
+Start with everything quiet:
+
+```text
+Output: low
+VCO 2 Level: 0
+White NS Level: 0
+LFO-1 Mod: 0
+S&H Mod: 0
+LFO-2 Mod: 0
+Repeat Gate: Off
+Envelope Mode: AR
+```
+
+Then test in this order:
+
+1. Press **Start Audio**.
+2. Press **Gate Note**.
+3. Use **VCO 1 Level** and **VCO 1 Coarse Freq** to hear VCO 1.
+4. Raise **VCO 2 Level** slowly and tune VCO 2 near VCO 1.
+5. Raise **White NS Level** slowly if you want noise.
+6. Move **Filter Cutoff** down and up.
+7. Raise **Resonance** carefully.
+8. Raise **LFO-1 Mod** and adjust **LFO 1 Rate** for smooth filter movement.
+9. Raise **S&H Mod** and adjust **S&H Rate** for stepped random filter movement.
+10. Raise **LFO-2 Mod** and adjust **LFO 2 Rate** for tremolo.
+11. Change **Envelope Mode** to ADSR and test **ADSR Attack**, **ADSR Decay**, **ADSR Sustain**, and **ADSR Release**.
+12. Turn **Repeat Gate** On and adjust **Repeat Gate Rate**.
+13. Turn **Repeat Gate** Off.
+14. Press **Release**.
+15. Press **Panic Stop**.
+
+Good enough means:
+
+- VCO 1 makes sound.
+- VCO 2 can be added without a jump in volume.
+- Noise can be added slowly.
+- Filter, LFO 1, S&H, LFO 2, ADSR, and Repeat Gate all affect the current voice.
+- **Panic Stop** makes everything silent.
+
 ## 2. What works now
 
 The working part is the floating panel called:
