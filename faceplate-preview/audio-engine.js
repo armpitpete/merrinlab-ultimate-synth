@@ -66,6 +66,7 @@
     ["sawtooth", "Saw"],
     ["square", "Square"],
     ["triangle", "Triangle"],
+    ["sine", "Sine"],
     ["pulse", "Pulse"],
   ];
 
@@ -466,7 +467,7 @@
 
     const note = document.createElement("small");
     note.className = "audio-note";
-    note.textContent = "VCO 1 only. Sine is excluded from this pass because a near-pure sine gives the low-pass filter almost no harmonics to remove. PWM, SYNC, LOG-CV, and LIN-CV remain inactive.";
+    note.textContent = "VCO 1 only. Sine is restored, but filter cutoff and resonance are naturally subtler on a near-pure sine. PWM, SYNC, LOG-CV, and LIN-CV remain inactive.";
     panel.append(note);
 
     document.head.append(style);
