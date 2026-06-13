@@ -15,6 +15,8 @@
     resonance: 0.7,
     lfo1Rate: 0.8,
     lfo1Mod: 0,
+    sampleHoldRate: 2,
+    sampleHoldMod: 0,
     lfo2Rate: 1.2,
     lfo2Mod: 0,
     envelopeMode: "ar",
@@ -34,6 +36,9 @@
   let noiseGain = null;
   let lfo1Oscillator = null;
   let lfo1Gain = null;
+  let sampleHoldSource = null;
+  let sampleHoldTimerId = null;
+  let sampleHoldValue = 0;
   let lfo2Oscillator = null;
   let lfo2Gain = null;
   let lfo2Offset = null;
@@ -54,6 +59,8 @@
     resonance: [0.1, 12],
     lfo1Rate: [0.05, 12],
     lfo1Mod: [0, 1],
+    sampleHoldRate: [0.1, 20],
+    sampleHoldMod: [0, 1],
     lfo2Rate: [0.05, 12],
     lfo2Mod: [0, 1],
     attack: [0.005, 1.5],
@@ -77,6 +84,8 @@
     resonance: "Resonance",
     lfo1Rate: "LFO 1 Rate",
     lfo1Mod: "LFO-1 Mod",
+    sampleHoldRate: "S&H Rate",
+    sampleHoldMod: "S&H Mod",
     lfo2Rate: "LFO 2 Rate",
     lfo2Mod: "LFO-2 Mod",
     envelopeMode: "Envelope Mode",
@@ -99,6 +108,8 @@
     resonance: "Q",
     lfo1Rate: "Hz",
     lfo1Mod: "%",
+    sampleHoldRate: "Hz",
+    sampleHoldMod: "%",
     lfo2Rate: "Hz",
     lfo2Mod: "%",
     attack: "s",
@@ -146,20 +157,31 @@
     return Math.min(1200, Math.max(40, frequency));
   }
 
-  function getSafeLfoDepth() {
+  function getFilterHeadroom() {
     const baseCutoff = clamp(state.cutoff, "cutoff");
-    const modAmount = clamp(state.lfo1Mod, "lfo1Mod");
-    const requestedDepth = modAmount * 1800;
     const lowHeadroom = Math.max(0, baseCutoff - limits.cutoff[0]);
     const highHeadroom = Math.max(0, limits.cutoff[1] - baseCutoff);
-    return Math.min(requestedDepth, lowHeadroom, highHeadroom);
+    return Math.min(lowHeadroom, highHeadroom);
+  }
+
+  function getSafeLfoDepth() {
+    const modAmount = clamp(state.lfo1Mod, "lfo1Mod");
+    const requestedDepth = modAmount * 1800;
+    return Math.min(requestedDepth, getFilterHeadroom());
+  }
+
+  function getSafeSampleHoldDepth() {
+    const modAmount = clamp(state.sampleHoldMod, "sampleHoldMod");
+    const requestedDepth = modAmount * 1800;
+    const remainingHeadroom = Math.max(0, getFilterHeadroom() - getSafeLfoDepth());
+    return Math.min(requestedDepth, remainingHeadroom);
   }
 
   function getSafeTremoloDepth() {
     return clamp(state.lfo2Mod, "lfo2Mod");
   }
 
-  function applyFilterCutoffAndLfo() {
+  function applyFilterCutoffAndModulators() {
     if (!audioContext || !filter) return;
 
     const now = audioContext.currentTime;
@@ -168,6 +190,34 @@
     if (lfo1Gain) {
       safeRamp(lfo1Gain.gain, getSafeLfoDepth(), now, 0.04);
     }
+
+    if (sampleHoldSource) {
+      safeRamp(sampleHoldSource.offset, sampleHoldValue * getSafeSampleHoldDepth(), now, 0.02);
+    }
+  }
+
+  function updateSampleHoldValue() {
+    if (!audioContext || !sampleHoldSource) return;
+
+    sampleHoldValue = Math.random() * 2 - 1;
+    const now = audioContext.currentTime;
+    safeRamp(sampleHoldSource.offset, sampleHoldValue * getSafeSampleHoldDepth(), now, 0.01);
+  }
+
+  function stopSampleHoldTimer() {
+    if (sampleHoldTimerId !== null) {
+      window.clearInterval(sampleHoldTimerId);
+      sampleHoldTimerId = null;
+    }
+  }
+
+  function startSampleHoldTimer() {
+    stopSampleHoldTimer();
+
+    const rate = clamp(state.sampleHoldRate, "sampleHoldRate");
+    const intervalMs = Math.max(40, 1000 / rate);
+    updateSampleHoldValue();
+    sampleHoldTimerId = window.setInterval(updateSampleHoldValue, intervalMs);
   }
 
   function applyLfo2Tremolo() {
@@ -322,6 +372,9 @@
     lfo1Gain = audioContext.createGain();
     lfo1Gain.gain.value = getSafeLfoDepth();
 
+    sampleHoldSource = audioContext.createConstantSource();
+    sampleHoldSource.offset.value = 0;
+
     mainVca = audioContext.createGain();
     mainVca.gain.value = 0;
 
@@ -356,6 +409,7 @@
 
     lfo1Oscillator.connect(lfo1Gain);
     lfo1Gain.connect(filter.frequency);
+    sampleHoldSource.connect(filter.frequency);
 
     lfo2Oscillator.connect(lfo2Gain);
     lfo2Gain.connect(tremoloGain.gain);
@@ -370,6 +424,8 @@
     oscillator.start();
     noiseSource.start();
     lfo1Oscillator.start();
+    sampleHoldSource.start();
+    startSampleHoldTimer();
     lfo2Oscillator.start();
     lfo2Offset.start();
     return true;
@@ -383,7 +439,7 @@
     }
 
     document.body.classList.add("is-audio-started");
-    setStatus(`Audio ready · VCO 1 + ${state.noiseType} noise · AR/ADSR envelope available`);
+    setStatus(`Audio ready · VCO 1 + ${state.noiseType} noise · S&H filter mod available`);
     applyAllParameters();
   }
 
@@ -433,6 +489,7 @@
   async function panicStop() {
     document.body.classList.remove("is-audio-started", "is-audio-gated");
     isGateOpen = false;
+    stopSampleHoldTimer();
 
     if (mainVca && audioContext) {
       mainVca.gain.cancelScheduledValues(audioContext.currentTime);
@@ -447,6 +504,11 @@
     if (lfo1Gain && audioContext) {
       lfo1Gain.gain.cancelScheduledValues(audioContext.currentTime);
       lfo1Gain.gain.setValueAtTime(0, audioContext.currentTime);
+    }
+
+    if (sampleHoldSource && audioContext) {
+      sampleHoldSource.offset.cancelScheduledValues(audioContext.currentTime);
+      sampleHoldSource.offset.setValueAtTime(0, audioContext.currentTime);
     }
 
     if (lfo2Gain && audioContext) {
@@ -488,6 +550,12 @@
     }
 
     try {
+      if (sampleHoldSource) sampleHoldSource.stop();
+    } catch (_error) {
+      // S&H source may already be stopped. Panic still succeeds.
+    }
+
+    try {
       if (lfo2Oscillator) lfo2Oscillator.stop();
     } catch (_error) {
       // LFO may already be stopped. Panic still succeeds.
@@ -514,6 +582,8 @@
     noiseGain = null;
     lfo1Oscillator = null;
     lfo1Gain = null;
+    sampleHoldSource = null;
+    sampleHoldValue = 0;
     lfo2Oscillator = null;
     lfo2Gain = null;
     lfo2Offset = null;
@@ -539,6 +609,8 @@
     applyParameter("resonance");
     applyParameter("lfo1Rate");
     applyParameter("lfo1Mod");
+    applyParameter("sampleHoldRate");
+    applyParameter("sampleHoldMod");
     applyParameter("lfo2Rate");
     applyParameter("lfo2Mod");
     applyParameter("envelopeMode");
@@ -571,7 +643,7 @@
     }
 
     if (key === "cutoff") {
-      applyFilterCutoffAndLfo();
+      applyFilterCutoffAndModulators();
     }
 
     if (key === "resonance" && filter) {
@@ -583,7 +655,15 @@
     }
 
     if (key === "lfo1Mod") {
-      applyFilterCutoffAndLfo();
+      applyFilterCutoffAndModulators();
+    }
+
+    if (key === "sampleHoldRate") {
+      startSampleHoldTimer();
+    }
+
+    if (key === "sampleHoldMod") {
+      applyFilterCutoffAndModulators();
     }
 
     if (key === "lfo2Rate" && lfo2Oscillator) {
@@ -612,8 +692,8 @@
     if (key === "coarseFreq" || key === "cutoff") return `${Math.round(value)} ${units[key]}`;
     if (key === "fineCents") return `${Number(value).toFixed(0)} ${units[key]}`;
     if (key === "pulseWidth") return `${Number(value).toFixed(0)} ${units[key]}`;
-    if (key === "lfo1Rate" || key === "lfo2Rate") return `${Number(value).toFixed(2)} ${units[key]}`;
-    if (key === "lfo1Mod" || key === "lfo2Mod" || key === "adsrSustain") return `${Math.round(Number(value) * 100)} ${units[key]}`;
+    if (key === "lfo1Rate" || key === "lfo2Rate" || key === "sampleHoldRate") return `${Number(value).toFixed(2)} ${units[key]}`;
+    if (key === "lfo1Mod" || key === "lfo2Mod" || key === "sampleHoldMod" || key === "adsrSustain") return `${Math.round(Number(value) * 100)} ${units[key]}`;
     if (key === "attack" || key === "release" || key === "adsrAttack" || key === "adsrDecay" || key === "adsrRelease") return `${Number(value).toFixed(2)} ${units[key]}`;
     if (key === "resonance") return `${Number(value).toFixed(1)} ${units[key]}`;
     return Number(value).toFixed(2);
@@ -746,6 +826,7 @@
       body.is-audio-started .mixer-module .status-light,
       body.is-audio-started .lfo1-module .status-light,
       body.is-audio-started .lfo2-module .status-light,
+      body.is-audio-started .sample-hold-module .status-light,
       body.is-audio-started .filter-lp-module .status-light,
       body.is-audio-started .main-vca-module .status-light,
       body.is-audio-started .output-module .status-light {
@@ -763,8 +844,8 @@
     panel.className = "audio-voice-panel";
     panel.setAttribute("aria-label", "First safe audible voice controls");
     panel.innerHTML = `
-      <h2>First Voice v0.7</h2>
-      <p data-audio-status>Stopped · VCO 1 + noise + LFO 1/2 + AR/ADSR · safe output</p>
+      <h2>First Voice v0.8</h2>
+      <p data-audio-status>Stopped · VCO 1 + noise + LFO/S&H + AR/ADSR · safe output</p>
       <div class="audio-button-row">
         <button type="button" data-audio-action="start">Start Audio</button>
         <button type="button" data-audio-action="gate-on">Gate Note</button>
@@ -785,6 +866,8 @@
       createSlider("resonance", 0.1, 12, 0.1),
       createSlider("lfo1Rate", 0.05, 12, 0.01),
       createSlider("lfo1Mod", 0, 1, 0.01),
+      createSlider("sampleHoldRate", 0.1, 20, 0.1),
+      createSlider("sampleHoldMod", 0, 1, 0.01),
       createSlider("lfo2Rate", 0.05, 12, 0.01),
       createSlider("lfo2Mod", 0, 1, 0.01),
       createSelect("envelopeMode", envelopeModes),
@@ -799,7 +882,7 @@
 
     const note = document.createElement("small");
     note.className = "audio-note";
-    note.textContent = "Envelope Mode selects the simple AR path or ADSR. Gate Note starts the envelope, Release releases it, and LFO 2 tremolo remains after the envelope path.";
+    note.textContent = "S&H now adds stepped random low-pass filter movement only. It does not affect pitch and is not patchable yet.";
     panel.append(note);
 
     document.head.append(style);
