@@ -1,0 +1,18 @@
+.expander-grid {
+  display: grid;
+  grid-template-columns: 1.45fr 1fr 1.1fr 1fr 1fr 1fr;
+  grid-template-areas:
+    "svcf mixer multiplier inverter distributor buffer"
+    "follower follower follower outputs outputs outputs";
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.state-variable-vcf-module { grid-area: svcf; }
+.expander-signal-mixer-module { grid-area: mixer; }
+.analog-multiplier-module { grid-area: multiplier; }
+.cv-inverter-module { grid-area: inverter; }
+.cv-distributor-module { grid-area: distributor; }
+.ext-signal-buffer-module { grid-area: buffer; }
+.envelope-follower-module { grid-area: follower; }
+.buffered-outputs-module { grid-area: outputs; }
