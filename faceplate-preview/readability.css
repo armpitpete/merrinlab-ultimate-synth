@@ -1,0 +1,89 @@
+/* =========================================================
+   Issue #15: readability polish only.
+   No module moves, label changes, controls, behaviour,
+   audio, JUCE, or VST work.
+   ========================================================= */
+
+:root {
+  --text: #f1e7d9;
+  --muted: #cdbda7;
+  --line: #665747;
+}
+
+.brand-subtitle,
+.top-label {
+  color: #d6c8b5;
+}
+
+.module-header h2 {
+  color: #f3e8da;
+  font-weight: 800;
+  letter-spacing: 0.105em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+.vco-bank .module-header h2,
+.mixer-module .module-header h2,
+.filter-lp-module .module-header h2,
+.main-vca-module .module-header h2,
+.output-module .module-header h2 {
+  color: #fff0df;
+}
+
+.expander-grid .module-header h2,
+.aux-vca-module .module-header h2 {
+  color: #e6d9c8;
+  font-weight: 800;
+  letter-spacing: 0.095em;
+}
+
+.control-label,
+.compact-source-module .control-label,
+.utility-module .control-label {
+  color: #efe3d3;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+
+.vco-module .control-label,
+.lowpass-strip .control-label,
+.vca-strip .control-label,
+.vertical-control .control-label,
+.mixer-control .control-label,
+.ar-main-control .control-label,
+.ar-jack-control .control-label,
+.vco-jack-grid .control-label,
+.mixer-noise-outputs .control-label {
+  color: #f5eadb;
+  font-weight: 750;
+}
+
+.selector,
+.mini-display,
+.switch-control,
+.display-box,
+.menu-button,
+.wave-box {
+  color: #f3e8da;
+  font-weight: 750;
+  border-color: #2a231d;
+}
+
+.expander-grid .selector,
+.expander-grid .mini-display,
+.expander-grid .switch-control,
+.expander-grid .wave-box {
+  color: #e8dac8;
+  border-color: #332a22;
+}
+
+.module-divider {
+  opacity: 0.64;
+}
+
+.status-light {
+  box-shadow:
+    0 0 8px rgba(118, 178, 93, 0.38),
+    0 0 1px rgba(255, 255, 255, 0.2);
+}
