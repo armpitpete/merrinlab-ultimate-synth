@@ -2,7 +2,7 @@
 
 **Project:** MerrinLab Ultimate Synth  
 **Manual status:** Living manual  
-**Current playable state:** First browser voice with VCO 1, VCO 2, VCO 3, selectable noise, LFO 1 filter modulation, S&H filter modulation, LFO 2 VCA modulation, optional ADSR envelope mode, and Repeat Gate triggering  
+**Current playable state:** First browser voice with VCO 1, VCO 2, VCO 3, selectable noise, LFO 1 filter modulation, S&H filter modulation, optional S&H pitch modulation to VCO 1, LFO 2 VCA modulation, optional ADSR envelope mode, and Repeat Gate triggering  
 
 ## 1. What this is
 
@@ -17,12 +17,12 @@ It is not a VST. It is not a JUCE app. It is not a full MFOS hardware emulation.
 The current goal is simple:
 
 ```text
-Make one safe, shaped, filterable sound using VCO 1, VCO 2, VCO 3, selectable noise, filter movement, level movement, optional envelope shaping, simple stepped S&H filter movement, and Repeat Gate envelope triggering.
+Make one safe, shaped, filterable sound using VCO 1, VCO 2, VCO 3, selectable noise, filter movement, optional VCO 1 pitch movement, level movement, optional envelope shaping, simple stepped S&H filter movement, and Repeat Gate envelope triggering.
 ```
 
 ## Quick-start test route
 
-Use this route when you only want to check that First Voice v1.1 still works.
+Use this route when you only want to check that First Voice v1.2 still works.
 
 Start with everything quiet:
 
@@ -33,6 +33,7 @@ VCO 3 Level: 0
 White NS Level: 0
 LFO-1 Mod: 0
 S&H Mod: 0
+S&H Pitch Mod: 0
 LFO-2 Mod: 0
 Repeat Gate: Off
 Envelope Mode: AR
@@ -50,12 +51,13 @@ Then test in this order:
 8. Raise **Resonance** carefully.
 9. Raise **LFO-1 Mod** and adjust **LFO 1 Rate** for smooth filter movement.
 10. Raise **S&H Mod** and adjust **S&H Rate** for stepped random filter movement.
-11. Raise **LFO-2 Mod** and adjust **LFO 2 Rate** for tremolo.
-12. Change **Envelope Mode** to ADSR and test **ADSR Attack**, **ADSR Decay**, **ADSR Sustain**, and **ADSR Release**.
-13. Turn **Repeat Gate** On and adjust **Repeat Gate Rate**.
-14. Turn **Repeat Gate** Off.
-15. Press **Release**.
-16. Press **Panic Stop**.
+11. Raise **S&H Pitch Mod** slowly if you want stepped random VCO 1 pitch movement.
+12. Raise **LFO-2 Mod** and adjust **LFO 2 Rate** for tremolo.
+13. Change **Envelope Mode** to ADSR and test **ADSR Attack**, **ADSR Decay**, **ADSR Sustain**, and **ADSR Release**.
+14. Turn **Repeat Gate** On and adjust **Repeat Gate Rate**.
+15. Turn **Repeat Gate** Off.
+16. Press **Release**.
+17. Press **Panic Stop**.
 
 Good enough means:
 
@@ -63,7 +65,7 @@ Good enough means:
 - VCO 2 can be added without a jump in volume.
 - VCO 3 can be added without a jump in volume.
 - Noise can be added slowly.
-- Filter, LFO 1, S&H, LFO 2, ADSR, and Repeat Gate all affect the current voice.
+- Filter, LFO 1, S&H filter modulation, S&H Pitch Mod, LFO 2, ADSR, and Repeat Gate all affect the current voice.
 - **Panic Stop** makes everything silent.
 
 ## 2. What works now
@@ -71,7 +73,7 @@ Good enough means:
 The working part is the floating panel called:
 
 ```text
-First Voice v1.1
+First Voice v1.2
 ```
 
 This panel controls the current playable voice.
@@ -105,8 +107,9 @@ Current working controls:
 | Resonance | Emphasises the sound around the filter cutoff point. |
 | LFO 1 Rate | Sets the speed of the filter cutoff movement. |
 | LFO-1 Mod | Sets how much LFO 1 moves the filter cutoff. |
-| S&H Rate | Sets how often the stepped random filter value changes. |
+| S&H Rate | Sets how often the stepped random value changes. |
 | S&H Mod | Sets how much S&H moves the filter cutoff. |
+| S&H Pitch Mod | Sets how much S&H moves VCO 1 pitch only. |
 | LFO 2 Rate | Sets the speed of the VCA level movement. |
 | LFO-2 Mod | Sets how much LFO 2 moves the Main VCA level. |
 | Envelope Mode | Chooses simple AR or ADSR envelope behaviour. |
@@ -159,6 +162,14 @@ Low-pass filter cutoff
 ```
 
 ```text
+Sample & Hold
+  ↓
+S&H Pitch Mod amount
+  ↓
+VCO 1 pitch only
+```
+
+```text
 LFO 2
   ↓
 LFO-2 Mod amount
@@ -178,38 +189,40 @@ Envelope Mode: AR or ADSR
 Main VCA
 ```
 
-Only VCO 1, VCO 2, VCO 3, the selected noise source, LFO 1 filter modulation, S&H filter modulation, LFO 2 VCA modulation, the selected envelope mode, and Repeat Gate triggering are active.
+Only VCO 1, VCO 2, VCO 3, the selected noise source, LFO 1 filter modulation, S&H filter modulation, S&H pitch modulation to VCO 1, LFO 2 VCA modulation, the selected envelope mode, and Repeat Gate triggering are active.
 
 ## 4. How to make a sound safely
 
 Use this order:
 
 1. Open the live preview page.
-2. Find the floating **First Voice v1.1** panel.
+2. Find the floating **First Voice v1.2** panel.
 3. Keep **Output** low at first.
 4. Keep **VCO 2 Level** at 0 at first.
 5. Keep **VCO 3 Level** at 0 at first.
 6. Keep **White NS Level** at 0 at first.
 7. Keep **LFO-1 Mod** at 0 at first.
 8. Keep **S&H Mod** at 0 at first.
-9. Keep **LFO-2 Mod** at 0 at first.
-10. Keep **Repeat Gate** Off at first.
-11. Leave **Envelope Mode** on AR at first.
-12. Press **Start Audio**.
-13. Press **Gate Note**.
-14. Adjust **VCO 1 Level** if the oscillator is too quiet.
-15. Raise **VCO 2 Level** slowly if you want a second oscillator.
-16. Raise **VCO 3 Level** slowly if you want a third oscillator.
-17. Raise **White NS Level** slowly if you want noise.
-18. Adjust **Filter Cutoff** to set the base brightness.
-19. Raise **LFO-1 Mod** slowly if you want smooth filter movement.
-20. Raise **S&H Mod** slowly if you want stepped random filter movement.
-21. Raise **LFO-2 Mod** slowly if you want tremolo.
-22. Change **Envelope Mode** to ADSR only after the basic sound works.
-23. Turn **Repeat Gate** On only after audio is already started.
-24. Adjust **Repeat Gate Rate** slowly.
-25. Press **Release** to let the selected envelope fade, or turn **Repeat Gate** Off.
-26. Press **Panic Stop** if anything behaves unexpectedly.
+9. Keep **S&H Pitch Mod** at 0 at first.
+10. Keep **LFO-2 Mod** at 0 at first.
+11. Keep **Repeat Gate** Off at first.
+12. Leave **Envelope Mode** on AR at first.
+13. Press **Start Audio**.
+14. Press **Gate Note**.
+15. Adjust **VCO 1 Level** if the oscillator is too quiet.
+16. Raise **VCO 2 Level** slowly if you want a second oscillator.
+17. Raise **VCO 3 Level** slowly if you want a third oscillator.
+18. Raise **White NS Level** slowly if you want noise.
+19. Adjust **Filter Cutoff** to set the base brightness.
+20. Raise **LFO-1 Mod** slowly if you want smooth filter movement.
+21. Raise **S&H Mod** slowly if you want stepped random filter movement.
+22. Raise **S&H Pitch Mod** slowly if you want stepped random VCO 1 pitch movement.
+23. Raise **LFO-2 Mod** slowly if you want tremolo.
+24. Change **Envelope Mode** to ADSR only after the basic sound works.
+25. Turn **Repeat Gate** On only after audio is already started.
+26. Adjust **Repeat Gate Rate** slowly.
+27. Press **Release** to let the selected envelope fade, or turn **Repeat Gate** Off.
+28. Press **Panic Stop** if anything behaves unexpectedly.
 
 ## 5. How to stop the sound
 
@@ -228,6 +241,7 @@ Use **Panic Stop** when you want immediate silence.
 - silences the noise level
 - stops LFO 1 filter movement
 - stops S&H filter movement
+- stops S&H pitch movement
 - stops LFO 2 level movement
 - stops Repeat Gate triggering
 - clears the envelope/VCA path
@@ -466,15 +480,36 @@ LFO 1 moves the low-pass filter cutoff smoothly.
 
 Sample & Hold moves the low-pass filter cutoff in stepped random changes.
 
-It does not affect pitch yet. It is not patchable yet.
+It does not affect pitch unless **S&H Pitch Mod** is raised above 0. It is not patchable yet.
 
 | Control | What it does |
 |---|---|
 | S&H Rate | Controls how often the random value changes. |
 | S&H Mod | Controls how much the random value moves the filter cutoff. |
+| S&H Pitch Mod | Controls how much the same random value moves VCO 1 pitch only. |
 | Filter Cutoff | Sets the base/centre cutoff. |
 
-## 14. Testing LFO 2 VCA modulation
+## 14. Testing S&H Pitch Mod
+
+**S&H Pitch Mod** is optional and starts at 0.
+
+It uses the existing Sample & Hold random value and applies it to **VCO 1 pitch only**.
+
+It does not affect VCO 2. It does not affect VCO 3. It is not quantised. It does not choose musical scales. It is not full patch routing.
+
+Good test:
+
+1. Start with **S&H Pitch Mod** at 0.
+2. Use one clear VCO 1 sound first.
+3. Keep **VCO 2 Level**, **VCO 3 Level**, and **White NS Level** low or off.
+4. Set **S&H Rate** slow to medium.
+5. Raise **S&H Pitch Mod** slowly.
+6. Listen for stepped random pitch movement on VCO 1.
+7. Raise **S&H Mod** separately if you also want stepped random filter movement.
+
+Keep the amount low at first. High pitch movement can sound chaotic quickly.
+
+## 15. Testing LFO 2 VCA modulation
 
 LFO 2 moves the Main VCA level.
 
@@ -486,7 +521,7 @@ This is tremolo: the sound gets louder and quieter automatically.
 | LFO-2 Mod | Controls how deep the level movement is. |
 | Gate Note / Release | Still controls the overall note shape. |
 
-## 15. Testing Envelope Mode
+## 16. Testing Envelope Mode
 
 **Envelope Mode** chooses how **Gate Note**, **Release**, and **Repeat Gate** shape the Main VCA.
 
@@ -505,7 +540,7 @@ In ADSR mode:
 4. The sound stays at **ADSR Sustain** while the gate is open.
 5. **Release** or the Repeat Gate release phase fades the sound using **ADSR Release**.
 
-## 16. Testing Repeat Gate
+## 17. Testing Repeat Gate
 
 Repeat Gate repeatedly triggers the current envelope.
 
@@ -517,7 +552,7 @@ It does not change pitch. It is not a sequencer. It is not patchable yet.
 | Repeat Gate Rate | Controls how often the envelope is triggered. |
 | Envelope Mode | Chooses whether Repeat Gate triggers AR or ADSR behaviour. |
 
-## 17. Why sine behaves differently
+## 18. Why sine behaves differently
 
 Sine is included because it is a useful basic waveform.
 
@@ -542,7 +577,7 @@ To test the filter clearly, use:
 - Pink Noise
 - Brown Noise
 
-## 18. What is still visual-only
+## 19. What is still visual-only
 
 Most of the large faceplate is still visual-only.
 
@@ -571,13 +606,15 @@ These are not active yet:
 
 The **VCO 1**, **VCO 2**, **VCO 3**, **ADSR Env. Gen.**, **Sample & Hold**, and **Repeat Gate** concepts have now started to become active through the First Voice panel, but they are not yet patchable modules.
 
-## 19. What not to expect yet
+## 20. What not to expect yet
 
 Do not expect:
 
 - VCO sync
 - PWM modulation
-- pitch randomisation
+- pitch S&H on VCO 2 or VCO 3
+- quantised pitch
+- scale selection
 - external input
 - real patch cables
 - full modulation routing
@@ -595,7 +632,7 @@ Do not expect:
 - VST plugin behaviour
 - exact MFOS hardware emulation
 
-## 20. Current safe test patch
+## 21. Current safe test patch
 
 Use this simple patch for testing:
 
@@ -620,6 +657,7 @@ LFO 1 Rate: slow
 LFO-1 Mod: 0 at first
 S&H Rate: slow to medium
 S&H Mod: 0 at first
+S&H Pitch Mod: 0 at first
 LFO 2 Rate: slow
 LFO-2 Mod: 0 at first
 Envelope Mode: AR first, then ADSR
@@ -642,17 +680,18 @@ Then test:
 4. Raise **VCO 3 Level** slowly.
 5. Change **VCO 3 Coarse Freq** and **VCO 3 Fine Freq**.
 6. Change **VCO 3 Waveform**.
-7. Press **Release**.
-8. Turn **Repeat Gate** On.
-9. Confirm Repeat Gate triggers all active oscillators through the selected envelope.
-10. Raise **White NS Level** slowly.
-11. Raise **S&H Mod** slowly.
-12. Raise **LFO-1 Mod** slowly and check it still works with all active oscillators.
-13. Raise **LFO-2 Mod** slowly and confirm tremolo still happens after the envelope.
-14. Turn **Repeat Gate** Off.
-15. Press **Panic Stop**.
+7. Raise **S&H Pitch Mod** slowly and confirm it affects VCO 1 pitch only.
+8. Press **Release**.
+9. Turn **Repeat Gate** On.
+10. Confirm Repeat Gate triggers all active oscillators through the selected envelope.
+11. Raise **White NS Level** slowly.
+12. Raise **S&H Mod** slowly.
+13. Raise **LFO-1 Mod** slowly and check it still works with all active oscillators.
+14. Raise **LFO-2 Mod** slowly and confirm tremolo still happens after the envelope.
+15. Turn **Repeat Gate** Off.
+16. Press **Panic Stop**.
 
-## 21. Manual update rule
+## 22. Manual update rule
 
 This is a living manual.
 
