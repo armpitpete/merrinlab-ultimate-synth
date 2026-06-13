@@ -15,6 +15,8 @@
     resonance: 0.7,
     lfo1Rate: 0.8,
     lfo1Mod: 0,
+    lfo2Rate: 1.2,
+    lfo2Mod: 0,
     attack: 0.03,
     release: 0.45,
     output: 0.08,
@@ -27,8 +29,12 @@
   let noiseGain = null;
   let lfo1Oscillator = null;
   let lfo1Gain = null;
+  let lfo2Oscillator = null;
+  let lfo2Gain = null;
+  let lfo2Offset = null;
   let filter = null;
   let mainVca = null;
+  let tremoloGain = null;
   let masterGain = null;
   let limiter = null;
   let isGateOpen = false;
@@ -43,6 +49,8 @@
     resonance: [0.1, 12],
     lfo1Rate: [0.05, 12],
     lfo1Mod: [0, 1],
+    lfo2Rate: [0.05, 12],
+    lfo2Mod: [0, 1],
     attack: [0.005, 1.5],
     release: [0.02, 2.5],
     output: [0, 0.16],
@@ -60,6 +68,8 @@
     resonance: "Resonance",
     lfo1Rate: "LFO 1 Rate",
     lfo1Mod: "LFO-1 Mod",
+    lfo2Rate: "LFO 2 Rate",
+    lfo2Mod: "LFO-2 Mod",
     attack: "Attack",
     release: "Release",
     output: "Output",
@@ -75,6 +85,8 @@
     resonance: "Q",
     lfo1Rate: "Hz",
     lfo1Mod: "%",
+    lfo2Rate: "Hz",
+    lfo2Mod: "%",
     attack: "s",
     release: "s",
     output: "",
@@ -120,6 +132,10 @@
     return Math.min(requestedDepth, lowHeadroom, highHeadroom);
   }
 
+  function getSafeTremoloDepth() {
+    return clamp(state.lfo2Mod, "lfo2Mod");
+  }
+
   function applyFilterCutoffAndLfo() {
     if (!audioContext || !filter) return;
 
@@ -129,6 +145,15 @@
     if (lfo1Gain) {
       safeRamp(lfo1Gain.gain, getSafeLfoDepth(), now, 0.04);
     }
+  }
+
+  function applyLfo2Tremolo() {
+    if (!audioContext || !lfo2Gain || !lfo2Offset) return;
+
+    const now = audioContext.currentTime;
+    const depth = getSafeTremoloDepth();
+    safeRamp(lfo2Gain.gain, depth / 2, now, 0.04);
+    safeRamp(lfo2Offset.offset, 1 - depth / 2, now, 0.04);
   }
 
   function createPulseWave(dutyPercent) {
@@ -277,6 +302,19 @@
     mainVca = audioContext.createGain();
     mainVca.gain.value = 0;
 
+    tremoloGain = audioContext.createGain();
+    tremoloGain.gain.value = 0;
+
+    lfo2Oscillator = audioContext.createOscillator();
+    lfo2Oscillator.type = "sine";
+    lfo2Oscillator.frequency.value = state.lfo2Rate;
+
+    lfo2Gain = audioContext.createGain();
+    lfo2Gain.gain.value = getSafeTremoloDepth() / 2;
+
+    lfo2Offset = audioContext.createConstantSource();
+    lfo2Offset.offset.value = 1 - getSafeTremoloDepth() / 2;
+
     masterGain = audioContext.createGain();
     masterGain.gain.value = state.output;
 
@@ -296,14 +334,21 @@
     lfo1Oscillator.connect(lfo1Gain);
     lfo1Gain.connect(filter.frequency);
 
+    lfo2Oscillator.connect(lfo2Gain);
+    lfo2Gain.connect(tremoloGain.gain);
+    lfo2Offset.connect(tremoloGain.gain);
+
     filter.connect(mainVca);
-    mainVca.connect(masterGain);
+    mainVca.connect(tremoloGain);
+    tremoloGain.connect(masterGain);
     masterGain.connect(limiter);
     limiter.connect(audioContext.destination);
 
     oscillator.start();
     noiseSource.start();
     lfo1Oscillator.start();
+    lfo2Oscillator.start();
+    lfo2Offset.start();
     return true;
   }
 
@@ -315,7 +360,7 @@
     }
 
     document.body.classList.add("is-audio-started");
-    setStatus(`Audio ready · VCO 1 + ${state.noiseType} noise · LFO 1 filter mod available`);
+    setStatus(`Audio ready · VCO 1 + ${state.noiseType} noise · LFO 1/2 mod available`);
     applyAllParameters();
   }
 
@@ -368,6 +413,21 @@
       lfo1Gain.gain.setValueAtTime(0, audioContext.currentTime);
     }
 
+    if (lfo2Gain && audioContext) {
+      lfo2Gain.gain.cancelScheduledValues(audioContext.currentTime);
+      lfo2Gain.gain.setValueAtTime(0, audioContext.currentTime);
+    }
+
+    if (lfo2Offset && audioContext) {
+      lfo2Offset.offset.cancelScheduledValues(audioContext.currentTime);
+      lfo2Offset.offset.setValueAtTime(0, audioContext.currentTime);
+    }
+
+    if (tremoloGain && audioContext) {
+      tremoloGain.gain.cancelScheduledValues(audioContext.currentTime);
+      tremoloGain.gain.setValueAtTime(0, audioContext.currentTime);
+    }
+
     if (masterGain && audioContext) {
       masterGain.gain.cancelScheduledValues(audioContext.currentTime);
       masterGain.gain.setValueAtTime(0, audioContext.currentTime);
@@ -392,6 +452,18 @@
     }
 
     try {
+      if (lfo2Oscillator) lfo2Oscillator.stop();
+    } catch (_error) {
+      // LFO may already be stopped. Panic still succeeds.
+    }
+
+    try {
+      if (lfo2Offset) lfo2Offset.stop();
+    } catch (_error) {
+      // Constant source may already be stopped. Panic still succeeds.
+    }
+
+    try {
       if (audioContext && audioContext.state !== "closed") {
         await audioContext.close();
       }
@@ -406,8 +478,12 @@
     noiseGain = null;
     lfo1Oscillator = null;
     lfo1Gain = null;
+    lfo2Oscillator = null;
+    lfo2Gain = null;
+    lfo2Offset = null;
     filter = null;
     mainVca = null;
+    tremoloGain = null;
     masterGain = null;
     limiter = null;
 
@@ -427,6 +503,8 @@
     applyParameter("resonance");
     applyParameter("lfo1Rate");
     applyParameter("lfo1Mod");
+    applyParameter("lfo2Rate");
+    applyParameter("lfo2Mod");
     applyParameter("output");
   }
 
@@ -471,6 +549,14 @@
       applyFilterCutoffAndLfo();
     }
 
+    if (key === "lfo2Rate" && lfo2Oscillator) {
+      safeRamp(lfo2Oscillator.frequency, clamp(state.lfo2Rate, "lfo2Rate"), now, 0.04);
+    }
+
+    if (key === "lfo2Mod") {
+      applyLfo2Tremolo();
+    }
+
     if (key === "output" && masterGain) {
       safeRamp(masterGain.gain, clamp(state.output, "output"), now, 0.02);
     }
@@ -485,8 +571,8 @@
     if (key === "coarseFreq" || key === "cutoff") return `${Math.round(value)} ${units[key]}`;
     if (key === "fineCents") return `${Number(value).toFixed(0)} ${units[key]}`;
     if (key === "pulseWidth") return `${Number(value).toFixed(0)} ${units[key]}`;
-    if (key === "lfo1Rate") return `${Number(value).toFixed(2)} ${units[key]}`;
-    if (key === "lfo1Mod") return `${Math.round(Number(value) * 100)} ${units[key]}`;
+    if (key === "lfo1Rate" || key === "lfo2Rate") return `${Number(value).toFixed(2)} ${units[key]}`;
+    if (key === "lfo1Mod" || key === "lfo2Mod") return `${Math.round(Number(value) * 100)} ${units[key]}`;
     if (key === "attack" || key === "release") return `${Number(value).toFixed(2)} ${units[key]}`;
     if (key === "resonance") return `${Number(value).toFixed(1)} ${units[key]}`;
     return Number(value).toFixed(2);
@@ -618,6 +704,7 @@
       body.is-audio-started .vco-bank .vco-module:first-child .status-light,
       body.is-audio-started .mixer-module .status-light,
       body.is-audio-started .lfo1-module .status-light,
+      body.is-audio-started .lfo2-module .status-light,
       body.is-audio-started .filter-lp-module .status-light,
       body.is-audio-started .main-vca-module .status-light,
       body.is-audio-started .output-module .status-light {
@@ -635,8 +722,8 @@
     panel.className = "audio-voice-panel";
     panel.setAttribute("aria-label", "First safe audible voice controls");
     panel.innerHTML = `
-      <h2>First Voice v0.5</h2>
-      <p data-audio-status>Stopped · VCO 1 + noise + LFO 1 filter mod · safe output</p>
+      <h2>First Voice v0.6</h2>
+      <p data-audio-status>Stopped · VCO 1 + noise + LFO 1/2 mod · safe output</p>
       <div class="audio-button-row">
         <button type="button" data-audio-action="start">Start Audio</button>
         <button type="button" data-audio-action="gate-on">Gate Note</button>
@@ -657,6 +744,8 @@
       createSlider("resonance", 0.1, 12, 0.1),
       createSlider("lfo1Rate", 0.05, 12, 0.01),
       createSlider("lfo1Mod", 0, 1, 0.01),
+      createSlider("lfo2Rate", 0.05, 12, 0.01),
+      createSlider("lfo2Mod", 0, 1, 0.01),
       createSlider("attack", 0.005, 1.5, 0.005),
       createSlider("release", 0.02, 2.5, 0.01),
       createSlider("output", 0, 0.16, 0.005),
@@ -664,7 +753,7 @@
 
     const note = document.createElement("small");
     note.className = "audio-note";
-    note.textContent = "VCO 1, selectable noise, and LFO 1 filter modulation only. LFO-1 Mod defaults to 0 and moves the low-pass cutoff around the Filter Cutoff base value.";
+    note.textContent = "VCO 1, selectable noise, LFO 1 filter movement, and LFO 2 tremolo only. LFO-2 Mod defaults to 0 and stays inside the safe VCA/output path.";
     panel.append(note);
 
     document.head.append(style);
