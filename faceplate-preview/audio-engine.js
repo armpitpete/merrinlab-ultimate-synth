@@ -9,6 +9,7 @@
     waveform: "sawtooth",
     pulseWidth: 50,
     vcoLevel: 0.35,
+    whiteNoiseLevel: 0,
     cutoff: 900,
     resonance: 0.7,
     attack: 0.03,
@@ -19,6 +20,8 @@
   let audioContext = null;
   let oscillator = null;
   let vcoGain = null;
+  let noiseSource = null;
+  let noiseGain = null;
   let filter = null;
   let mainVca = null;
   let masterGain = null;
@@ -30,6 +33,7 @@
     fineCents: [-100, 100],
     pulseWidth: [10, 90],
     vcoLevel: [0, 0.7],
+    whiteNoiseLevel: [0, 0.35],
     cutoff: [120, 6500],
     resonance: [0.1, 12],
     attack: [0.005, 1.5],
@@ -43,6 +47,7 @@
     waveform: "Waveform",
     pulseWidth: "Pulse Width %",
     vcoLevel: "VCO 1 Level",
+    whiteNoiseLevel: "White NS Level",
     cutoff: "Filter Cutoff",
     resonance: "Resonance",
     attack: "Attack",
@@ -55,6 +60,7 @@
     fineCents: "cent",
     pulseWidth: "%",
     vcoLevel: "",
+    whiteNoiseLevel: "",
     cutoff: "Hz",
     resonance: "Q",
     attack: "s",
@@ -106,6 +112,22 @@
     });
   }
 
+  function createWhiteNoiseSource() {
+    const seconds = 2;
+    const sampleRate = audioContext.sampleRate;
+    const buffer = audioContext.createBuffer(1, sampleRate * seconds, sampleRate);
+    const channel = buffer.getChannelData(0);
+
+    for (let i = 0; i < channel.length; i += 1) {
+      channel[i] = (Math.random() * 2 - 1) * 0.7;
+    }
+
+    const source = audioContext.createBufferSource();
+    source.buffer = buffer;
+    source.loop = true;
+    return source;
+  }
+
   function applyWaveform() {
     if (!audioContext || !oscillator) return;
 
@@ -136,6 +158,10 @@
     vcoGain = audioContext.createGain();
     vcoGain.gain.value = state.vcoLevel;
 
+    noiseSource = createWhiteNoiseSource();
+    noiseGain = audioContext.createGain();
+    noiseGain.gain.value = state.whiteNoiseLevel;
+
     filter = audioContext.createBiquadFilter();
     filter.type = "lowpass";
     filter.frequency.value = state.cutoff;
@@ -156,12 +182,17 @@
 
     oscillator.connect(vcoGain);
     vcoGain.connect(filter);
+
+    noiseSource.connect(noiseGain);
+    noiseGain.connect(filter);
+
     filter.connect(mainVca);
     mainVca.connect(masterGain);
     masterGain.connect(limiter);
     limiter.connect(audioContext.destination);
 
     oscillator.start();
+    noiseSource.start();
     return true;
   }
 
@@ -173,7 +204,7 @@
     }
 
     document.body.classList.add("is-audio-started");
-    setStatus("Audio ready · VCO 1 only · press Gate Note");
+    setStatus("Audio ready · VCO 1 + white noise · press Gate Note");
     applyAllParameters();
   }
 
@@ -216,6 +247,11 @@
       mainVca.gain.setValueAtTime(0, audioContext.currentTime);
     }
 
+    if (noiseGain && audioContext) {
+      noiseGain.gain.cancelScheduledValues(audioContext.currentTime);
+      noiseGain.gain.setValueAtTime(0, audioContext.currentTime);
+    }
+
     if (masterGain && audioContext) {
       masterGain.gain.cancelScheduledValues(audioContext.currentTime);
       masterGain.gain.setValueAtTime(0, audioContext.currentTime);
@@ -225,6 +261,12 @@
       if (oscillator) oscillator.stop();
     } catch (_error) {
       // Oscillator may already be stopped. Panic still succeeds.
+    }
+
+    try {
+      if (noiseSource) noiseSource.stop();
+    } catch (_error) {
+      // Noise may already be stopped. Panic still succeeds.
     }
 
     try {
@@ -238,6 +280,8 @@
     audioContext = null;
     oscillator = null;
     vcoGain = null;
+    noiseSource = null;
+    noiseGain = null;
     filter = null;
     mainVca = null;
     masterGain = null;
@@ -253,6 +297,7 @@
     applyParameter("waveform");
     applyParameter("pulseWidth");
     applyParameter("vcoLevel");
+    applyParameter("whiteNoiseLevel");
     applyParameter("cutoff");
     applyParameter("resonance");
     applyParameter("output");
@@ -272,6 +317,10 @@
 
     if (key === "vcoLevel" && vcoGain) {
       safeRamp(vcoGain.gain, clamp(state.vcoLevel, "vcoLevel"), now, 0.02);
+    }
+
+    if (key === "whiteNoiseLevel" && noiseGain) {
+      safeRamp(noiseGain.gain, clamp(state.whiteNoiseLevel, "whiteNoiseLevel"), now, 0.02);
     }
 
     if (key === "cutoff" && filter) {
@@ -425,6 +474,7 @@
       }
 
       body.is-audio-started .vco-bank .vco-module:first-child .status-light,
+      body.is-audio-started .mixer-module .status-light,
       body.is-audio-started .filter-lp-module .status-light,
       body.is-audio-started .main-vca-module .status-light,
       body.is-audio-started .output-module .status-light {
@@ -442,8 +492,8 @@
     panel.className = "audio-voice-panel";
     panel.setAttribute("aria-label", "First safe audible voice controls");
     panel.innerHTML = `
-      <h2>First Voice v0.2</h2>
-      <p data-audio-status>Stopped · VCO 1 only · safe output</p>
+      <h2>First Voice v0.3</h2>
+      <p data-audio-status>Stopped · VCO 1 + white noise · safe output</p>
       <div class="audio-button-row">
         <button type="button" data-audio-action="start">Start Audio</button>
         <button type="button" data-audio-action="gate-on">Gate Note</button>
@@ -458,6 +508,7 @@
       createSelect("waveform"),
       createSlider("pulseWidth", 10, 90, 1),
       createSlider("vcoLevel", 0, 0.7, 0.01),
+      createSlider("whiteNoiseLevel", 0, 0.35, 0.005),
       createSlider("cutoff", 120, 6500, 1),
       createSlider("resonance", 0.1, 12, 0.1),
       createSlider("attack", 0.005, 1.5, 0.005),
@@ -467,7 +518,7 @@
 
     const note = document.createElement("small");
     note.className = "audio-note";
-    note.textContent = "VCO 1 only. Sine is restored, but filter cutoff and resonance are naturally subtler on a near-pure sine. PWM, SYNC, LOG-CV, and LIN-CV remain inactive.";
+    note.textContent = "VCO 1 and White Noise only. Noise follows the same filter, VCA, output, and Panic Stop safety path. PWM, SYNC, LOG-CV, and LIN-CV remain inactive.";
     panel.append(note);
 
     document.head.append(style);
