@@ -1,3 +1,12 @@
+.ultimate-grid {
+  grid-template-areas:
+    "vcos mixer filter  filter  filter  output"
+    "vcos mixer ar      mainvca mainvca output"
+    "vcos mixer ar      lfo1    lfo2    sh"
+    "vcos mixer ar      atten   atten   atten"
+    "adsr auxvca auxvca repeat  repeat  repeat";
+}
+
 .expander-grid {
   display: grid;
   grid-template-columns: 1.45fr 1fr 1.1fr 1fr 1fr 1fr;
