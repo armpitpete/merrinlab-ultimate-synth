@@ -4,7 +4,10 @@
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
 
   const state = {
-    pitch: 220,
+    coarseFreq: 220,
+    fineCents: 0,
+    waveform: "sawtooth",
+    pulseWidth: 50,
     vcoLevel: 0.35,
     cutoff: 900,
     resonance: 0.7,
@@ -23,7 +26,9 @@
   let isGateOpen = false;
 
   const limits = {
-    pitch: [110, 440],
+    coarseFreq: [55, 880],
+    fineCents: [-100, 100],
+    pulseWidth: [10, 90],
     vcoLevel: [0, 0.7],
     cutoff: [180, 5200],
     resonance: [0.1, 6],
@@ -33,7 +38,10 @@
   };
 
   const labels = {
-    pitch: "Pitch",
+    coarseFreq: "Coarse Freq",
+    fineCents: "Fine Freq",
+    waveform: "Waveform",
+    pulseWidth: "Pulse Width %",
     vcoLevel: "VCO 1 Level",
     cutoff: "Filter Cutoff",
     resonance: "Resonance",
@@ -43,7 +51,9 @@
   };
 
   const units = {
-    pitch: "Hz",
+    coarseFreq: "Hz",
+    fineCents: "cent",
+    pulseWidth: "%",
     vcoLevel: "",
     cutoff: "Hz",
     resonance: "Q",
@@ -51,6 +61,14 @@
     release: "s",
     output: "",
   };
+
+  const waveforms = [
+    ["sawtooth", "Saw"],
+    ["square", "Square"],
+    ["triangle", "Triangle"],
+    ["sine", "Sine"],
+    ["pulse", "Pulse"],
+  ];
 
   function clamp(value, key) {
     const [min, max] = limits[key];
@@ -60,6 +78,42 @@
   function safeRamp(param, value, time, rampTime = 0.02) {
     param.cancelScheduledValues(time);
     param.setTargetAtTime(value, time, rampTime);
+  }
+
+  function getVcoFrequency() {
+    const coarse = clamp(state.coarseFreq, "coarseFreq");
+    const fine = clamp(state.fineCents, "fineCents");
+    const frequency = coarse * Math.pow(2, fine / 1200);
+    return Math.min(1200, Math.max(40, frequency));
+  }
+
+  function createPulseWave(dutyPercent) {
+    const duty = clamp(dutyPercent, "pulseWidth") / 100;
+    const harmonics = 64;
+    const real = new Float32Array(harmonics + 1);
+    const imag = new Float32Array(harmonics + 1);
+
+    real[0] = 0;
+    imag[0] = 0;
+
+    for (let n = 1; n <= harmonics; n += 1) {
+      imag[n] = (2 / (n * Math.PI)) * Math.sin(n * Math.PI * duty);
+    }
+
+    return audioContext.createPeriodicWave(real, imag, {
+      disableNormalization: false,
+    });
+  }
+
+  function applyWaveform() {
+    if (!audioContext || !oscillator) return;
+
+    if (state.waveform === "pulse") {
+      oscillator.setPeriodicWave(createPulseWave(state.pulseWidth));
+      return;
+    }
+
+    oscillator.type = state.waveform;
   }
 
   function createAudioGraph() {
@@ -75,8 +129,8 @@
     audioContext = new AudioContextClass();
 
     oscillator = audioContext.createOscillator();
-    oscillator.type = "sawtooth";
-    oscillator.frequency.value = state.pitch;
+    oscillator.frequency.value = getVcoFrequency();
+    applyWaveform();
 
     vcoGain = audioContext.createGain();
     vcoGain.gain.value = state.vcoLevel;
@@ -193,7 +247,10 @@
 
   function applyAllParameters() {
     if (!audioContext) return;
-    applyParameter("pitch");
+    applyParameter("coarseFreq");
+    applyParameter("fineCents");
+    applyParameter("waveform");
+    applyParameter("pulseWidth");
     applyParameter("vcoLevel");
     applyParameter("cutoff");
     applyParameter("resonance");
@@ -203,26 +260,29 @@
   function applyParameter(key) {
     if (!audioContext) return;
     const now = audioContext.currentTime;
-    const value = clamp(state[key], key);
 
-    if (key === "pitch" && oscillator) {
-      safeRamp(oscillator.frequency, value, now, 0.015);
+    if ((key === "coarseFreq" || key === "fineCents") && oscillator) {
+      safeRamp(oscillator.frequency, getVcoFrequency(), now, 0.015);
+    }
+
+    if (key === "waveform" || key === "pulseWidth") {
+      applyWaveform();
     }
 
     if (key === "vcoLevel" && vcoGain) {
-      safeRamp(vcoGain.gain, value, now, 0.02);
+      safeRamp(vcoGain.gain, clamp(state.vcoLevel, "vcoLevel"), now, 0.02);
     }
 
     if (key === "cutoff" && filter) {
-      safeRamp(filter.frequency, value, now, 0.025);
+      safeRamp(filter.frequency, clamp(state.cutoff, "cutoff"), now, 0.025);
     }
 
     if (key === "resonance" && filter) {
-      safeRamp(filter.Q, value, now, 0.025);
+      safeRamp(filter.Q, clamp(state.resonance, "resonance"), now, 0.025);
     }
 
     if (key === "output" && masterGain) {
-      safeRamp(masterGain.gain, value, now, 0.02);
+      safeRamp(masterGain.gain, clamp(state.output, "output"), now, 0.02);
     }
   }
 
@@ -232,7 +292,9 @@
   }
 
   function formatValue(key, value) {
-    if (key === "pitch" || key === "cutoff") return `${Math.round(value)} ${units[key]}`;
+    if (key === "coarseFreq" || key === "cutoff") return `${Math.round(value)} ${units[key]}`;
+    if (key === "fineCents") return `${Number(value).toFixed(0)} ${units[key]}`;
+    if (key === "pulseWidth") return `${Number(value).toFixed(0)} ${units[key]}`;
     if (key === "attack" || key === "release") return `${Number(value).toFixed(2)} ${units[key]}`;
     if (key === "resonance") return `${Number(value).toFixed(1)} ${units[key]}`;
     return Number(value).toFixed(2);
@@ -249,6 +311,22 @@
     return row;
   }
 
+  function createSelect(key) {
+    const row = document.createElement("label");
+    row.className = "audio-select-row";
+    const options = waveforms.map(([value, label]) => {
+      const selected = value === state[key] ? " selected" : "";
+      return `<option value="${value}"${selected}>${label}</option>`;
+    }).join("");
+
+    row.innerHTML = `
+      <span>${labels[key]}</span>
+      <select data-audio-control="${key}">${options}</select>
+      <output data-audio-readout="${key}">${state[key]}</output>
+    `;
+    return row;
+  }
+
   function createPanel() {
     const style = document.createElement("style");
     style.textContent = `
@@ -257,7 +335,9 @@
         right: 18px;
         bottom: 18px;
         z-index: 50;
-        width: min(340px, calc(100vw - 36px));
+        width: min(360px, calc(100vw - 36px));
+        max-height: calc(100vh - 36px);
+        overflow: auto;
         padding: 14px;
         border: 1px solid rgba(215, 184, 132, 0.42);
         border-radius: 18px;
@@ -278,6 +358,14 @@
         margin: 0 0 12px;
         color: #cdbda7;
         font-size: 0.72rem;
+      }
+
+      .audio-note {
+        display: block;
+        margin: 10px 0 0;
+        color: #bda98d;
+        font-size: 0.66rem;
+        line-height: 1.45;
       }
 
       .audio-button-row {
@@ -303,9 +391,10 @@
         border-color: rgba(255, 134, 99, 0.72);
       }
 
-      .audio-slider-row {
+      .audio-slider-row,
+      .audio-select-row {
         display: grid;
-        grid-template-columns: 92px 1fr 58px;
+        grid-template-columns: 94px 1fr 62px;
         align-items: center;
         gap: 8px;
         margin: 8px 0;
@@ -316,7 +405,19 @@
         accent-color: #d7b884;
       }
 
-      .audio-slider-row output {
+      .audio-select-row select {
+        min-width: 0;
+        border: 1px solid rgba(215, 184, 132, 0.36);
+        border-radius: 999px;
+        padding: 5px 8px;
+        background: #211913;
+        color: #f3e8da;
+        font: inherit;
+        font-size: 0.7rem;
+      }
+
+      .audio-slider-row output,
+      .audio-select-row output {
         text-align: right;
         color: #d6c8b5;
         font-variant-numeric: tabular-nums;
@@ -340,7 +441,7 @@
     panel.className = "audio-voice-panel";
     panel.setAttribute("aria-label", "First safe audible voice controls");
     panel.innerHTML = `
-      <h2>First Voice v0.1</h2>
+      <h2>First Voice v0.2</h2>
       <p data-audio-status>Stopped · VCO 1 only · safe output</p>
       <div class="audio-button-row">
         <button type="button" data-audio-action="start">Start Audio</button>
@@ -351,7 +452,10 @@
     `;
 
     panel.append(
-      createSlider("pitch", 110, 440, 1),
+      createSlider("coarseFreq", 55, 880, 1),
+      createSlider("fineCents", -100, 100, 1),
+      createSelect("waveform"),
+      createSlider("pulseWidth", 10, 90, 1),
       createSlider("vcoLevel", 0, 0.7, 0.01),
       createSlider("cutoff", 180, 5200, 1),
       createSlider("resonance", 0.1, 6, 0.1),
@@ -359,6 +463,11 @@
       createSlider("release", 0.02, 2.5, 0.01),
       createSlider("output", 0, 0.16, 0.005),
     );
+
+    const note = document.createElement("small");
+    note.className = "audio-note";
+    note.textContent = "VCO 1 only. PWM, SYNC, LOG-CV, and LIN-CV are documented for later and remain inactive.";
+    panel.append(note);
 
     document.head.append(style);
     document.body.append(panel);
@@ -368,12 +477,23 @@
       if (!input) return;
 
       const key = input.dataset.audioControl;
-      state[key] = clamp(input.value, key);
+
+      if (input.tagName === "SELECT") {
+        state[key] = input.value;
+      } else {
+        state[key] = clamp(input.value, key);
+      }
 
       const readout = panel.querySelector(`[data-audio-readout="${key}"]`);
-      if (readout) readout.textContent = formatValue(key, state[key]);
+      if (readout) readout.textContent = key === "waveform" ? state[key] : formatValue(key, state[key]);
 
       applyParameter(key);
+    });
+
+    panel.addEventListener("change", (event) => {
+      const input = event.target.closest("[data-audio-control]");
+      if (!input) return;
+      input.dispatchEvent(new Event("input", { bubbles: true }));
     });
 
     panel.addEventListener("click", (event) => {
