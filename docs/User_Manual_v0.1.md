@@ -2,7 +2,7 @@
 
 **Project:** MerrinLab Ultimate Synth  
 **Manual status:** Living manual  
-**Current playable state:** First browser voice with VCO 1, selectable noise, and LFO 1 filter modulation  
+**Current playable state:** First browser voice with VCO 1, selectable noise, LFO 1 filter modulation, and LFO 2 VCA modulation  
 
 ## 1. What this is
 
@@ -17,7 +17,7 @@ It is not a VST. It is not a JUCE app. It is not a full MFOS hardware emulation.
 The current goal is simple:
 
 ```text
-Make one safe, shaped, filterable sound using VCO 1, selectable noise, and LFO 1 filter movement.
+Make one safe, shaped, filterable sound using VCO 1, selectable noise, LFO 1 filter movement, and LFO 2 level movement.
 ```
 
 ## 2. What works now
@@ -25,7 +25,7 @@ Make one safe, shaped, filterable sound using VCO 1, selectable noise, and LFO 1
 The working part is the floating panel called:
 
 ```text
-First Voice v0.5
+First Voice v0.6
 ```
 
 This panel controls the current playable voice.
@@ -49,6 +49,8 @@ Current working controls:
 | Resonance | Emphasises the sound around the filter cutoff point. |
 | LFO 1 Rate | Sets the speed of the filter cutoff movement. |
 | LFO-1 Mod | Sets how much LFO 1 moves the filter cutoff. |
+| LFO 2 Rate | Sets the speed of the VCA level movement. |
+| LFO-2 Mod | Sets how much LFO 2 moves the Main VCA level. |
 | Attack | Sets how quickly the note opens after Gate Note. |
 | Release | Sets how quickly the note fades after Release. |
 | Output | Sets the final safe output level. |
@@ -66,10 +68,12 @@ Low-pass filter
                ↓
 Main VCA
                ↓
+LFO 2 tremolo stage
+               ↓
 Safe output
 ```
 
-The current modulation path is:
+The current modulation paths are:
 
 ```text
 LFO 1
@@ -77,6 +81,14 @@ LFO 1
 LFO-1 Mod amount
   ↓
 Low-pass filter cutoff
+```
+
+```text
+LFO 2
+  ↓
+LFO-2 Mod amount
+  ↓
+Main VCA level / tremolo stage
 ```
 
 The current control path is:
@@ -89,27 +101,30 @@ Simple envelope
 Main VCA
 ```
 
-Only VCO 1, the selected noise source, and LFO 1 filter modulation are active.
+Only VCO 1, the selected noise source, LFO 1 filter modulation, and LFO 2 VCA modulation are active.
 
 ## 4. How to make a sound safely
 
 Use this order:
 
 1. Open the live preview page.
-2. Find the floating **First Voice v0.5** panel.
+2. Find the floating **First Voice v0.6** panel.
 3. Keep **Output** low at first.
 4. Keep **White NS Level** at 0 at first.
 5. Keep **LFO-1 Mod** at 0 at first.
-6. Choose a **Noise Type** if you want to test noise.
-7. Press **Start Audio**.
-8. Press **Gate Note**.
-9. Adjust **VCO 1 Level** if the oscillator is too quiet.
-10. Raise **White NS Level** slowly if you want noise.
-11. Adjust **Filter Cutoff** to set the base brightness.
-12. Raise **LFO-1 Mod** slowly if you want filter movement.
-13. Adjust **LFO 1 Rate** to change movement speed.
-14. Press **Release** to let the sound fade.
-15. Press **Panic Stop** if anything behaves unexpectedly.
+6. Keep **LFO-2 Mod** at 0 at first.
+7. Choose a **Noise Type** if you want to test noise.
+8. Press **Start Audio**.
+9. Press **Gate Note**.
+10. Adjust **VCO 1 Level** if the oscillator is too quiet.
+11. Raise **White NS Level** slowly if you want noise.
+12. Adjust **Filter Cutoff** to set the base brightness.
+13. Raise **LFO-1 Mod** slowly if you want filter movement.
+14. Adjust **LFO 1 Rate** to change filter movement speed.
+15. Raise **LFO-2 Mod** slowly if you want tremolo.
+16. Adjust **LFO 2 Rate** to change tremolo speed.
+17. Press **Release** to let the sound fade.
+18. Press **Panic Stop** if anything behaves unexpectedly.
 
 ## 5. How to stop the sound
 
@@ -117,11 +132,12 @@ Use **Release** for normal note ending.
 
 Use **Panic Stop** when you want immediate silence.
 
-**Panic Stop** does five important things:
+**Panic Stop** does six important things:
 
 - closes the note level immediately
 - silences the noise level
 - stops LFO 1 filter movement
+- stops LFO 2 level movement
 - sets the output to silent
 - closes the browser audio context
 
@@ -200,6 +216,8 @@ Low-pass filter
   ↓
 Main VCA
   ↓
+LFO 2 tremolo stage
+  ↓
 Safe output
 ```
 
@@ -209,6 +227,7 @@ This means:
 - **Release** fades it out.
 - **Filter Cutoff** changes its brightness clearly.
 - **LFO 1** can sweep the filtered noise.
+- **LFO 2** can make the noise rise and fall in level.
 - **Resonance** colours the filtered noise.
 - **Panic Stop** silences it.
 
@@ -262,7 +281,32 @@ You should hear the filter brightness move up and down.
 
 The LFO modulation is kept inside a safe cutoff range. If **Filter Cutoff** is very low or very high, the LFO may have less room to move.
 
-## 10. Why sine behaves differently
+## 10. Testing LFO 2 VCA modulation
+
+LFO 2 now moves the Main VCA level.
+
+This is tremolo: the sound gets louder and quieter automatically.
+
+Use these controls:
+
+| Control | What it does |
+|---|---|
+| LFO 2 Rate | Controls how fast the level rises and falls. |
+| LFO-2 Mod | Controls how deep the level movement is. |
+| Gate Note / Release | Still controls the overall note shape. |
+
+How to test it:
+
+1. Start with **LFO-2 Mod** at 0.
+2. Press **Gate Note**.
+3. Raise **LFO-2 Mod** slowly.
+4. Adjust **LFO 2 Rate**.
+
+You should hear the whole sound pulse in level.
+
+LFO 2 stays inside the safe VCA/output path. It should not create output spikes.
+
+## 11. Why sine behaves differently
 
 Sine is included because it is a useful basic waveform.
 
@@ -286,7 +330,7 @@ To test the filter clearly, use:
 - Pink Noise
 - Brown Noise
 
-## 11. What is still visual-only
+## 12. What is still visual-only
 
 Most of the large faceplate is still visual-only.
 
@@ -302,7 +346,6 @@ These are not active yet:
 - LOG-CV
 - LIN-CV
 - low-pass external CV inputs
-- LFO 2
 - Sample & Hold
 - Repeat Gate Rate
 - Attenuators
@@ -325,7 +368,7 @@ These controls are visible because the faceplate is being built toward the large
 
 They should not be expected to affect sound yet.
 
-## 12. What not to expect yet
+## 13. What not to expect yet
 
 Do not expect:
 
@@ -333,7 +376,6 @@ Do not expect:
 - external input
 - real patch cables
 - full modulation routing
-- LFO 2 movement
 - sample and hold
 - repeat gate triggering
 - ADSR shaping
@@ -345,7 +387,7 @@ Do not expect:
 - VST plugin behaviour
 - exact MFOS hardware emulation
 
-## 13. Current safe test patch
+## 14. Current safe test patch
 
 Use this simple patch for testing:
 
@@ -360,6 +402,8 @@ Filter Cutoff: middle
 Resonance: low to medium
 LFO 1 Rate: slow
 LFO-1 Mod: 0 at first
+LFO 2 Rate: slow
+LFO-2 Mod: 0 at first
 Attack: short
 Release: medium
 Output: low
@@ -377,11 +421,13 @@ Then test:
 8. Move **Filter Cutoff** while noise is audible.
 9. Raise **LFO-1 Mod** slowly.
 10. Change **LFO 1 Rate**.
-11. Try **Sine**, but expect subtler filter changes.
-12. Press **Release**.
-13. Press **Panic Stop**.
+11. Raise **LFO-2 Mod** slowly.
+12. Change **LFO 2 Rate**.
+13. Try **Sine**, but expect subtler filter changes.
+14. Press **Release**.
+15. Press **Panic Stop**.
 
-## 14. Manual update rule
+## 15. Manual update rule
 
 This is a living manual.
 
@@ -390,7 +436,6 @@ Every time playable behaviour changes, update this manual.
 Examples:
 
 - If VCO 2 becomes active, add a VCO 2 section.
-- If LFO 2 begins modulating the VCA, add an LFO 2 section.
 - If MIDI input is added, add a MIDI section.
 - If a visible control begins working, move it from visual-only to active.
 
