@@ -2,7 +2,7 @@
 
 **Project:** MerrinLab Ultimate Synth  
 **Manual status:** Living manual  
-**Current playable state:** First browser voice with VCO 1, selectable noise, LFO 1 filter modulation, and LFO 2 VCA modulation  
+**Current playable state:** First browser voice with VCO 1, selectable noise, LFO 1 filter modulation, LFO 2 VCA modulation, and optional ADSR envelope mode  
 
 ## 1. What this is
 
@@ -17,7 +17,7 @@ It is not a VST. It is not a JUCE app. It is not a full MFOS hardware emulation.
 The current goal is simple:
 
 ```text
-Make one safe, shaped, filterable sound using VCO 1, selectable noise, LFO 1 filter movement, and LFO 2 level movement.
+Make one safe, shaped, filterable sound using VCO 1, selectable noise, filter movement, level movement, and optional envelope shaping.
 ```
 
 ## 2. What works now
@@ -25,7 +25,7 @@ Make one safe, shaped, filterable sound using VCO 1, selectable noise, LFO 1 fil
 The working part is the floating panel called:
 
 ```text
-First Voice v0.6
+First Voice v0.7
 ```
 
 This panel controls the current playable voice.
@@ -35,8 +35,8 @@ Current working controls:
 | Control | What it does |
 |---|---|
 | Start Audio | Starts the browser audio engine after user action. |
-| Gate Note | Opens the note so sound can be heard. |
-| Release | Releases the note and lets the sound fade. |
+| Gate Note | Opens the note and starts the selected envelope. |
+| Release | Releases the selected envelope. |
 | Panic Stop | Silences the sound immediately and closes the audio engine. |
 | Coarse Freq | Sets the main VCO 1 pitch. |
 | Fine Freq | Detunes VCO 1 slightly around the coarse pitch. |
@@ -51,8 +51,13 @@ Current working controls:
 | LFO-1 Mod | Sets how much LFO 1 moves the filter cutoff. |
 | LFO 2 Rate | Sets the speed of the VCA level movement. |
 | LFO-2 Mod | Sets how much LFO 2 moves the Main VCA level. |
-| Attack | Sets how quickly the note opens after Gate Note. |
-| Release | Sets how quickly the note fades after Release. |
+| Envelope Mode | Chooses simple AR or ADSR envelope behaviour. |
+| AR Attack | Sets simple AR opening speed. |
+| AR Release | Sets simple AR fade speed. |
+| ADSR Attack | Sets ADSR opening speed. |
+| ADSR Decay | Sets how quickly ADSR falls from peak to sustain. |
+| ADSR Sustain | Sets the held level while Gate Note remains open. |
+| ADSR Release | Sets ADSR fade speed after Release. |
 | Output | Sets the final safe output level. |
 
 ## 3. Current sound path
@@ -66,7 +71,7 @@ Selected Noise → simple mixer stage
                ↓
 Low-pass filter
                ↓
-Main VCA
+Main VCA / selected envelope
                ↓
 LFO 2 tremolo stage
                ↓
@@ -91,40 +96,39 @@ LFO-2 Mod amount
 Main VCA level / tremolo stage
 ```
 
-The current control path is:
+The current envelope path is:
 
 ```text
 Gate Note / Release
   ↓
-Simple envelope
+Envelope Mode: AR or ADSR
   ↓
 Main VCA
 ```
 
-Only VCO 1, the selected noise source, LFO 1 filter modulation, and LFO 2 VCA modulation are active.
+Only VCO 1, the selected noise source, LFO 1 filter modulation, LFO 2 VCA modulation, and the selected envelope mode are active.
 
 ## 4. How to make a sound safely
 
 Use this order:
 
 1. Open the live preview page.
-2. Find the floating **First Voice v0.6** panel.
+2. Find the floating **First Voice v0.7** panel.
 3. Keep **Output** low at first.
 4. Keep **White NS Level** at 0 at first.
 5. Keep **LFO-1 Mod** at 0 at first.
 6. Keep **LFO-2 Mod** at 0 at first.
-7. Choose a **Noise Type** if you want to test noise.
+7. Leave **Envelope Mode** on AR at first.
 8. Press **Start Audio**.
 9. Press **Gate Note**.
 10. Adjust **VCO 1 Level** if the oscillator is too quiet.
 11. Raise **White NS Level** slowly if you want noise.
 12. Adjust **Filter Cutoff** to set the base brightness.
 13. Raise **LFO-1 Mod** slowly if you want filter movement.
-14. Adjust **LFO 1 Rate** to change filter movement speed.
-15. Raise **LFO-2 Mod** slowly if you want tremolo.
-16. Adjust **LFO 2 Rate** to change tremolo speed.
-17. Press **Release** to let the sound fade.
-18. Press **Panic Stop** if anything behaves unexpectedly.
+14. Raise **LFO-2 Mod** slowly if you want tremolo.
+15. Change **Envelope Mode** to ADSR only after the basic sound works.
+16. Press **Release** to let the selected envelope fade.
+17. Press **Panic Stop** if anything behaves unexpectedly.
 
 ## 5. How to stop the sound
 
@@ -132,12 +136,13 @@ Use **Release** for normal note ending.
 
 Use **Panic Stop** when you want immediate silence.
 
-**Panic Stop** does six important things:
+**Panic Stop** does these things:
 
 - closes the note level immediately
 - silences the noise level
 - stops LFO 1 filter movement
 - stops LFO 2 level movement
+- clears the envelope/VCA path
 - sets the output to silent
 - closes the browser audio context
 
@@ -193,8 +198,6 @@ Noise works as a second source.
 
 Use **Noise Type** to choose the noise colour.
 
-Current options:
-
 | Noise Type | What to expect |
 |---|---|
 | White | Bright, full-range noise. Strong for filter testing. |
@@ -205,8 +208,6 @@ Use **White NS Level** to bring the selected noise in.
 
 The name still says **White NS Level** because it matches the visible faceplate label, but in the First Voice panel it controls the amount of whichever noise type is selected.
 
-Start with a low value. Noise can feel louder than an oscillator because it fills a wide frequency range.
-
 All noise types follow the same path as VCO 1:
 
 ```text
@@ -214,24 +215,12 @@ Selected Noise
   ↓
 Low-pass filter
   ↓
-Main VCA
+Main VCA / selected envelope
   ↓
 LFO 2 tremolo stage
   ↓
 Safe output
 ```
-
-This means:
-
-- **Gate Note** must be open before you hear it.
-- **Release** fades it out.
-- **Filter Cutoff** changes its brightness clearly.
-- **LFO 1** can sweep the filtered noise.
-- **LFO 2** can make the noise rise and fall in level.
-- **Resonance** colours the filtered noise.
-- **Panic Stop** silences it.
-
-Noise is useful for testing the filter because it contains many frequencies at once.
 
 ## 8. Testing the filter
 
@@ -247,8 +236,6 @@ Lower cutoff should make the sound darker.
 
 Higher cutoff should make the sound brighter.
 
-Noise should make this especially obvious.
-
 ### Resonance
 
 Resonance emphasises the area around the cutoff point.
@@ -257,11 +244,9 @@ At this stage, resonance is capped for safety. It should colour the sound, but i
 
 ## 9. Testing LFO 1 filter modulation
 
-LFO 1 now moves the low-pass filter cutoff.
+LFO 1 moves the low-pass filter cutoff.
 
 It does not make a separate sound by itself. It changes the filter movement.
-
-Use these controls:
 
 | Control | What it does |
 |---|---|
@@ -269,7 +254,7 @@ Use these controls:
 | LFO-1 Mod | Controls how much the filter moves. |
 | Filter Cutoff | Sets the base/centre cutoff around which the LFO moves. |
 
-How to test it:
+Good test:
 
 1. Choose **Noise Type: White**.
 2. Raise **White NS Level** slowly.
@@ -279,15 +264,11 @@ How to test it:
 
 You should hear the filter brightness move up and down.
 
-The LFO modulation is kept inside a safe cutoff range. If **Filter Cutoff** is very low or very high, the LFO may have less room to move.
-
 ## 10. Testing LFO 2 VCA modulation
 
-LFO 2 now moves the Main VCA level.
+LFO 2 moves the Main VCA level.
 
 This is tremolo: the sound gets louder and quieter automatically.
-
-Use these controls:
 
 | Control | What it does |
 |---|---|
@@ -295,7 +276,7 @@ Use these controls:
 | LFO-2 Mod | Controls how deep the level movement is. |
 | Gate Note / Release | Still controls the overall note shape. |
 
-How to test it:
+Good test:
 
 1. Start with **LFO-2 Mod** at 0.
 2. Press **Gate Note**.
@@ -306,7 +287,46 @@ You should hear the whole sound pulse in level.
 
 LFO 2 stays inside the safe VCA/output path. It should not create output spikes.
 
-## 11. Why sine behaves differently
+## 11. Testing Envelope Mode
+
+**Envelope Mode** chooses how **Gate Note** and **Release** shape the Main VCA.
+
+Current options:
+
+| Envelope Mode | What it does |
+|---|---|
+| AR | Simple attack/release behaviour. This is the earlier safe behaviour. |
+| ADSR | Attack, Decay, Sustain, Release shaping. |
+
+### AR mode
+
+AR mode uses:
+
+- **AR Attack**
+- **AR Release**
+
+Use AR when you want the previous simple behaviour.
+
+### ADSR mode
+
+ADSR mode uses:
+
+- **ADSR Attack**
+- **ADSR Decay**
+- **ADSR Sustain**
+- **ADSR Release**
+
+How ADSR behaves:
+
+1. **Gate Note** starts the envelope.
+2. The sound rises over **ADSR Attack**.
+3. The sound falls from peak to the sustain level over **ADSR Decay**.
+4. The sound stays at **ADSR Sustain** while Gate Note is held open.
+5. **Release** fades the sound using **ADSR Release**.
+
+LFO 2 tremolo still happens after the envelope, so tremolo can pulse either AR-shaped or ADSR-shaped notes.
+
+## 12. Why sine behaves differently
 
 Sine is included because it is a useful basic waveform.
 
@@ -330,7 +350,7 @@ To test the filter clearly, use:
 - Pink Noise
 - Brown Noise
 
-## 12. What is still visual-only
+## 13. What is still visual-only
 
 Most of the large faceplate is still visual-only.
 
@@ -349,7 +369,6 @@ These are not active yet:
 - Sample & Hold
 - Repeat Gate Rate
 - Attenuators
-- ADSR Env. Gen.
 - AUX VCA
 - State Variable VCF
 - Signal Mixer
@@ -364,11 +383,9 @@ These are not active yet:
 - presets
 - MIDI learn
 
-These controls are visible because the faceplate is being built toward the larger instrument.
+The **ADSR Env. Gen.** concept has now started to become active through the First Voice panel, but it is not yet a patchable envelope module.
 
-They should not be expected to affect sound yet.
-
-## 13. What not to expect yet
+## 14. What not to expect yet
 
 Do not expect:
 
@@ -378,7 +395,7 @@ Do not expect:
 - full modulation routing
 - sample and hold
 - repeat gate triggering
-- ADSR shaping
+- patchable ADSR routing
 - state-variable filter sound
 - Expander utility behaviour
 - MIDI input
@@ -387,7 +404,7 @@ Do not expect:
 - VST plugin behaviour
 - exact MFOS hardware emulation
 
-## 14. Current safe test patch
+## 15. Current safe test patch
 
 Use this simple patch for testing:
 
@@ -404,30 +421,30 @@ LFO 1 Rate: slow
 LFO-1 Mod: 0 at first
 LFO 2 Rate: slow
 LFO-2 Mod: 0 at first
-Attack: short
-Release: medium
+Envelope Mode: AR first, then ADSR
+AR Attack: short
+AR Release: medium
+ADSR Attack: short
+ADSR Decay: medium
+ADSR Sustain: medium
+ADSR Release: medium
 Output: low
 ```
 
 Then test:
 
-1. Move **Filter Cutoff** down and up.
-2. Increase **Resonance** carefully.
-3. Change **Waveform** to Square.
-4. Change **Waveform** to Pulse.
-5. Move **Pulse Width %** while Pulse is selected.
-6. Choose **Noise Type: White** and raise **White NS Level** slowly.
-7. Change **Noise Type** to Pink, then Brown.
-8. Move **Filter Cutoff** while noise is audible.
-9. Raise **LFO-1 Mod** slowly.
-10. Change **LFO 1 Rate**.
-11. Raise **LFO-2 Mod** slowly.
-12. Change **LFO 2 Rate**.
-13. Try **Sine**, but expect subtler filter changes.
-14. Press **Release**.
-15. Press **Panic Stop**.
+1. Press **Start Audio**.
+2. Press **Gate Note** in AR mode.
+3. Press **Release**.
+4. Change **Envelope Mode** to ADSR.
+5. Press **Gate Note**.
+6. Adjust **ADSR Attack**, **ADSR Decay**, and **ADSR Sustain**.
+7. Press **Release** and adjust **ADSR Release**.
+8. Raise **White NS Level** slowly and test ADSR on noise.
+9. Raise **LFO-2 Mod** slowly and confirm tremolo still happens after the envelope.
+10. Press **Panic Stop**.
 
-## 15. Manual update rule
+## 16. Manual update rule
 
 This is a living manual.
 
