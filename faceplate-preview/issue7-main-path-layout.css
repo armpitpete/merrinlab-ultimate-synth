@@ -1,0 +1,11 @@
+/* Issue #7: main signal-path hierarchy only.
+   Keep Issue #6 Expander bay intact and do not apply broad visual polish. */
+
+.ultimate-grid {
+  grid-template-areas:
+    "vcos mixer filter  filter  filter  output"
+    "vcos mixer ar      mainvca mainvca output"
+    "vcos mixer ar      lfo1    lfo2    sh"
+    "vcos mixer ar      atten   atten   atten"
+    "adsr auxvca auxvca repeat  repeat  repeat";
+}
