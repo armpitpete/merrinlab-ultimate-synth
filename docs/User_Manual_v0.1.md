@@ -330,7 +330,101 @@ Use **VCO 3 Waveform** to choose VCO 3's shape.
 
 VCO 3 is not patchable yet. It does not add sync, PWM modulation, pitch S&H, or free routing.
 
-## 9. Testing noise
+## 9. Three-oscillator tuning notes
+
+Use this section when the sound becomes thick, muddy, or too loud.
+
+### Start one oscillator at a time
+
+Begin with:
+
+```text
+VCO 1 Level: low to medium
+VCO 2 Level: 0
+VCO 3 Level: 0
+White NS Level: 0
+```
+
+Get VCO 1 sounding useful before adding more sources.
+
+Then raise **VCO 2 Level** slowly. After that, raise **VCO 3 Level** slowly.
+
+### Unison tuning
+
+For a solid basic sound, set all three oscillators near the same pitch:
+
+```text
+VCO 1 Coarse Freq: 220 Hz
+VCO 2 Coarse Freq: 220 Hz
+VCO 3 Coarse Freq: 220 Hz
+Fine Freq controls: 0 cent
+```
+
+This gives a centred three-oscillator sound.
+
+### Slight detune
+
+For a wider sound, keep the coarse frequencies the same and move the fine controls only a little:
+
+```text
+VCO 1 Fine Freq: 0 cent
+VCO 2 Fine Freq: -3 to -7 cent
+VCO 3 Fine Freq: +3 to +7 cent
+```
+
+Small detune can make the sound feel alive.
+
+Too much detune can make the pitch unclear. If the sound turns messy, move the fine controls closer to 0.
+
+### Octave-style spread
+
+For a bigger sound, set one oscillator lower or higher.
+
+Simple octave-style test:
+
+```text
+VCO 1 Coarse Freq: 220 Hz
+VCO 2 Coarse Freq: 440 Hz
+VCO 3 Coarse Freq: 110 Hz
+```
+
+This gives one centre pitch, one higher layer, and one lower layer.
+
+Keep levels low when using octave spread, because the sound can become large quickly.
+
+### Fifth-style spread
+
+For a stronger harmonic sound, try a fifth-style spread:
+
+```text
+VCO 1 Coarse Freq: 220 Hz
+VCO 2 Coarse Freq: 330 Hz
+VCO 3 Coarse Freq: 220 Hz
+```
+
+This keeps VCO 1 and VCO 3 centred while VCO 2 adds a higher harmonic layer.
+
+Use small levels at first. A fifth can sound strong even when the oscillator level is low.
+
+### Keep levels low
+
+Three oscillators plus noise can get loud quickly.
+
+Safe starting levels:
+
+```text
+VCO 1 Level: 0.25 to 0.35
+VCO 2 Level: 0.10 to 0.20
+VCO 3 Level: 0.10 to 0.20
+White NS Level: 0 to 0.05
+Output: low
+```
+
+Raise only one level at a time.
+
+If the sound gets harsh, reduce oscillator levels before raising the output.
+
+## 10. Testing noise
 
 Noise works as another source alongside VCO 1, VCO 2, and VCO 3.
 
@@ -346,7 +440,7 @@ Use **White NS Level** to bring the selected noise in.
 
 The name still says **White NS Level** because it matches the visible faceplate label, but in the First Voice panel it controls the amount of whichever noise type is selected.
 
-## 10. Testing the filter
+## 11. Testing the filter
 
 Use Saw, Square, Pulse, White Noise, Pink Noise, or Brown Noise when testing the filter.
 
@@ -358,7 +452,7 @@ These sources contain enough frequency material for the low-pass filter to remov
 
 At this stage, resonance is capped for safety. It should colour the sound, but it should not run away or self-oscillate.
 
-## 11. Testing LFO 1 filter modulation
+## 12. Testing LFO 1 filter modulation
 
 LFO 1 moves the low-pass filter cutoff smoothly.
 
@@ -368,7 +462,7 @@ LFO 1 moves the low-pass filter cutoff smoothly.
 | LFO-1 Mod | Controls how much the filter moves. |
 | Filter Cutoff | Sets the base/centre cutoff around which the LFO moves. |
 
-## 12. Testing Sample & Hold filter modulation
+## 13. Testing Sample & Hold filter modulation
 
 Sample & Hold moves the low-pass filter cutoff in stepped random changes.
 
@@ -380,7 +474,7 @@ It does not affect pitch yet. It is not patchable yet.
 | S&H Mod | Controls how much the random value moves the filter cutoff. |
 | Filter Cutoff | Sets the base/centre cutoff. |
 
-## 13. Testing LFO 2 VCA modulation
+## 14. Testing LFO 2 VCA modulation
 
 LFO 2 moves the Main VCA level.
 
@@ -392,7 +486,7 @@ This is tremolo: the sound gets louder and quieter automatically.
 | LFO-2 Mod | Controls how deep the level movement is. |
 | Gate Note / Release | Still controls the overall note shape. |
 
-## 14. Testing Envelope Mode
+## 15. Testing Envelope Mode
 
 **Envelope Mode** chooses how **Gate Note**, **Release**, and **Repeat Gate** shape the Main VCA.
 
@@ -411,7 +505,7 @@ In ADSR mode:
 4. The sound stays at **ADSR Sustain** while the gate is open.
 5. **Release** or the Repeat Gate release phase fades the sound using **ADSR Release**.
 
-## 15. Testing Repeat Gate
+## 16. Testing Repeat Gate
 
 Repeat Gate repeatedly triggers the current envelope.
 
@@ -423,7 +517,7 @@ It does not change pitch. It is not a sequencer. It is not patchable yet.
 | Repeat Gate Rate | Controls how often the envelope is triggered. |
 | Envelope Mode | Chooses whether Repeat Gate triggers AR or ADSR behaviour. |
 
-## 16. Why sine behaves differently
+## 17. Why sine behaves differently
 
 Sine is included because it is a useful basic waveform.
 
@@ -448,7 +542,7 @@ To test the filter clearly, use:
 - Pink Noise
 - Brown Noise
 
-## 17. What is still visual-only
+## 18. What is still visual-only
 
 Most of the large faceplate is still visual-only.
 
@@ -477,7 +571,7 @@ These are not active yet:
 
 The **VCO 1**, **VCO 2**, **VCO 3**, **ADSR Env. Gen.**, **Sample & Hold**, and **Repeat Gate** concepts have now started to become active through the First Voice panel, but they are not yet patchable modules.
 
-## 18. What not to expect yet
+## 19. What not to expect yet
 
 Do not expect:
 
@@ -501,7 +595,7 @@ Do not expect:
 - VST plugin behaviour
 - exact MFOS hardware emulation
 
-## 19. Current safe test patch
+## 20. Current safe test patch
 
 Use this simple patch for testing:
 
@@ -558,7 +652,7 @@ Then test:
 14. Turn **Repeat Gate** Off.
 15. Press **Panic Stop**.
 
-## 20. Manual update rule
+## 21. Manual update rule
 
 This is a living manual.
 
