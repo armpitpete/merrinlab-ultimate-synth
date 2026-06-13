@@ -9,6 +9,11 @@
     waveform: "sawtooth",
     pulseWidth: 50,
     vcoLevel: 0.35,
+    vco2CoarseFreq: 220,
+    vco2FineCents: 0,
+    vco2Waveform: "sawtooth",
+    vco2PulseWidth: 50,
+    vco2Level: 0,
     noiseType: "white",
     whiteNoiseLevel: 0,
     cutoff: 900,
@@ -34,6 +39,8 @@
   let audioContext = null;
   let oscillator = null;
   let vcoGain = null;
+  let oscillator2 = null;
+  let vco2Gain = null;
   let noiseSource = null;
   let noiseGain = null;
   let lfo1Oscillator = null;
@@ -59,6 +66,10 @@
     fineCents: [-100, 100],
     pulseWidth: [10, 90],
     vcoLevel: [0, 0.7],
+    vco2CoarseFreq: [55, 880],
+    vco2FineCents: [-100, 100],
+    vco2PulseWidth: [10, 90],
+    vco2Level: [0, 0.45],
     whiteNoiseLevel: [0, 0.35],
     cutoff: [120, 6500],
     resonance: [0.1, 12],
@@ -79,11 +90,16 @@
   };
 
   const labels = {
-    coarseFreq: "Coarse Freq",
-    fineCents: "Fine Freq",
-    waveform: "Waveform",
-    pulseWidth: "Pulse Width %",
+    coarseFreq: "VCO 1 Coarse Freq",
+    fineCents: "VCO 1 Fine Freq",
+    waveform: "VCO 1 Waveform",
+    pulseWidth: "VCO 1 Pulse Width %",
     vcoLevel: "VCO 1 Level",
+    vco2CoarseFreq: "VCO 2 Coarse Freq",
+    vco2FineCents: "VCO 2 Fine Freq",
+    vco2Waveform: "VCO 2 Waveform",
+    vco2PulseWidth: "VCO 2 Pulse Width %",
+    vco2Level: "VCO 2 Level",
     noiseType: "Noise Type",
     whiteNoiseLevel: "White NS Level",
     cutoff: "Filter Cutoff",
@@ -111,6 +127,10 @@
     fineCents: "cent",
     pulseWidth: "%",
     vcoLevel: "",
+    vco2CoarseFreq: "Hz",
+    vco2FineCents: "cent",
+    vco2PulseWidth: "%",
+    vco2Level: "",
     whiteNoiseLevel: "",
     cutoff: "Hz",
     resonance: "Q",
@@ -164,11 +184,19 @@
     param.setTargetAtTime(value, time, rampTime);
   }
 
-  function getVcoFrequency() {
-    const coarse = clamp(state.coarseFreq, "coarseFreq");
-    const fine = clamp(state.fineCents, "fineCents");
+  function getOscillatorFrequency(coarseKey, fineKey) {
+    const coarse = clamp(state[coarseKey], coarseKey);
+    const fine = clamp(state[fineKey], fineKey);
     const frequency = coarse * Math.pow(2, fine / 1200);
     return Math.min(1200, Math.max(40, frequency));
+  }
+
+  function getVcoFrequency() {
+    return getOscillatorFrequency("coarseFreq", "fineCents");
+  }
+
+  function getVco2Frequency() {
+    return getOscillatorFrequency("vco2CoarseFreq", "vco2FineCents");
   }
 
   function getFilterHeadroom() {
@@ -299,8 +327,8 @@
     safeRamp(lfo2Offset.offset, 1 - depth / 2, now, 0.04);
   }
 
-  function createPulseWave(dutyPercent) {
-    const duty = clamp(dutyPercent, "pulseWidth") / 100;
+  function createPulseWave(dutyPercent, pulseWidthKey = "pulseWidth") {
+    const duty = clamp(dutyPercent, pulseWidthKey) / 100;
     const harmonics = 64;
     const real = new Float32Array(harmonics + 1);
     const imag = new Float32Array(harmonics + 1);
@@ -396,15 +424,23 @@
     noiseSource.start();
   }
 
-  function applyWaveform() {
-    if (!audioContext || !oscillator) return;
+  function applyOscillatorWaveform(targetOscillator, waveform, pulseWidth, pulseWidthKey) {
+    if (!audioContext || !targetOscillator) return;
 
-    if (state.waveform === "pulse") {
-      oscillator.setPeriodicWave(createPulseWave(state.pulseWidth));
+    if (waveform === "pulse") {
+      targetOscillator.setPeriodicWave(createPulseWave(pulseWidth, pulseWidthKey));
       return;
     }
 
-    oscillator.type = state.waveform;
+    targetOscillator.type = waveform;
+  }
+
+  function applyWaveform() {
+    applyOscillatorWaveform(oscillator, state.waveform, state.pulseWidth, "pulseWidth");
+  }
+
+  function applyVco2Waveform() {
+    applyOscillatorWaveform(oscillator2, state.vco2Waveform, state.vco2PulseWidth, "vco2PulseWidth");
   }
 
   function createAudioGraph() {
@@ -425,6 +461,13 @@
 
     vcoGain = audioContext.createGain();
     vcoGain.gain.value = state.vcoLevel;
+
+    oscillator2 = audioContext.createOscillator();
+    oscillator2.frequency.value = getVco2Frequency();
+    applyVco2Waveform();
+
+    vco2Gain = audioContext.createGain();
+    vco2Gain.gain.value = state.vco2Level;
 
     noiseSource = createNoiseSource();
     noiseGain = audioContext.createGain();
@@ -474,6 +517,9 @@
     oscillator.connect(vcoGain);
     vcoGain.connect(filter);
 
+    oscillator2.connect(vco2Gain);
+    vco2Gain.connect(filter);
+
     noiseSource.connect(noiseGain);
     noiseGain.connect(filter);
 
@@ -492,6 +538,7 @@
     limiter.connect(audioContext.destination);
 
     oscillator.start();
+    oscillator2.start();
     noiseSource.start();
     lfo1Oscillator.start();
     sampleHoldSource.start();
@@ -509,7 +556,7 @@
     }
 
     document.body.classList.add("is-audio-started");
-    setStatus(`Audio ready · VCO 1 + ${state.noiseType} noise · Repeat Gate available`);
+    setStatus(`Audio ready · VCO 1 + VCO 2 + ${state.noiseType} noise · safe output`);
     applyAllParameters();
   }
 
@@ -619,6 +666,12 @@
     }
 
     try {
+      if (oscillator2) oscillator2.stop();
+    } catch (_error) {
+      // Oscillator may already be stopped. Panic still succeeds.
+    }
+
+    try {
       if (noiseSource) noiseSource.stop();
     } catch (_error) {
       // Noise may already be stopped. Panic still succeeds.
@@ -659,6 +712,8 @@
     audioContext = null;
     oscillator = null;
     vcoGain = null;
+    oscillator2 = null;
+    vco2Gain = null;
     noiseSource = null;
     noiseGain = null;
     lfo1Oscillator = null;
@@ -683,8 +738,13 @@
     applyParameter("fineCents");
     applyParameter("waveform");
     applyParameter("pulseWidth");
-    applyParameter("noiseType");
     applyParameter("vcoLevel");
+    applyParameter("vco2CoarseFreq");
+    applyParameter("vco2FineCents");
+    applyParameter("vco2Waveform");
+    applyParameter("vco2PulseWidth");
+    applyParameter("vco2Level");
+    applyParameter("noiseType");
     applyParameter("whiteNoiseLevel");
     applyParameter("cutoff");
     applyParameter("resonance");
@@ -708,8 +768,16 @@
       safeRamp(oscillator.frequency, getVcoFrequency(), now, 0.015);
     }
 
+    if ((key === "vco2CoarseFreq" || key === "vco2FineCents") && oscillator2) {
+      safeRamp(oscillator2.frequency, getVco2Frequency(), now, 0.015);
+    }
+
     if (key === "waveform" || key === "pulseWidth") {
       applyWaveform();
+    }
+
+    if (key === "vco2Waveform" || key === "vco2PulseWidth") {
+      applyVco2Waveform();
     }
 
     if (key === "noiseType") {
@@ -719,6 +787,10 @@
 
     if (key === "vcoLevel" && vcoGain) {
       safeRamp(vcoGain.gain, clamp(state.vcoLevel, "vcoLevel"), now, 0.02);
+    }
+
+    if (key === "vco2Level" && vco2Gain) {
+      safeRamp(vco2Gain.gain, clamp(state.vco2Level, "vco2Level"), now, 0.02);
     }
 
     if (key === "whiteNoiseLevel" && noiseGain) {
@@ -789,9 +861,9 @@
   }
 
   function formatValue(key, value) {
-    if (key === "coarseFreq" || key === "cutoff") return `${Math.round(value)} ${units[key]}`;
-    if (key === "fineCents") return `${Number(value).toFixed(0)} ${units[key]}`;
-    if (key === "pulseWidth") return `${Number(value).toFixed(0)} ${units[key]}`;
+    if (key === "coarseFreq" || key === "vco2CoarseFreq" || key === "cutoff") return `${Math.round(value)} ${units[key]}`;
+    if (key === "fineCents" || key === "vco2FineCents") return `${Number(value).toFixed(0)} ${units[key]}`;
+    if (key === "pulseWidth" || key === "vco2PulseWidth") return `${Number(value).toFixed(0)} ${units[key]}`;
     if (key === "lfo1Rate" || key === "lfo2Rate" || key === "sampleHoldRate" || key === "repeatGateRate") return `${Number(value).toFixed(2)} ${units[key]}`;
     if (key === "lfo1Mod" || key === "lfo2Mod" || key === "sampleHoldMod" || key === "adsrSustain") return `${Math.round(Number(value) * 100)} ${units[key]}`;
     if (key === "attack" || key === "release" || key === "adsrAttack" || key === "adsrDecay" || key === "adsrRelease") return `${Number(value).toFixed(2)} ${units[key]}`;
@@ -834,7 +906,7 @@
         right: 18px;
         bottom: 18px;
         z-index: 50;
-        width: min(360px, calc(100vw - 36px));
+        width: min(380px, calc(100vw - 36px));
         max-height: calc(100vh - 36px);
         overflow: auto;
         padding: 14px;
@@ -893,7 +965,7 @@
       .audio-slider-row,
       .audio-select-row {
         display: grid;
-        grid-template-columns: 94px 1fr 62px;
+        grid-template-columns: 112px 1fr 62px;
         align-items: center;
         gap: 8px;
         margin: 8px 0;
@@ -923,6 +995,7 @@
       }
 
       body.is-audio-started .vco-bank .vco-module:first-child .status-light,
+      body.is-audio-started .vco-bank .vco-module:nth-child(2) .status-light,
       body.is-audio-started .mixer-module .status-light,
       body.is-audio-started .lfo1-module .status-light,
       body.is-audio-started .lfo2-module .status-light,
@@ -945,8 +1018,8 @@
     panel.className = "audio-voice-panel";
     panel.setAttribute("aria-label", "First safe audible voice controls");
     panel.innerHTML = `
-      <h2>First Voice v0.9</h2>
-      <p data-audio-status>Stopped · VCO 1 + noise + LFO/S&H + AR/ADSR + Repeat Gate · safe output</p>
+      <h2>First Voice v1.0</h2>
+      <p data-audio-status>Stopped · VCO 1 + VCO 2 + noise + LFO/S&H + AR/ADSR + Repeat Gate · safe output</p>
       <div class="audio-button-row">
         <button type="button" data-audio-action="start">Start Audio</button>
         <button type="button" data-audio-action="gate-on">Gate Note</button>
@@ -961,6 +1034,11 @@
       createSelect("waveform", waveforms),
       createSlider("pulseWidth", 10, 90, 1),
       createSlider("vcoLevel", 0, 0.7, 0.01),
+      createSlider("vco2CoarseFreq", 55, 880, 1),
+      createSlider("vco2FineCents", -100, 100, 1),
+      createSelect("vco2Waveform", waveforms),
+      createSlider("vco2PulseWidth", 10, 90, 1),
+      createSlider("vco2Level", 0, 0.45, 0.01),
       createSelect("noiseType", noiseTypes),
       createSlider("whiteNoiseLevel", 0, 0.35, 0.005),
       createSlider("cutoff", 120, 6500, 1),
@@ -985,7 +1063,7 @@
 
     const note = document.createElement("small");
     note.className = "audio-note";
-    note.textContent = "Repeat Gate repeatedly triggers the current AR/ADSR envelope only. It does not change pitch, add steps, or act as a sequencer.";
+    note.textContent = "VCO 2 is a second oscillator source only. It follows the same filter, envelope, modulation, Repeat Gate, and safe output path as VCO 1.";
     panel.append(note);
 
     document.head.append(style);
