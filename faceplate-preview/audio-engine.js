@@ -27,6 +27,7 @@
     lfo1Mod: 0,
     sampleHoldRate: 2,
     sampleHoldMod: 0,
+    sampleHoldPitchMod: 0,
     lfo2Rate: 1.2,
     lfo2Mod: 0,
     envelopeMode: "ar",
@@ -52,7 +53,7 @@
   let noiseGain = null;
   let lfo1Oscillator = null;
   let lfo1Gain = null;
-  let sampleHoldSource = null;
+  let sampleHoldFilterSource = null;
   let sampleHoldTimerId = null;
   let sampleHoldValue = 0;
   let lfo2Oscillator = null;
@@ -65,7 +66,6 @@
   let limiter = null;
   let repeatGateTimerId = null;
   let repeatGateReleaseTimerId = null;
-  let isGateOpen = false;
   let isRepeatGateHoldingGate = false;
 
   const limits = {
@@ -88,6 +88,7 @@
     lfo1Mod: [0, 1],
     sampleHoldRate: [0.1, 20],
     sampleHoldMod: [0, 1],
+    sampleHoldPitchMod: [0, 1],
     lfo2Rate: [0.05, 12],
     lfo2Mod: [0, 1],
     repeatGateRate: [0.1, 12],
@@ -124,6 +125,7 @@
     lfo1Mod: "LFO-1 Mod",
     sampleHoldRate: "S&H Rate",
     sampleHoldMod: "S&H Mod",
+    sampleHoldPitchMod: "S&H Pitch Mod",
     lfo2Rate: "LFO 2 Rate",
     lfo2Mod: "LFO-2 Mod",
     envelopeMode: "Envelope Mode",
@@ -158,6 +160,7 @@
     lfo1Mod: "%",
     sampleHoldRate: "Hz",
     sampleHoldMod: "%",
+    sampleHoldPitchMod: "%",
     lfo2Rate: "Hz",
     lfo2Mod: "%",
     repeatGateRate: "Hz",
@@ -211,8 +214,16 @@
     return Math.min(1200, Math.max(40, frequency));
   }
 
+  function getSampleHoldPitchCents() {
+    const amount = clamp(state.sampleHoldPitchMod, "sampleHoldPitchMod");
+    const maxDepthCents = 700;
+    return sampleHoldValue * amount * maxDepthCents;
+  }
+
   function getVcoFrequency() {
-    return getOscillatorFrequency("coarseFreq", "fineCents");
+    const baseFrequency = getOscillatorFrequency("coarseFreq", "fineCents");
+    const shiftedFrequency = baseFrequency * Math.pow(2, getSampleHoldPitchCents() / 1200);
+    return Math.min(1600, Math.max(30, shiftedFrequency));
   }
 
   function getVco2Frequency() {
@@ -257,6 +268,11 @@
     return Math.max(30, Math.min(intervalMs * 0.45, intervalMs - 20));
   }
 
+  function applyVco1Frequency() {
+    if (!audioContext || !oscillator) return;
+    safeRamp(oscillator.frequency, getVcoFrequency(), audioContext.currentTime, 0.015);
+  }
+
   function applyFilterCutoffAndModulators() {
     if (!audioContext || !filter) return;
 
@@ -267,17 +283,22 @@
       safeRamp(lfo1Gain.gain, getSafeLfoDepth(), now, 0.04);
     }
 
-    if (sampleHoldSource) {
-      safeRamp(sampleHoldSource.offset, sampleHoldValue * getSafeSampleHoldDepth(), now, 0.02);
+    if (sampleHoldFilterSource) {
+      safeRamp(sampleHoldFilterSource.offset, sampleHoldValue * getSafeSampleHoldDepth(), now, 0.02);
     }
   }
 
   function updateSampleHoldValue() {
-    if (!audioContext || !sampleHoldSource) return;
+    if (!audioContext) return;
 
     sampleHoldValue = Math.random() * 2 - 1;
     const now = audioContext.currentTime;
-    safeRamp(sampleHoldSource.offset, sampleHoldValue * getSafeSampleHoldDepth(), now, 0.01);
+
+    if (sampleHoldFilterSource) {
+      safeRamp(sampleHoldFilterSource.offset, sampleHoldValue * getSafeSampleHoldDepth(), now, 0.01);
+    }
+
+    applyVco1Frequency();
   }
 
   function stopSampleHoldTimer() {
@@ -429,7 +450,7 @@
   }
 
   function replaceNoiseSource() {
-    if (!audioContext || !noiseGain || !filter) return;
+    if (!audioContext || !noiseGain) return;
 
     try {
       if (noiseSource) noiseSource.stop();
@@ -520,8 +541,8 @@
     lfo1Gain = audioContext.createGain();
     lfo1Gain.gain.value = getSafeLfoDepth();
 
-    sampleHoldSource = audioContext.createConstantSource();
-    sampleHoldSource.offset.value = 0;
+    sampleHoldFilterSource = audioContext.createConstantSource();
+    sampleHoldFilterSource.offset.value = 0;
 
     mainVca = audioContext.createGain();
     mainVca.gain.value = 0;
@@ -563,7 +584,7 @@
 
     lfo1Oscillator.connect(lfo1Gain);
     lfo1Gain.connect(filter.frequency);
-    sampleHoldSource.connect(filter.frequency);
+    sampleHoldFilterSource.connect(filter.frequency);
 
     lfo2Oscillator.connect(lfo2Gain);
     lfo2Gain.connect(tremoloGain.gain);
@@ -580,7 +601,7 @@
     oscillator3.start();
     noiseSource.start();
     lfo1Oscillator.start();
-    sampleHoldSource.start();
+    sampleHoldFilterSource.start();
     startSampleHoldTimer();
     lfo2Oscillator.start();
     lfo2Offset.start();
@@ -605,7 +626,6 @@
     const now = audioContext.currentTime;
     const target = 0.55;
 
-    isGateOpen = true;
     document.body.classList.add("is-audio-gated");
     mainVca.gain.cancelScheduledValues(now);
     mainVca.gain.setValueAtTime(Math.max(0.0001, mainVca.gain.value), now);
@@ -638,7 +658,6 @@
       ? clamp(state.adsrRelease, "adsrRelease")
       : clamp(state.release, "release");
 
-    isGateOpen = false;
     document.body.classList.remove("is-audio-gated");
     mainVca.gain.cancelScheduledValues(now);
     mainVca.gain.setValueAtTime(Math.max(0.0001, mainVca.gain.value), now);
@@ -653,10 +672,10 @@
 
   async function panicStop() {
     document.body.classList.remove("is-audio-started", "is-audio-gated");
-    isGateOpen = false;
     isRepeatGateHoldingGate = false;
     stopSampleHoldTimer();
     stopRepeatGateTimer(false);
+    sampleHoldValue = 0;
 
     if (mainVca && audioContext) {
       mainVca.gain.cancelScheduledValues(audioContext.currentTime);
@@ -673,9 +692,9 @@
       lfo1Gain.gain.setValueAtTime(0, audioContext.currentTime);
     }
 
-    if (sampleHoldSource && audioContext) {
-      sampleHoldSource.offset.cancelScheduledValues(audioContext.currentTime);
-      sampleHoldSource.offset.setValueAtTime(0, audioContext.currentTime);
+    if (sampleHoldFilterSource && audioContext) {
+      sampleHoldFilterSource.offset.cancelScheduledValues(audioContext.currentTime);
+      sampleHoldFilterSource.offset.setValueAtTime(0, audioContext.currentTime);
     }
 
     if (lfo2Gain && audioContext) {
@@ -698,53 +717,13 @@
       masterGain.gain.setValueAtTime(0, audioContext.currentTime);
     }
 
-    try {
-      if (oscillator) oscillator.stop();
-    } catch (_error) {
-      // Oscillator may already be stopped. Panic still succeeds.
-    }
-
-    try {
-      if (oscillator2) oscillator2.stop();
-    } catch (_error) {
-      // Oscillator may already be stopped. Panic still succeeds.
-    }
-
-    try {
-      if (oscillator3) oscillator3.stop();
-    } catch (_error) {
-      // Oscillator may already be stopped. Panic still succeeds.
-    }
-
-    try {
-      if (noiseSource) noiseSource.stop();
-    } catch (_error) {
-      // Noise may already be stopped. Panic still succeeds.
-    }
-
-    try {
-      if (lfo1Oscillator) lfo1Oscillator.stop();
-    } catch (_error) {
-      // LFO may already be stopped. Panic still succeeds.
-    }
-
-    try {
-      if (sampleHoldSource) sampleHoldSource.stop();
-    } catch (_error) {
-      // S&H source may already be stopped. Panic still succeeds.
-    }
-
-    try {
-      if (lfo2Oscillator) lfo2Oscillator.stop();
-    } catch (_error) {
-      // LFO may already be stopped. Panic still succeeds.
-    }
-
-    try {
-      if (lfo2Offset) lfo2Offset.stop();
-    } catch (_error) {
-      // Constant source may already be stopped. Panic still succeeds.
-    }
+    [oscillator, oscillator2, oscillator3, noiseSource, lfo1Oscillator, sampleHoldFilterSource, lfo2Oscillator, lfo2Offset].forEach((source) => {
+      try {
+        if (source) source.stop();
+      } catch (_error) {
+        // Source may already be stopped. Panic still succeeds.
+      }
+    });
 
     try {
       if (audioContext && audioContext.state !== "closed") {
@@ -765,8 +744,7 @@
     noiseGain = null;
     lfo1Oscillator = null;
     lfo1Gain = null;
-    sampleHoldSource = null;
-    sampleHoldValue = 0;
+    sampleHoldFilterSource = null;
     lfo2Oscillator = null;
     lfo2Gain = null;
     lfo2Offset = null;
@@ -781,43 +759,46 @@
 
   function applyAllParameters() {
     if (!audioContext) return;
-    applyParameter("coarseFreq");
-    applyParameter("fineCents");
-    applyParameter("waveform");
-    applyParameter("pulseWidth");
-    applyParameter("vcoLevel");
-    applyParameter("vco2CoarseFreq");
-    applyParameter("vco2FineCents");
-    applyParameter("vco2Waveform");
-    applyParameter("vco2PulseWidth");
-    applyParameter("vco2Level");
-    applyParameter("vco3CoarseFreq");
-    applyParameter("vco3FineCents");
-    applyParameter("vco3Waveform");
-    applyParameter("vco3PulseWidth");
-    applyParameter("vco3Level");
-    applyParameter("noiseType");
-    applyParameter("whiteNoiseLevel");
-    applyParameter("cutoff");
-    applyParameter("resonance");
-    applyParameter("lfo1Rate");
-    applyParameter("lfo1Mod");
-    applyParameter("sampleHoldRate");
-    applyParameter("sampleHoldMod");
-    applyParameter("lfo2Rate");
-    applyParameter("lfo2Mod");
-    applyParameter("envelopeMode");
-    applyParameter("repeatGate");
-    applyParameter("repeatGateRate");
-    applyParameter("output");
+    [
+      "coarseFreq",
+      "fineCents",
+      "waveform",
+      "pulseWidth",
+      "vcoLevel",
+      "vco2CoarseFreq",
+      "vco2FineCents",
+      "vco2Waveform",
+      "vco2PulseWidth",
+      "vco2Level",
+      "vco3CoarseFreq",
+      "vco3FineCents",
+      "vco3Waveform",
+      "vco3PulseWidth",
+      "vco3Level",
+      "noiseType",
+      "whiteNoiseLevel",
+      "cutoff",
+      "resonance",
+      "lfo1Rate",
+      "lfo1Mod",
+      "sampleHoldRate",
+      "sampleHoldMod",
+      "sampleHoldPitchMod",
+      "lfo2Rate",
+      "lfo2Mod",
+      "envelopeMode",
+      "repeatGate",
+      "repeatGateRate",
+      "output",
+    ].forEach(applyParameter);
   }
 
   function applyParameter(key) {
     if (!audioContext) return;
     const now = audioContext.currentTime;
 
-    if ((key === "coarseFreq" || key === "fineCents") && oscillator) {
-      safeRamp(oscillator.frequency, getVcoFrequency(), now, 0.015);
+    if (key === "coarseFreq" || key === "fineCents" || key === "sampleHoldPitchMod") {
+      applyVco1Frequency();
     }
 
     if ((key === "vco2CoarseFreq" || key === "vco2FineCents") && oscillator2) {
@@ -828,17 +809,9 @@
       safeRamp(oscillator3.frequency, getVco3Frequency(), now, 0.015);
     }
 
-    if (key === "waveform" || key === "pulseWidth") {
-      applyWaveform();
-    }
-
-    if (key === "vco2Waveform" || key === "vco2PulseWidth") {
-      applyVco2Waveform();
-    }
-
-    if (key === "vco3Waveform" || key === "vco3PulseWidth") {
-      applyVco3Waveform();
-    }
+    if (key === "waveform" || key === "pulseWidth") applyWaveform();
+    if (key === "vco2Waveform" || key === "vco2PulseWidth") applyVco2Waveform();
+    if (key === "vco3Waveform" || key === "vco3PulseWidth") applyVco3Waveform();
 
     if (key === "noiseType") {
       replaceNoiseSource();
@@ -861,7 +834,7 @@
       safeRamp(noiseGain.gain, clamp(state.whiteNoiseLevel, "whiteNoiseLevel"), now, 0.02);
     }
 
-    if (key === "cutoff") {
+    if (key === "cutoff" || key === "lfo1Mod" || key === "sampleHoldMod") {
       applyFilterCutoffAndModulators();
     }
 
@@ -873,16 +846,8 @@
       safeRamp(lfo1Oscillator.frequency, clamp(state.lfo1Rate, "lfo1Rate"), now, 0.04);
     }
 
-    if (key === "lfo1Mod") {
-      applyFilterCutoffAndModulators();
-    }
-
     if (key === "sampleHoldRate") {
       startSampleHoldTimer();
-    }
-
-    if (key === "sampleHoldMod") {
-      applyFilterCutoffAndModulators();
     }
 
     if (key === "lfo2Rate" && lfo2Oscillator) {
@@ -907,11 +872,9 @@
       }
     }
 
-    if (key === "repeatGateRate") {
-      if (state.repeatGate === "on") {
-        startRepeatGateTimer();
-        setStatus(`Repeat Gate rate changed · ${formatValue("repeatGateRate", state.repeatGateRate)}`);
-      }
+    if (key === "repeatGateRate" && state.repeatGate === "on") {
+      startRepeatGateTimer();
+      setStatus(`Repeat Gate rate changed · ${formatValue("repeatGateRate", state.repeatGateRate)}`);
     }
 
     if (key === "output" && masterGain) {
@@ -929,7 +892,7 @@
     if (key === "fineCents" || key === "vco2FineCents" || key === "vco3FineCents") return `${Number(value).toFixed(0)} ${units[key]}`;
     if (key === "pulseWidth" || key === "vco2PulseWidth" || key === "vco3PulseWidth") return `${Number(value).toFixed(0)} ${units[key]}`;
     if (key === "lfo1Rate" || key === "lfo2Rate" || key === "sampleHoldRate" || key === "repeatGateRate") return `${Number(value).toFixed(2)} ${units[key]}`;
-    if (key === "lfo1Mod" || key === "lfo2Mod" || key === "sampleHoldMod" || key === "adsrSustain") return `${Math.round(Number(value) * 100)} ${units[key]}`;
+    if (key === "lfo1Mod" || key === "lfo2Mod" || key === "sampleHoldMod" || key === "sampleHoldPitchMod" || key === "adsrSustain") return `${Math.round(Number(value) * 100)} ${units[key]}`;
     if (key === "attack" || key === "release" || key === "adsrAttack" || key === "adsrDecay" || key === "adsrRelease") return `${Number(value).toFixed(2)} ${units[key]}`;
     if (key === "resonance") return `${Number(value).toFixed(1)} ${units[key]}`;
     return Number(value).toFixed(2);
@@ -1122,7 +1085,7 @@
     panel.className = "audio-voice-panel";
     panel.setAttribute("aria-label", "First safe audible voice controls");
     panel.innerHTML = `
-      <h2>First Voice v1.1</h2>
+      <h2>First Voice v1.2</h2>
       <p data-audio-status>Stopped · VCO 1 + VCO 2 + VCO 3 + noise + LFO/S&H + AR/ADSR + Repeat Gate · safe output</p>
     `;
 
@@ -1173,6 +1136,10 @@
         createSlider("sampleHoldMod", 0, 1, 0.01),
       ),
       createGroup(
+        "VCO 1 Pitch Modulation",
+        createSlider("sampleHoldPitchMod", 0, 1, 0.01),
+      ),
+      createGroup(
         "Amplitude / Envelope",
         createSlider("lfo2Rate", 0.05, 12, 0.01),
         createSlider("lfo2Mod", 0, 1, 0.01),
@@ -1197,7 +1164,7 @@
 
     const note = document.createElement("small");
     note.className = "audio-note";
-    note.textContent = "VCO 3 is a third oscillator source only. It follows the same filter, envelope, modulation, Repeat Gate, and safe output path as VCO 1 and VCO 2.";
+    note.textContent = "S&H Pitch Mod is optional and default-off. It moves VCO 1 pitch only. S&H filter modulation remains separate.";
     panel.append(note);
 
     document.head.append(style);
