@@ -9,6 +9,7 @@
     waveform: "sawtooth",
     pulseWidth: 50,
     vcoLevel: 0.35,
+    noiseType: "white",
     whiteNoiseLevel: 0,
     cutoff: 900,
     resonance: 0.7,
@@ -47,6 +48,7 @@
     waveform: "Waveform",
     pulseWidth: "Pulse Width %",
     vcoLevel: "VCO 1 Level",
+    noiseType: "Noise Type",
     whiteNoiseLevel: "White NS Level",
     cutoff: "Filter Cutoff",
     resonance: "Resonance",
@@ -74,6 +76,12 @@
     ["triangle", "Triangle"],
     ["sine", "Sine"],
     ["pulse", "Pulse"],
+  ];
+
+  const noiseTypes = [
+    ["white", "White"],
+    ["pink", "Pink"],
+    ["brown", "Brown"],
   ];
 
   function clamp(value, key) {
@@ -112,20 +120,82 @@
     });
   }
 
-  function createWhiteNoiseSource() {
+  function fillWhiteNoise(channel) {
+    for (let i = 0; i < channel.length; i += 1) {
+      channel[i] = (Math.random() * 2 - 1) * 0.7;
+    }
+  }
+
+  function fillPinkNoise(channel) {
+    let b0 = 0;
+    let b1 = 0;
+    let b2 = 0;
+    let b3 = 0;
+    let b4 = 0;
+    let b5 = 0;
+    let b6 = 0;
+
+    for (let i = 0; i < channel.length; i += 1) {
+      const white = Math.random() * 2 - 1;
+      b0 = 0.99886 * b0 + white * 0.0555179;
+      b1 = 0.99332 * b1 + white * 0.0750759;
+      b2 = 0.96900 * b2 + white * 0.1538520;
+      b3 = 0.86650 * b3 + white * 0.3104856;
+      b4 = 0.55000 * b4 + white * 0.5329522;
+      b5 = -0.7616 * b5 - white * 0.0168980;
+      channel[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.08;
+      b6 = white * 0.115926;
+    }
+  }
+
+  function fillBrownNoise(channel) {
+    let lastOut = 0;
+
+    for (let i = 0; i < channel.length; i += 1) {
+      const white = Math.random() * 2 - 1;
+      lastOut = (lastOut + (0.02 * white)) / 1.02;
+      channel[i] = lastOut * 3.5;
+    }
+  }
+
+  function createNoiseSource() {
     const seconds = 2;
     const sampleRate = audioContext.sampleRate;
     const buffer = audioContext.createBuffer(1, sampleRate * seconds, sampleRate);
     const channel = buffer.getChannelData(0);
 
-    for (let i = 0; i < channel.length; i += 1) {
-      channel[i] = (Math.random() * 2 - 1) * 0.7;
+    if (state.noiseType === "pink") {
+      fillPinkNoise(channel);
+    } else if (state.noiseType === "brown") {
+      fillBrownNoise(channel);
+    } else {
+      fillWhiteNoise(channel);
     }
 
     const source = audioContext.createBufferSource();
     source.buffer = buffer;
     source.loop = true;
     return source;
+  }
+
+  function replaceNoiseSource() {
+    if (!audioContext || !noiseGain || !filter) return;
+
+    try {
+      if (noiseSource) noiseSource.stop();
+    } catch (_error) {
+      // The previous source may already be stopped.
+    }
+
+    try {
+      if (noiseSource) noiseSource.disconnect();
+    } catch (_error) {
+      // Disconnect is best-effort.
+    }
+
+    noiseSource = createNoiseSource();
+    noiseSource.connect(noiseGain);
+    noiseSource.start();
   }
 
   function applyWaveform() {
@@ -158,7 +228,7 @@
     vcoGain = audioContext.createGain();
     vcoGain.gain.value = state.vcoLevel;
 
-    noiseSource = createWhiteNoiseSource();
+    noiseSource = createNoiseSource();
     noiseGain = audioContext.createGain();
     noiseGain.gain.value = state.whiteNoiseLevel;
 
@@ -204,7 +274,7 @@
     }
 
     document.body.classList.add("is-audio-started");
-    setStatus("Audio ready · VCO 1 + white noise · press Gate Note");
+    setStatus(`Audio ready · VCO 1 + ${state.noiseType} noise · press Gate Note`);
     applyAllParameters();
   }
 
@@ -296,6 +366,7 @@
     applyParameter("fineCents");
     applyParameter("waveform");
     applyParameter("pulseWidth");
+    applyParameter("noiseType");
     applyParameter("vcoLevel");
     applyParameter("whiteNoiseLevel");
     applyParameter("cutoff");
@@ -313,6 +384,11 @@
 
     if (key === "waveform" || key === "pulseWidth") {
       applyWaveform();
+    }
+
+    if (key === "noiseType") {
+      replaceNoiseSource();
+      setStatus(`Noise type changed · ${state.noiseType} noise`);
     }
 
     if (key === "vcoLevel" && vcoGain) {
@@ -361,10 +437,10 @@
     return row;
   }
 
-  function createSelect(key) {
+  function createSelect(key, optionsList) {
     const row = document.createElement("label");
     row.className = "audio-select-row";
-    const options = waveforms.map(([value, label]) => {
+    const options = optionsList.map(([value, label]) => {
       const selected = value === state[key] ? " selected" : "";
       return `<option value="${value}"${selected}>${label}</option>`;
     }).join("");
@@ -492,8 +568,8 @@
     panel.className = "audio-voice-panel";
     panel.setAttribute("aria-label", "First safe audible voice controls");
     panel.innerHTML = `
-      <h2>First Voice v0.3</h2>
-      <p data-audio-status>Stopped · VCO 1 + white noise · safe output</p>
+      <h2>First Voice v0.4</h2>
+      <p data-audio-status>Stopped · VCO 1 + selectable noise · safe output</p>
       <div class="audio-button-row">
         <button type="button" data-audio-action="start">Start Audio</button>
         <button type="button" data-audio-action="gate-on">Gate Note</button>
@@ -505,9 +581,10 @@
     panel.append(
       createSlider("coarseFreq", 55, 880, 1),
       createSlider("fineCents", -100, 100, 1),
-      createSelect("waveform"),
+      createSelect("waveform", waveforms),
       createSlider("pulseWidth", 10, 90, 1),
       createSlider("vcoLevel", 0, 0.7, 0.01),
+      createSelect("noiseType", noiseTypes),
       createSlider("whiteNoiseLevel", 0, 0.35, 0.005),
       createSlider("cutoff", 120, 6500, 1),
       createSlider("resonance", 0.1, 12, 0.1),
@@ -518,7 +595,7 @@
 
     const note = document.createElement("small");
     note.className = "audio-note";
-    note.textContent = "VCO 1 and White Noise only. Noise follows the same filter, VCA, output, and Panic Stop safety path. PWM, SYNC, LOG-CV, and LIN-CV remain inactive.";
+    note.textContent = "VCO 1 and selectable noise only. White NS Level controls all noise types. Noise follows the same filter, VCA, output, and Panic Stop safety path.";
     panel.append(note);
 
     document.head.append(style);
@@ -537,7 +614,7 @@
       }
 
       const readout = panel.querySelector(`[data-audio-readout="${key}"]`);
-      if (readout) readout.textContent = key === "waveform" ? state[key] : formatValue(key, state[key]);
+      if (readout) readout.textContent = input.tagName === "SELECT" ? state[key] : formatValue(key, state[key]);
 
       applyParameter(key);
     });
