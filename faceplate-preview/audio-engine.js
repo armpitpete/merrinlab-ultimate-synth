@@ -898,6 +898,30 @@
     return row;
   }
 
+  function createButtonRow() {
+    const row = document.createElement("div");
+    row.className = "audio-button-row";
+    row.innerHTML = `
+      <button type="button" data-audio-action="start">Start Audio</button>
+      <button type="button" data-audio-action="gate-on">Gate Note</button>
+      <button type="button" data-audio-action="gate-off">Release</button>
+      <button type="button" data-audio-action="panic">Panic Stop</button>
+    `;
+    return row;
+  }
+
+  function createGroup(title, ...children) {
+    const group = document.createElement("section");
+    group.className = "audio-control-group";
+
+    const heading = document.createElement("h3");
+    heading.className = "audio-group-title";
+    heading.textContent = title;
+
+    group.append(heading, ...children);
+    return group;
+  }
+
   function createPanel() {
     const style = document.createElement("style");
     style.textContent = `
@@ -931,6 +955,22 @@
         font-size: 0.72rem;
       }
 
+      .audio-control-group {
+        margin: 10px 0 0;
+        padding: 10px 10px 8px;
+        border: 1px solid rgba(215, 184, 132, 0.18);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.025);
+      }
+
+      .audio-group-title {
+        margin: 0 0 8px;
+        color: #e7d1ad;
+        font-size: 0.66rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
       .audio-note {
         display: block;
         margin: 10px 0 0;
@@ -943,7 +983,6 @@
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 8px;
-        margin-bottom: 12px;
       }
 
       .audio-button-row button {
@@ -1020,50 +1059,72 @@
     panel.innerHTML = `
       <h2>First Voice v1.0</h2>
       <p data-audio-status>Stopped · VCO 1 + VCO 2 + noise + LFO/S&H + AR/ADSR + Repeat Gate · safe output</p>
-      <div class="audio-button-row">
-        <button type="button" data-audio-action="start">Start Audio</button>
-        <button type="button" data-audio-action="gate-on">Gate Note</button>
-        <button type="button" data-audio-action="gate-off">Release</button>
-        <button type="button" data-audio-action="panic">Panic Stop</button>
-      </div>
     `;
 
     panel.append(
-      createSlider("coarseFreq", 55, 880, 1),
-      createSlider("fineCents", -100, 100, 1),
-      createSelect("waveform", waveforms),
-      createSlider("pulseWidth", 10, 90, 1),
-      createSlider("vcoLevel", 0, 0.7, 0.01),
-      createSlider("vco2CoarseFreq", 55, 880, 1),
-      createSlider("vco2FineCents", -100, 100, 1),
-      createSelect("vco2Waveform", waveforms),
-      createSlider("vco2PulseWidth", 10, 90, 1),
-      createSlider("vco2Level", 0, 0.45, 0.01),
-      createSelect("noiseType", noiseTypes),
-      createSlider("whiteNoiseLevel", 0, 0.35, 0.005),
-      createSlider("cutoff", 120, 6500, 1),
-      createSlider("resonance", 0.1, 12, 0.1),
-      createSlider("lfo1Rate", 0.05, 12, 0.01),
-      createSlider("lfo1Mod", 0, 1, 0.01),
-      createSlider("sampleHoldRate", 0.1, 20, 0.1),
-      createSlider("sampleHoldMod", 0, 1, 0.01),
-      createSlider("lfo2Rate", 0.05, 12, 0.01),
-      createSlider("lfo2Mod", 0, 1, 0.01),
-      createSelect("envelopeMode", envelopeModes),
-      createSelect("repeatGate", repeatGateModes),
-      createSlider("repeatGateRate", 0.1, 12, 0.1),
-      createSlider("attack", 0.005, 1.5, 0.005),
-      createSlider("release", 0.02, 2.5, 0.01),
-      createSlider("adsrAttack", 0.005, 2, 0.005),
-      createSlider("adsrDecay", 0.005, 3, 0.005),
-      createSlider("adsrSustain", 0, 1, 0.01),
-      createSlider("adsrRelease", 0.02, 4, 0.01),
-      createSlider("output", 0, 0.16, 0.005),
+      createGroup(
+        "Transport / Safety",
+        createButtonRow(),
+      ),
+      createGroup(
+        "VCO 1",
+        createSlider("coarseFreq", 55, 880, 1),
+        createSlider("fineCents", -100, 100, 1),
+        createSelect("waveform", waveforms),
+        createSlider("pulseWidth", 10, 90, 1),
+        createSlider("vcoLevel", 0, 0.7, 0.01),
+      ),
+      createGroup(
+        "VCO 2",
+        createSlider("vco2CoarseFreq", 55, 880, 1),
+        createSlider("vco2FineCents", -100, 100, 1),
+        createSelect("vco2Waveform", waveforms),
+        createSlider("vco2PulseWidth", 10, 90, 1),
+        createSlider("vco2Level", 0, 0.45, 0.01),
+      ),
+      createGroup(
+        "Noise",
+        createSelect("noiseType", noiseTypes),
+        createSlider("whiteNoiseLevel", 0, 0.35, 0.005),
+      ),
+      createGroup(
+        "Filter",
+        createSlider("cutoff", 120, 6500, 1),
+        createSlider("resonance", 0.1, 12, 0.1),
+      ),
+      createGroup(
+        "Filter Modulation",
+        createSlider("lfo1Rate", 0.05, 12, 0.01),
+        createSlider("lfo1Mod", 0, 1, 0.01),
+        createSlider("sampleHoldRate", 0.1, 20, 0.1),
+        createSlider("sampleHoldMod", 0, 1, 0.01),
+      ),
+      createGroup(
+        "Amplitude / Envelope",
+        createSlider("lfo2Rate", 0.05, 12, 0.01),
+        createSlider("lfo2Mod", 0, 1, 0.01),
+        createSelect("envelopeMode", envelopeModes),
+        createSlider("attack", 0.005, 1.5, 0.005),
+        createSlider("release", 0.02, 2.5, 0.01),
+        createSlider("adsrAttack", 0.005, 2, 0.005),
+        createSlider("adsrDecay", 0.005, 3, 0.005),
+        createSlider("adsrSustain", 0, 1, 0.01),
+        createSlider("adsrRelease", 0.02, 4, 0.01),
+      ),
+      createGroup(
+        "Repeat Gate",
+        createSelect("repeatGate", repeatGateModes),
+        createSlider("repeatGateRate", 0.1, 12, 0.1),
+      ),
+      createGroup(
+        "Output",
+        createSlider("output", 0, 0.16, 0.005),
+      ),
     );
 
     const note = document.createElement("small");
     note.className = "audio-note";
-    note.textContent = "VCO 2 is a second oscillator source only. It follows the same filter, envelope, modulation, Repeat Gate, and safe output path as VCO 1.";
+    note.textContent = "Controls are grouped for testing only. VCO 2 still follows the same filter, envelope, modulation, Repeat Gate, and safe output path as VCO 1.";
     panel.append(note);
 
     document.head.append(style);
