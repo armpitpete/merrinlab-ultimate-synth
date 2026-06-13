@@ -2,7 +2,7 @@
 
 **Project:** MerrinLab Ultimate Synth  
 **Manual status:** Living manual  
-**Current playable state:** First browser voice with VCO 1, VCO 2, selectable noise, LFO 1 filter modulation, S&H filter modulation, LFO 2 VCA modulation, optional ADSR envelope mode, and Repeat Gate triggering  
+**Current playable state:** First browser voice with VCO 1, VCO 2, VCO 3, selectable noise, LFO 1 filter modulation, S&H filter modulation, LFO 2 VCA modulation, optional ADSR envelope mode, and Repeat Gate triggering  
 
 ## 1. What this is
 
@@ -17,18 +17,19 @@ It is not a VST. It is not a JUCE app. It is not a full MFOS hardware emulation.
 The current goal is simple:
 
 ```text
-Make one safe, shaped, filterable sound using VCO 1, VCO 2, selectable noise, filter movement, level movement, optional envelope shaping, simple stepped S&H filter movement, and Repeat Gate envelope triggering.
+Make one safe, shaped, filterable sound using VCO 1, VCO 2, VCO 3, selectable noise, filter movement, level movement, optional envelope shaping, simple stepped S&H filter movement, and Repeat Gate envelope triggering.
 ```
 
 ## Quick-start test route
 
-Use this route when you only want to check that First Voice v1.0 still works.
+Use this route when you only want to check that First Voice v1.1 still works.
 
 Start with everything quiet:
 
 ```text
 Output: low
 VCO 2 Level: 0
+VCO 3 Level: 0
 White NS Level: 0
 LFO-1 Mod: 0
 S&H Mod: 0
@@ -43,22 +44,24 @@ Then test in this order:
 2. Press **Gate Note**.
 3. Use **VCO 1 Level** and **VCO 1 Coarse Freq** to hear VCO 1.
 4. Raise **VCO 2 Level** slowly and tune VCO 2 near VCO 1.
-5. Raise **White NS Level** slowly if you want noise.
-6. Move **Filter Cutoff** down and up.
-7. Raise **Resonance** carefully.
-8. Raise **LFO-1 Mod** and adjust **LFO 1 Rate** for smooth filter movement.
-9. Raise **S&H Mod** and adjust **S&H Rate** for stepped random filter movement.
-10. Raise **LFO-2 Mod** and adjust **LFO 2 Rate** for tremolo.
-11. Change **Envelope Mode** to ADSR and test **ADSR Attack**, **ADSR Decay**, **ADSR Sustain**, and **ADSR Release**.
-12. Turn **Repeat Gate** On and adjust **Repeat Gate Rate**.
-13. Turn **Repeat Gate** Off.
-14. Press **Release**.
-15. Press **Panic Stop**.
+5. Raise **VCO 3 Level** slowly and tune VCO 3 near VCO 1 and VCO 2.
+6. Raise **White NS Level** slowly if you want noise.
+7. Move **Filter Cutoff** down and up.
+8. Raise **Resonance** carefully.
+9. Raise **LFO-1 Mod** and adjust **LFO 1 Rate** for smooth filter movement.
+10. Raise **S&H Mod** and adjust **S&H Rate** for stepped random filter movement.
+11. Raise **LFO-2 Mod** and adjust **LFO 2 Rate** for tremolo.
+12. Change **Envelope Mode** to ADSR and test **ADSR Attack**, **ADSR Decay**, **ADSR Sustain**, and **ADSR Release**.
+13. Turn **Repeat Gate** On and adjust **Repeat Gate Rate**.
+14. Turn **Repeat Gate** Off.
+15. Press **Release**.
+16. Press **Panic Stop**.
 
 Good enough means:
 
 - VCO 1 makes sound.
 - VCO 2 can be added without a jump in volume.
+- VCO 3 can be added without a jump in volume.
 - Noise can be added slowly.
 - Filter, LFO 1, S&H, LFO 2, ADSR, and Repeat Gate all affect the current voice.
 - **Panic Stop** makes everything silent.
@@ -68,7 +71,7 @@ Good enough means:
 The working part is the floating panel called:
 
 ```text
-First Voice v1.0
+First Voice v1.1
 ```
 
 This panel controls the current playable voice.
@@ -91,9 +94,14 @@ Current working controls:
 | VCO 2 Waveform | Chooses the active VCO 2 waveform. |
 | VCO 2 Pulse Width % | Changes VCO 2 Pulse waveform shape only. |
 | VCO 2 Level | Sets how much VCO 2 enters the signal path. |
+| VCO 3 Coarse Freq | Sets the main VCO 3 pitch. |
+| VCO 3 Fine Freq | Detunes VCO 3 slightly around the coarse pitch. |
+| VCO 3 Waveform | Chooses the active VCO 3 waveform. |
+| VCO 3 Pulse Width % | Changes VCO 3 Pulse waveform shape only. |
+| VCO 3 Level | Sets how much VCO 3 enters the signal path. |
 | Noise Type | Selects the noise colour: White, Pink, or Brown. |
 | White NS Level | Sets how much selected noise enters the signal path. |
-| Filter Cutoff | Sets the base/centre brightness of VCO 1, VCO 2, and noise. |
+| Filter Cutoff | Sets the base/centre brightness of VCO 1, VCO 2, VCO 3, and noise. |
 | Resonance | Emphasises the sound around the filter cutoff point. |
 | LFO 1 Rate | Sets the speed of the filter cutoff movement. |
 | LFO-1 Mod | Sets how much LFO 1 moves the filter cutoff. |
@@ -119,6 +127,7 @@ The current audio path is:
 ```text
 VCO 1 ─────────┐
 VCO 2 ─────────┤
+VCO 3 ─────────┤
                ↓
 Selected Noise → simple mixer stage
                ↓
@@ -169,37 +178,38 @@ Envelope Mode: AR or ADSR
 Main VCA
 ```
 
-Only VCO 1, VCO 2, the selected noise source, LFO 1 filter modulation, S&H filter modulation, LFO 2 VCA modulation, the selected envelope mode, and Repeat Gate triggering are active.
+Only VCO 1, VCO 2, VCO 3, the selected noise source, LFO 1 filter modulation, S&H filter modulation, LFO 2 VCA modulation, the selected envelope mode, and Repeat Gate triggering are active.
 
 ## 4. How to make a sound safely
 
 Use this order:
 
 1. Open the live preview page.
-2. Find the floating **First Voice v1.0** panel.
+2. Find the floating **First Voice v1.1** panel.
 3. Keep **Output** low at first.
 4. Keep **VCO 2 Level** at 0 at first.
-5. Keep **White NS Level** at 0 at first.
-6. Keep **LFO-1 Mod** at 0 at first.
-7. Keep **S&H Mod** at 0 at first.
-8. Keep **LFO-2 Mod** at 0 at first.
-9. Keep **Repeat Gate** Off at first.
-10. Leave **Envelope Mode** on AR at first.
-11. Press **Start Audio**.
-12. Press **Gate Note**.
-13. Adjust **VCO 1 Level** if the oscillator is too quiet.
-14. Raise **VCO 2 Level** slowly if you want a second oscillator.
-15. Adjust **VCO 2 Coarse Freq**, **VCO 2 Fine Freq**, and **VCO 2 Waveform**.
-16. Raise **White NS Level** slowly if you want noise.
-17. Adjust **Filter Cutoff** to set the base brightness.
-18. Raise **LFO-1 Mod** slowly if you want smooth filter movement.
-19. Raise **S&H Mod** slowly if you want stepped random filter movement.
-20. Raise **LFO-2 Mod** slowly if you want tremolo.
-21. Change **Envelope Mode** to ADSR only after the basic sound works.
-22. Turn **Repeat Gate** On only after audio is already started.
-23. Adjust **Repeat Gate Rate** slowly.
-24. Press **Release** to let the selected envelope fade, or turn **Repeat Gate** Off.
-25. Press **Panic Stop** if anything behaves unexpectedly.
+5. Keep **VCO 3 Level** at 0 at first.
+6. Keep **White NS Level** at 0 at first.
+7. Keep **LFO-1 Mod** at 0 at first.
+8. Keep **S&H Mod** at 0 at first.
+9. Keep **LFO-2 Mod** at 0 at first.
+10. Keep **Repeat Gate** Off at first.
+11. Leave **Envelope Mode** on AR at first.
+12. Press **Start Audio**.
+13. Press **Gate Note**.
+14. Adjust **VCO 1 Level** if the oscillator is too quiet.
+15. Raise **VCO 2 Level** slowly if you want a second oscillator.
+16. Raise **VCO 3 Level** slowly if you want a third oscillator.
+17. Raise **White NS Level** slowly if you want noise.
+18. Adjust **Filter Cutoff** to set the base brightness.
+19. Raise **LFO-1 Mod** slowly if you want smooth filter movement.
+20. Raise **S&H Mod** slowly if you want stepped random filter movement.
+21. Raise **LFO-2 Mod** slowly if you want tremolo.
+22. Change **Envelope Mode** to ADSR only after the basic sound works.
+23. Turn **Repeat Gate** On only after audio is already started.
+24. Adjust **Repeat Gate Rate** slowly.
+25. Press **Release** to let the selected envelope fade, or turn **Repeat Gate** Off.
+26. Press **Panic Stop** if anything behaves unexpectedly.
 
 ## 5. How to stop the sound
 
@@ -214,6 +224,7 @@ Use **Panic Stop** when you want immediate silence.
 - closes the note level immediately
 - stops VCO 1
 - stops VCO 2
+- stops VCO 3
 - silences the noise level
 - stops LFO 1 filter movement
 - stops S&H filter movement
@@ -235,43 +246,11 @@ VCO 1 has these active waveform choices:
 - Sine
 - Pulse
 
-### VCO 1 Coarse Freq
-
-Use **VCO 1 Coarse Freq** for the main pitch.
-
-Move it slowly. It changes the oscillator frequency across a safe test range.
-
-### VCO 1 Fine Freq
-
-Use **VCO 1 Fine Freq** for small tuning changes.
-
-It moves in cents, not large pitch jumps.
-
-### VCO 1 Waveform
-
-Use **VCO 1 Waveform** to change the oscillator shape.
-
-Different waveforms give the filter different material to work with.
-
-| Waveform | What to expect |
-|---|---|
-| Saw | Bright, strong, good for testing filter cutoff. |
-| Square | Hollow, strong, good for testing resonance. |
-| Triangle | Softer than saw and square. |
-| Sine | Very plain. Filter changes are subtle. |
-| Pulse | Bright and adjustable using Pulse Width %. |
-
-### VCO 1 Pulse Width %
-
 **VCO 1 Pulse Width %** only matters when **VCO 1 Waveform** is set to **Pulse**.
-
-It changes the shape of the pulse wave.
-
-If the waveform is Saw, Square, Triangle, or Sine, Pulse Width % should not be treated as active sound control.
 
 ## 7. Testing VCO 2
 
-VCO 2 is now a second oscillator source.
+VCO 2 is a second oscillator source.
 
 It follows the same sound path as VCO 1:
 
@@ -287,7 +266,31 @@ LFO 2 tremolo stage
 Safe output
 ```
 
-VCO 2 has these active waveform choices:
+**VCO 2 Level** starts at 0 for safety.
+
+Raise it slowly. Two or three oscillators plus noise can become louder than one oscillator.
+
+VCO 2 is not patchable yet. It does not add sync, PWM modulation, pitch S&H, or free routing.
+
+## 8. Testing VCO 3
+
+VCO 3 is now a third oscillator source.
+
+It follows the same sound path as VCO 1 and VCO 2:
+
+```text
+VCO 3
+  ↓
+Low-pass filter
+  ↓
+Main VCA / selected envelope
+  ↓
+LFO 2 tremolo stage
+  ↓
+Safe output
+```
+
+VCO 3 has these active waveform choices:
 
 - Saw
 - Square
@@ -295,40 +298,41 @@ VCO 2 has these active waveform choices:
 - Sine
 - Pulse
 
-### VCO 2 Level
+### VCO 3 Level
 
-**VCO 2 Level** controls how much VCO 2 enters the sound path.
+**VCO 3 Level** controls how much VCO 3 enters the sound path.
 
 It starts at 0 for safety.
 
-Raise it slowly. Two oscillators plus noise can become louder than one oscillator.
+Raise it slowly. Three oscillators plus noise can become louder than one oscillator.
 
-### VCO 2 Coarse Freq and Fine Freq
+### VCO 3 Coarse Freq and Fine Freq
 
-Use **VCO 2 Coarse Freq** for the main VCO 2 pitch.
+Use **VCO 3 Coarse Freq** for the main VCO 3 pitch.
 
-Use **VCO 2 Fine Freq** for small detuning.
+Use **VCO 3 Fine Freq** for small detuning.
 
 A simple test is:
 
 1. Keep **VCO 1 Level** audible.
-2. Raise **VCO 2 Level** slowly.
-3. Set **VCO 2 Coarse Freq** near VCO 1.
-4. Move **VCO 2 Fine Freq** slightly.
+2. Keep **VCO 2 Level** low or audible.
+3. Raise **VCO 3 Level** slowly.
+4. Set **VCO 3 Coarse Freq** near VCO 1 and VCO 2.
+5. Move **VCO 3 Fine Freq** slightly.
 
-You should hear the two oscillators blend or beat against each other.
+You should hear the three oscillators blend or beat against each other.
 
-### VCO 2 Waveform and Pulse Width
+### VCO 3 Waveform and Pulse Width
 
-Use **VCO 2 Waveform** to choose VCO 2's shape.
+Use **VCO 3 Waveform** to choose VCO 3's shape.
 
-**VCO 2 Pulse Width %** only matters when **VCO 2 Waveform** is set to **Pulse**.
+**VCO 3 Pulse Width %** only matters when **VCO 3 Waveform** is set to **Pulse**.
 
-VCO 2 is not patchable yet. It does not add sync, PWM modulation, pitch S&H, or free routing.
+VCO 3 is not patchable yet. It does not add sync, PWM modulation, pitch S&H, or free routing.
 
-## 8. Testing noise
+## 9. Testing noise
 
-Noise works as a third source alongside VCO 1 and VCO 2.
+Noise works as another source alongside VCO 1, VCO 2, and VCO 3.
 
 Use **Noise Type** to choose the noise colour.
 
@@ -342,45 +346,21 @@ Use **White NS Level** to bring the selected noise in.
 
 The name still says **White NS Level** because it matches the visible faceplate label, but in the First Voice panel it controls the amount of whichever noise type is selected.
 
-All noise types follow the same path as the oscillators:
-
-```text
-Selected Noise
-  ↓
-Low-pass filter
-  ↓
-Main VCA / selected envelope
-  ↓
-LFO 2 tremolo stage
-  ↓
-Safe output
-```
-
-## 9. Testing the filter
+## 10. Testing the filter
 
 Use Saw, Square, Pulse, White Noise, Pink Noise, or Brown Noise when testing the filter.
 
 These sources contain enough frequency material for the low-pass filter to remove.
 
-### Filter Cutoff
-
 **Filter Cutoff** sets the base or centre brightness.
 
-Lower cutoff should make the sound darker.
-
-Higher cutoff should make the sound brighter.
-
-### Resonance
-
-Resonance emphasises the area around the cutoff point.
+**Resonance** emphasises the area around the cutoff point.
 
 At this stage, resonance is capped for safety. It should colour the sound, but it should not run away or self-oscillate.
 
-## 10. Testing LFO 1 filter modulation
+## 11. Testing LFO 1 filter modulation
 
 LFO 1 moves the low-pass filter cutoff smoothly.
-
-It does not make a separate sound by itself. It changes the filter movement.
 
 | Control | What it does |
 |---|---|
@@ -388,17 +368,7 @@ It does not make a separate sound by itself. It changes the filter movement.
 | LFO-1 Mod | Controls how much the filter moves. |
 | Filter Cutoff | Sets the base/centre cutoff around which the LFO moves. |
 
-Good test:
-
-1. Choose **Noise Type: White**.
-2. Raise **White NS Level** slowly.
-3. Set **Filter Cutoff** around the middle.
-4. Raise **LFO-1 Mod** slowly.
-5. Adjust **LFO 1 Rate**.
-
-You should hear smooth filter brightness movement.
-
-## 11. Testing Sample & Hold filter modulation
+## 12. Testing Sample & Hold filter modulation
 
 Sample & Hold moves the low-pass filter cutoff in stepped random changes.
 
@@ -410,20 +380,7 @@ It does not affect pitch yet. It is not patchable yet.
 | S&H Mod | Controls how much the random value moves the filter cutoff. |
 | Filter Cutoff | Sets the base/centre cutoff. |
 
-Good test:
-
-1. Choose **Noise Type: White**.
-2. Raise **White NS Level** slowly.
-3. Set **Filter Cutoff** around the middle.
-4. Keep **LFO-1 Mod** low at first.
-5. Raise **S&H Mod** slowly.
-6. Adjust **S&H Rate**.
-
-You should hear stepped random brightness changes.
-
-S&H modulation stays inside the safe filter range. If **LFO-1 Mod** is already high, S&H may have less room to move.
-
-## 12. Testing LFO 2 VCA modulation
+## 13. Testing LFO 2 VCA modulation
 
 LFO 2 moves the Main VCA level.
 
@@ -435,18 +392,7 @@ This is tremolo: the sound gets louder and quieter automatically.
 | LFO-2 Mod | Controls how deep the level movement is. |
 | Gate Note / Release | Still controls the overall note shape. |
 
-Good test:
-
-1. Start with **LFO-2 Mod** at 0.
-2. Press **Gate Note**.
-3. Raise **LFO-2 Mod** slowly.
-4. Adjust **LFO 2 Rate**.
-
-You should hear the whole sound pulse in level.
-
-LFO 2 stays inside the safe VCA/output path. It should not create output spikes.
-
-## 13. Testing Envelope Mode
+## 14. Testing Envelope Mode
 
 **Envelope Mode** chooses how **Gate Note**, **Release**, and **Repeat Gate** shape the Main VCA.
 
@@ -454,28 +400,10 @@ Current options:
 
 | Envelope Mode | What it does |
 |---|---|
-| AR | Simple attack/release behaviour. This is the earlier safe behaviour. |
+| AR | Simple attack/release behaviour. |
 | ADSR | Attack, Decay, Sustain, Release shaping. |
 
-### AR mode
-
-AR mode uses:
-
-- **AR Attack**
-- **AR Release**
-
-Use AR when you want the previous simple behaviour.
-
-### ADSR mode
-
-ADSR mode uses:
-
-- **ADSR Attack**
-- **ADSR Decay**
-- **ADSR Sustain**
-- **ADSR Release**
-
-How ADSR behaves:
+In ADSR mode:
 
 1. **Gate Note** or **Repeat Gate** starts the envelope.
 2. The sound rises over **ADSR Attack**.
@@ -483,9 +411,7 @@ How ADSR behaves:
 4. The sound stays at **ADSR Sustain** while the gate is open.
 5. **Release** or the Repeat Gate release phase fades the sound using **ADSR Release**.
 
-LFO 2 tremolo still happens after the envelope, so tremolo can pulse either AR-shaped or ADSR-shaped notes.
-
-## 14. Testing Repeat Gate
+## 15. Testing Repeat Gate
 
 Repeat Gate repeatedly triggers the current envelope.
 
@@ -497,22 +423,7 @@ It does not change pitch. It is not a sequencer. It is not patchable yet.
 | Repeat Gate Rate | Controls how often the envelope is triggered. |
 | Envelope Mode | Chooses whether Repeat Gate triggers AR or ADSR behaviour. |
 
-Good test:
-
-1. Keep **Repeat Gate** Off.
-2. Press **Start Audio**.
-3. Press **Gate Note** once to confirm the voice works.
-4. Press **Release**.
-5. Set **Envelope Mode** to AR.
-6. Turn **Repeat Gate** On.
-7. Adjust **Repeat Gate Rate**.
-8. Change **Envelope Mode** to ADSR and test again.
-9. Turn **Repeat Gate** Off.
-10. Press **Panic Stop**.
-
-Repeat Gate should only trigger the current envelope path. It should not change pitch, add steps, start MIDI, or create a sequencer.
-
-## 15. Why sine behaves differently
+## 16. Why sine behaves differently
 
 Sine is included because it is a useful basic waveform.
 
@@ -537,14 +448,12 @@ To test the filter clearly, use:
 - Pink Noise
 - Brown Noise
 
-## 16. What is still visual-only
+## 17. What is still visual-only
 
 Most of the large faceplate is still visual-only.
 
 These are not active yet:
 
-- VCO 3
-- VCO 3 Level
 - Ext. In Level
 - PWM modulation
 - SYNC
@@ -566,22 +475,21 @@ These are not active yet:
 - presets
 - MIDI learn
 
-The **VCO 2**, **ADSR Env. Gen.**, **Sample & Hold**, and **Repeat Gate** concepts have now started to become active through the First Voice panel, but they are not yet patchable modules.
+The **VCO 1**, **VCO 2**, **VCO 3**, **ADSR Env. Gen.**, **Sample & Hold**, and **Repeat Gate** concepts have now started to become active through the First Voice panel, but they are not yet patchable modules.
 
-## 17. What not to expect yet
+## 18. What not to expect yet
 
 Do not expect:
 
-- full three-oscillator sound
-- VCO 2 sync
-- VCO 2 PWM modulation
-- VCO 2 patch routing
+- VCO sync
+- PWM modulation
 - pitch randomisation
 - external input
 - real patch cables
 - full modulation routing
 - sequencer behaviour
 - pitch changes from Repeat Gate
+- patchable oscillator routing
 - patchable ADSR routing
 - patchable Sample & Hold routing
 - patchable Repeat Gate routing
@@ -593,7 +501,7 @@ Do not expect:
 - VST plugin behaviour
 - exact MFOS hardware emulation
 
-## 18. Current safe test patch
+## 19. Current safe test patch
 
 Use this simple patch for testing:
 
@@ -606,6 +514,10 @@ VCO 2 Waveform: Saw
 VCO 2 Coarse Freq: around 220 Hz
 VCO 2 Fine Freq: 0 cent
 VCO 2 Level: 0 at first
+VCO 3 Waveform: Saw
+VCO 3 Coarse Freq: around 220 Hz
+VCO 3 Fine Freq: 0 cent
+VCO 3 Level: 0 at first
 Noise Type: White
 White NS Level: 0 at first
 Filter Cutoff: middle
@@ -633,19 +545,20 @@ Then test:
 1. Press **Start Audio**.
 2. Press **Gate Note** in AR mode.
 3. Raise **VCO 2 Level** slowly.
-4. Change **VCO 2 Coarse Freq** and **VCO 2 Fine Freq**.
-5. Change **VCO 2 Waveform**.
-6. Press **Release**.
-7. Turn **Repeat Gate** On.
-8. Confirm Repeat Gate triggers both oscillators through the selected envelope.
-9. Raise **White NS Level** slowly.
-10. Raise **S&H Mod** slowly.
-11. Raise **LFO-1 Mod** slowly and check it still works with both oscillators.
-12. Raise **LFO-2 Mod** slowly and confirm tremolo still happens after the envelope.
-13. Turn **Repeat Gate** Off.
-14. Press **Panic Stop**.
+4. Raise **VCO 3 Level** slowly.
+5. Change **VCO 3 Coarse Freq** and **VCO 3 Fine Freq**.
+6. Change **VCO 3 Waveform**.
+7. Press **Release**.
+8. Turn **Repeat Gate** On.
+9. Confirm Repeat Gate triggers all active oscillators through the selected envelope.
+10. Raise **White NS Level** slowly.
+11. Raise **S&H Mod** slowly.
+12. Raise **LFO-1 Mod** slowly and check it still works with all active oscillators.
+13. Raise **LFO-2 Mod** slowly and confirm tremolo still happens after the envelope.
+14. Turn **Repeat Gate** Off.
+15. Press **Panic Stop**.
 
-## 19. Manual update rule
+## 20. Manual update rule
 
 This is a living manual.
 
@@ -653,7 +566,6 @@ Every time playable behaviour changes, update this manual.
 
 Examples:
 
-- If VCO 3 becomes active, add a VCO 3 section.
 - If MIDI input is added, add a MIDI section.
 - If a visible control begins working, move it from visual-only to active.
 
