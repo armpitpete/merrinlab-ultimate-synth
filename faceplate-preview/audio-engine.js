@@ -30,8 +30,8 @@
     fineCents: [-100, 100],
     pulseWidth: [10, 90],
     vcoLevel: [0, 0.7],
-    cutoff: [180, 5200],
-    resonance: [0.1, 6],
+    cutoff: [120, 6500],
+    resonance: [0.1, 12],
     attack: [0.005, 1.5],
     release: [0.02, 2.5],
     output: [0, 0.16],
@@ -66,7 +66,6 @@
     ["sawtooth", "Saw"],
     ["square", "Square"],
     ["triangle", "Triangle"],
-    ["sine", "Sine"],
     ["pulse", "Pulse"],
   ];
 
@@ -97,7 +96,8 @@
     imag[0] = 0;
 
     for (let n = 1; n <= harmonics; n += 1) {
-      imag[n] = (2 / (n * Math.PI)) * Math.sin(n * Math.PI * duty);
+      real[n] = (2 / (n * Math.PI)) * Math.sin(n * Math.PI * duty);
+      imag[n] = 0;
     }
 
     return audioContext.createPeriodicWave(real, imag, {
@@ -457,8 +457,8 @@
       createSelect("waveform"),
       createSlider("pulseWidth", 10, 90, 1),
       createSlider("vcoLevel", 0, 0.7, 0.01),
-      createSlider("cutoff", 180, 5200, 1),
-      createSlider("resonance", 0.1, 6, 0.1),
+      createSlider("cutoff", 120, 6500, 1),
+      createSlider("resonance", 0.1, 12, 0.1),
       createSlider("attack", 0.005, 1.5, 0.005),
       createSlider("release", 0.02, 2.5, 0.01),
       createSlider("output", 0, 0.16, 0.005),
@@ -466,7 +466,7 @@
 
     const note = document.createElement("small");
     note.className = "audio-note";
-    note.textContent = "VCO 1 only. PWM, SYNC, LOG-CV, and LIN-CV are documented for later and remain inactive.";
+    note.textContent = "VCO 1 only. Sine is excluded from this pass because a near-pure sine gives the low-pass filter almost no harmonics to remove. PWM, SYNC, LOG-CV, and LIN-CV remain inactive.";
     panel.append(note);
 
     document.head.append(style);
