@@ -2,7 +2,7 @@
 
 **Project:** MerrinLab Ultimate Synth  
 **Manual status:** Living manual  
-**Current playable state:** First browser voice with VCO 1 and selectable noise  
+**Current playable state:** First browser voice with VCO 1, selectable noise, and LFO 1 filter modulation  
 
 ## 1. What this is
 
@@ -17,7 +17,7 @@ It is not a VST. It is not a JUCE app. It is not a full MFOS hardware emulation.
 The current goal is simple:
 
 ```text
-Make one safe, shaped, filterable sound using VCO 1 and selectable noise.
+Make one safe, shaped, filterable sound using VCO 1, selectable noise, and LFO 1 filter movement.
 ```
 
 ## 2. What works now
@@ -25,7 +25,7 @@ Make one safe, shaped, filterable sound using VCO 1 and selectable noise.
 The working part is the floating panel called:
 
 ```text
-First Voice v0.4
+First Voice v0.5
 ```
 
 This panel controls the current playable voice.
@@ -45,8 +45,10 @@ Current working controls:
 | VCO 1 Level | Sets how much VCO 1 enters the signal path. |
 | Noise Type | Selects the noise colour: White, Pink, or Brown. |
 | White NS Level | Sets how much selected noise enters the signal path. |
-| Filter Cutoff | Changes the brightness of VCO 1 and noise. |
+| Filter Cutoff | Sets the base/centre brightness of VCO 1 and noise. |
 | Resonance | Emphasises the sound around the filter cutoff point. |
+| LFO 1 Rate | Sets the speed of the filter cutoff movement. |
+| LFO-1 Mod | Sets how much LFO 1 moves the filter cutoff. |
 | Attack | Sets how quickly the note opens after Gate Note. |
 | Release | Sets how quickly the note fades after Release. |
 | Output | Sets the final safe output level. |
@@ -67,6 +69,16 @@ Main VCA
 Safe output
 ```
 
+The current modulation path is:
+
+```text
+LFO 1
+  ↓
+LFO-1 Mod amount
+  ↓
+Low-pass filter cutoff
+```
+
 The current control path is:
 
 ```text
@@ -77,24 +89,27 @@ Simple envelope
 Main VCA
 ```
 
-Only VCO 1 and the selected noise source make sound.
+Only VCO 1, the selected noise source, and LFO 1 filter modulation are active.
 
 ## 4. How to make a sound safely
 
 Use this order:
 
 1. Open the live preview page.
-2. Find the floating **First Voice v0.4** panel.
+2. Find the floating **First Voice v0.5** panel.
 3. Keep **Output** low at first.
 4. Keep **White NS Level** at 0 at first.
-5. Choose a **Noise Type** if you want to test noise.
-6. Press **Start Audio**.
-7. Press **Gate Note**.
-8. Adjust **VCO 1 Level** if the oscillator is too quiet.
-9. Raise **White NS Level** slowly if you want noise.
-10. Adjust **Filter Cutoff** to hear the sound get darker or brighter.
-11. Press **Release** to let the sound fade.
-12. Press **Panic Stop** if anything behaves unexpectedly.
+5. Keep **LFO-1 Mod** at 0 at first.
+6. Choose a **Noise Type** if you want to test noise.
+7. Press **Start Audio**.
+8. Press **Gate Note**.
+9. Adjust **VCO 1 Level** if the oscillator is too quiet.
+10. Raise **White NS Level** slowly if you want noise.
+11. Adjust **Filter Cutoff** to set the base brightness.
+12. Raise **LFO-1 Mod** slowly if you want filter movement.
+13. Adjust **LFO 1 Rate** to change movement speed.
+14. Press **Release** to let the sound fade.
+15. Press **Panic Stop** if anything behaves unexpectedly.
 
 ## 5. How to stop the sound
 
@@ -102,10 +117,11 @@ Use **Release** for normal note ending.
 
 Use **Panic Stop** when you want immediate silence.
 
-**Panic Stop** does four important things:
+**Panic Stop** does five important things:
 
 - closes the note level immediately
 - silences the noise level
+- stops LFO 1 filter movement
 - sets the output to silent
 - closes the browser audio context
 
@@ -157,7 +173,7 @@ If the waveform is Saw, Square, Triangle, or Sine, Pulse Width % should not be t
 
 ## 7. Testing noise
 
-Noise now works as a second source.
+Noise works as a second source.
 
 Use **Noise Type** to choose the noise colour.
 
@@ -192,6 +208,7 @@ This means:
 - **Gate Note** must be open before you hear it.
 - **Release** fades it out.
 - **Filter Cutoff** changes its brightness clearly.
+- **LFO 1** can sweep the filtered noise.
 - **Resonance** colours the filtered noise.
 - **Panic Stop** silences it.
 
@@ -205,6 +222,8 @@ These sources contain enough frequency material for the low-pass filter to remov
 
 ### Filter Cutoff
 
+**Filter Cutoff** sets the base or centre brightness.
+
 Lower cutoff should make the sound darker.
 
 Higher cutoff should make the sound brighter.
@@ -217,7 +236,33 @@ Resonance emphasises the area around the cutoff point.
 
 At this stage, resonance is capped for safety. It should colour the sound, but it should not run away or self-oscillate.
 
-## 9. Why sine behaves differently
+## 9. Testing LFO 1 filter modulation
+
+LFO 1 now moves the low-pass filter cutoff.
+
+It does not make a separate sound by itself. It changes the filter movement.
+
+Use these controls:
+
+| Control | What it does |
+|---|---|
+| LFO 1 Rate | Controls how fast the filter moves. |
+| LFO-1 Mod | Controls how much the filter moves. |
+| Filter Cutoff | Sets the base/centre cutoff around which the LFO moves. |
+
+How to test it:
+
+1. Choose **Noise Type: White**.
+2. Raise **White NS Level** slowly.
+3. Set **Filter Cutoff** around the middle.
+4. Raise **LFO-1 Mod** slowly.
+5. Adjust **LFO 1 Rate**.
+
+You should hear the filter brightness move up and down.
+
+The LFO modulation is kept inside a safe cutoff range. If **Filter Cutoff** is very low or very high, the LFO may have less room to move.
+
+## 10. Why sine behaves differently
 
 Sine is included because it is a useful basic waveform.
 
@@ -229,6 +274,7 @@ So with Sine selected:
 
 - Filter Cutoff may sound subtle.
 - Resonance may sound subtle.
+- LFO 1 filter movement may sound subtle.
 - This does not automatically mean the filter is broken.
 
 To test the filter clearly, use:
@@ -240,7 +286,7 @@ To test the filter clearly, use:
 - Pink Noise
 - Brown Noise
 
-## 10. What is still visual-only
+## 11. What is still visual-only
 
 Most of the large faceplate is still visual-only.
 
@@ -256,7 +302,6 @@ These are not active yet:
 - LOG-CV
 - LIN-CV
 - low-pass external CV inputs
-- LFO 1
 - LFO 2
 - Sample & Hold
 - Repeat Gate Rate
@@ -280,15 +325,15 @@ These controls are visible because the faceplate is being built toward the large
 
 They should not be expected to affect sound yet.
 
-## 11. What not to expect yet
+## 12. What not to expect yet
 
 Do not expect:
 
 - full three-oscillator sound
 - external input
 - real patch cables
-- modulation routing
-- LFO movement
+- full modulation routing
+- LFO 2 movement
 - sample and hold
 - repeat gate triggering
 - ADSR shaping
@@ -300,7 +345,7 @@ Do not expect:
 - VST plugin behaviour
 - exact MFOS hardware emulation
 
-## 12. Current safe test patch
+## 13. Current safe test patch
 
 Use this simple patch for testing:
 
@@ -313,6 +358,8 @@ Noise Type: White
 White NS Level: 0 at first
 Filter Cutoff: middle
 Resonance: low to medium
+LFO 1 Rate: slow
+LFO-1 Mod: 0 at first
 Attack: short
 Release: medium
 Output: low
@@ -328,11 +375,13 @@ Then test:
 6. Choose **Noise Type: White** and raise **White NS Level** slowly.
 7. Change **Noise Type** to Pink, then Brown.
 8. Move **Filter Cutoff** while noise is audible.
-9. Try **Sine**, but expect subtler filter changes.
-10. Press **Release**.
-11. Press **Panic Stop**.
+9. Raise **LFO-1 Mod** slowly.
+10. Change **LFO 1 Rate**.
+11. Try **Sine**, but expect subtler filter changes.
+12. Press **Release**.
+13. Press **Panic Stop**.
 
-## 13. Manual update rule
+## 14. Manual update rule
 
 This is a living manual.
 
@@ -341,7 +390,7 @@ Every time playable behaviour changes, update this manual.
 Examples:
 
 - If VCO 2 becomes active, add a VCO 2 section.
-- If LFO 1 begins modulating the filter, add an LFO section.
+- If LFO 2 begins modulating the VCA, add an LFO 2 section.
 - If MIDI input is added, add a MIDI section.
 - If a visible control begins working, move it from visual-only to active.
 
