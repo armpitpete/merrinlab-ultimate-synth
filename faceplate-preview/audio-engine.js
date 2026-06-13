@@ -20,6 +20,8 @@
     lfo2Rate: 1.2,
     lfo2Mod: 0,
     envelopeMode: "ar",
+    repeatGate: "off",
+    repeatGateRate: 2,
     attack: 0.03,
     release: 0.45,
     adsrAttack: 0.05,
@@ -47,7 +49,10 @@
   let tremoloGain = null;
   let masterGain = null;
   let limiter = null;
+  let repeatGateTimerId = null;
+  let repeatGateReleaseTimerId = null;
   let isGateOpen = false;
+  let isRepeatGateHoldingGate = false;
 
   const limits = {
     coarseFreq: [55, 880],
@@ -63,6 +68,7 @@
     sampleHoldMod: [0, 1],
     lfo2Rate: [0.05, 12],
     lfo2Mod: [0, 1],
+    repeatGateRate: [0.1, 12],
     attack: [0.005, 1.5],
     release: [0.02, 2.5],
     adsrAttack: [0.005, 2],
@@ -89,6 +95,8 @@
     lfo2Rate: "LFO 2 Rate",
     lfo2Mod: "LFO-2 Mod",
     envelopeMode: "Envelope Mode",
+    repeatGate: "Repeat Gate",
+    repeatGateRate: "Repeat Gate Rate",
     attack: "AR Attack",
     release: "AR Release",
     adsrAttack: "ADSR Attack",
@@ -112,6 +120,7 @@
     sampleHoldMod: "%",
     lfo2Rate: "Hz",
     lfo2Mod: "%",
+    repeatGateRate: "Hz",
     attack: "s",
     release: "s",
     adsrAttack: "s",
@@ -138,6 +147,11 @@
   const envelopeModes = [
     ["ar", "AR"],
     ["adsr", "ADSR"],
+  ];
+
+  const repeatGateModes = [
+    ["off", "Off"],
+    ["on", "On"],
   ];
 
   function clamp(value, key) {
@@ -181,6 +195,16 @@
     return clamp(state.lfo2Mod, "lfo2Mod");
   }
 
+  function getRepeatGateIntervalMs() {
+    const rate = clamp(state.repeatGateRate, "repeatGateRate");
+    return Math.max(80, 1000 / rate);
+  }
+
+  function getRepeatGateHoldMs() {
+    const intervalMs = getRepeatGateIntervalMs();
+    return Math.max(30, Math.min(intervalMs * 0.45, intervalMs - 20));
+  }
+
   function applyFilterCutoffAndModulators() {
     if (!audioContext || !filter) return;
 
@@ -218,6 +242,52 @@
     const intervalMs = Math.max(40, 1000 / rate);
     updateSampleHoldValue();
     sampleHoldTimerId = window.setInterval(updateSampleHoldValue, intervalMs);
+  }
+
+  function stopRepeatGateTimer(releaseGate = false) {
+    if (repeatGateTimerId !== null) {
+      window.clearInterval(repeatGateTimerId);
+      repeatGateTimerId = null;
+    }
+
+    if (repeatGateReleaseTimerId !== null) {
+      window.clearTimeout(repeatGateReleaseTimerId);
+      repeatGateReleaseTimerId = null;
+    }
+
+    if (releaseGate && isRepeatGateHoldingGate) {
+      triggerGateOff("Repeat Gate off · gate released");
+    }
+
+    isRepeatGateHoldingGate = false;
+  }
+
+  function triggerRepeatGateCycle() {
+    if (!audioContext || !mainVca || state.repeatGate !== "on") return;
+
+    if (repeatGateReleaseTimerId !== null) {
+      window.clearTimeout(repeatGateReleaseTimerId);
+      repeatGateReleaseTimerId = null;
+    }
+
+    triggerGateOn("Repeat Gate trigger · envelope active");
+    isRepeatGateHoldingGate = true;
+
+    repeatGateReleaseTimerId = window.setTimeout(() => {
+      if (state.repeatGate !== "on" || !isRepeatGateHoldingGate) return;
+      triggerGateOff("Repeat Gate release");
+      isRepeatGateHoldingGate = false;
+      repeatGateReleaseTimerId = null;
+    }, getRepeatGateHoldMs());
+  }
+
+  function startRepeatGateTimer() {
+    stopRepeatGateTimer(false);
+
+    if (!audioContext || state.repeatGate !== "on") return;
+
+    triggerRepeatGateCycle();
+    repeatGateTimerId = window.setInterval(triggerRepeatGateCycle, getRepeatGateIntervalMs());
   }
 
   function applyLfo2Tremolo() {
@@ -439,12 +509,11 @@
     }
 
     document.body.classList.add("is-audio-started");
-    setStatus(`Audio ready · VCO 1 + ${state.noiseType} noise · S&H filter mod available`);
+    setStatus(`Audio ready · VCO 1 + ${state.noiseType} noise · Repeat Gate available`);
     applyAllParameters();
   }
 
-  async function gateOn() {
-    await startAudio();
+  function triggerGateOn(statusMessage) {
     if (!audioContext || !mainVca) return;
 
     const now = audioContext.currentTime;
@@ -461,16 +530,21 @@
       const sustain = clamp(state.adsrSustain, "adsrSustain") * target;
       mainVca.gain.linearRampToValueAtTime(target, now + attack);
       mainVca.gain.linearRampToValueAtTime(sustain, now + attack + decay);
-      setStatus("Gate open · ADSR envelope active");
+      setStatus(statusMessage || "Gate open · ADSR envelope active");
       return;
     }
 
     const attack = clamp(state.attack, "attack");
     mainVca.gain.linearRampToValueAtTime(target, now + attack);
-    setStatus("Gate open · AR envelope active");
+    setStatus(statusMessage || "Gate open · AR envelope active");
   }
 
-  function gateOff() {
+  async function gateOn() {
+    await startAudio();
+    triggerGateOn();
+  }
+
+  function triggerGateOff(statusMessage) {
     if (!audioContext || !mainVca) return;
 
     const now = audioContext.currentTime;
@@ -483,13 +557,20 @@
     mainVca.gain.cancelScheduledValues(now);
     mainVca.gain.setValueAtTime(Math.max(0.0001, mainVca.gain.value), now);
     mainVca.gain.linearRampToValueAtTime(0.0001, now + release);
-    setStatus(state.envelopeMode === "adsr" ? "Gate released · ADSR release" : "Gate released · AR release");
+    setStatus(statusMessage || (state.envelopeMode === "adsr" ? "Gate released · ADSR release" : "Gate released · AR release"));
+  }
+
+  function gateOff() {
+    triggerGateOff();
+    isRepeatGateHoldingGate = false;
   }
 
   async function panicStop() {
     document.body.classList.remove("is-audio-started", "is-audio-gated");
     isGateOpen = false;
+    isRepeatGateHoldingGate = false;
     stopSampleHoldTimer();
+    stopRepeatGateTimer(false);
 
     if (mainVca && audioContext) {
       mainVca.gain.cancelScheduledValues(audioContext.currentTime);
@@ -614,6 +695,8 @@
     applyParameter("lfo2Rate");
     applyParameter("lfo2Mod");
     applyParameter("envelopeMode");
+    applyParameter("repeatGate");
+    applyParameter("repeatGateRate");
     applyParameter("output");
   }
 
@@ -678,6 +761,23 @@
       setStatus(`Envelope mode changed · ${state.envelopeMode.toUpperCase()}`);
     }
 
+    if (key === "repeatGate") {
+      if (state.repeatGate === "on") {
+        startRepeatGateTimer();
+        setStatus("Repeat Gate on · triggering current envelope");
+      } else {
+        stopRepeatGateTimer(true);
+        setStatus("Repeat Gate off");
+      }
+    }
+
+    if (key === "repeatGateRate") {
+      if (state.repeatGate === "on") {
+        startRepeatGateTimer();
+        setStatus(`Repeat Gate rate changed · ${formatValue("repeatGateRate", state.repeatGateRate)}`);
+      }
+    }
+
     if (key === "output" && masterGain) {
       safeRamp(masterGain.gain, clamp(state.output, "output"), now, 0.02);
     }
@@ -692,7 +792,7 @@
     if (key === "coarseFreq" || key === "cutoff") return `${Math.round(value)} ${units[key]}`;
     if (key === "fineCents") return `${Number(value).toFixed(0)} ${units[key]}`;
     if (key === "pulseWidth") return `${Number(value).toFixed(0)} ${units[key]}`;
-    if (key === "lfo1Rate" || key === "lfo2Rate" || key === "sampleHoldRate") return `${Number(value).toFixed(2)} ${units[key]}`;
+    if (key === "lfo1Rate" || key === "lfo2Rate" || key === "sampleHoldRate" || key === "repeatGateRate") return `${Number(value).toFixed(2)} ${units[key]}`;
     if (key === "lfo1Mod" || key === "lfo2Mod" || key === "sampleHoldMod" || key === "adsrSustain") return `${Math.round(Number(value) * 100)} ${units[key]}`;
     if (key === "attack" || key === "release" || key === "adsrAttack" || key === "adsrDecay" || key === "adsrRelease") return `${Number(value).toFixed(2)} ${units[key]}`;
     if (key === "resonance") return `${Number(value).toFixed(1)} ${units[key]}`;
@@ -827,6 +927,7 @@
       body.is-audio-started .lfo1-module .status-light,
       body.is-audio-started .lfo2-module .status-light,
       body.is-audio-started .sample-hold-module .status-light,
+      body.is-audio-started .repeat-gate-module .status-light,
       body.is-audio-started .filter-lp-module .status-light,
       body.is-audio-started .main-vca-module .status-light,
       body.is-audio-started .output-module .status-light {
@@ -844,8 +945,8 @@
     panel.className = "audio-voice-panel";
     panel.setAttribute("aria-label", "First safe audible voice controls");
     panel.innerHTML = `
-      <h2>First Voice v0.8</h2>
-      <p data-audio-status>Stopped · VCO 1 + noise + LFO/S&H + AR/ADSR · safe output</p>
+      <h2>First Voice v0.9</h2>
+      <p data-audio-status>Stopped · VCO 1 + noise + LFO/S&H + AR/ADSR + Repeat Gate · safe output</p>
       <div class="audio-button-row">
         <button type="button" data-audio-action="start">Start Audio</button>
         <button type="button" data-audio-action="gate-on">Gate Note</button>
@@ -871,6 +972,8 @@
       createSlider("lfo2Rate", 0.05, 12, 0.01),
       createSlider("lfo2Mod", 0, 1, 0.01),
       createSelect("envelopeMode", envelopeModes),
+      createSelect("repeatGate", repeatGateModes),
+      createSlider("repeatGateRate", 0.1, 12, 0.1),
       createSlider("attack", 0.005, 1.5, 0.005),
       createSlider("release", 0.02, 2.5, 0.01),
       createSlider("adsrAttack", 0.005, 2, 0.005),
@@ -882,7 +985,7 @@
 
     const note = document.createElement("small");
     note.className = "audio-note";
-    note.textContent = "S&H now adds stepped random low-pass filter movement only. It does not affect pitch and is not patchable yet.";
+    note.textContent = "Repeat Gate repeatedly triggers the current AR/ADSR envelope only. It does not change pitch, add steps, or act as a sequencer.";
     panel.append(note);
 
     document.head.append(style);
