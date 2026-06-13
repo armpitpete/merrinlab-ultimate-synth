@@ -1,8 +1,8 @@
 .ultimate-grid {
   grid-template-areas:
     "vcos mixer filter  filter  filter  sh"
-    "vcos mixer ar      mainvca mainvca output"
-    "vcos mixer ar      lfo1    lfo2    ."
+    "vcos mixer ar      mainvca mainvca sh"
+    "vcos mixer ar      lfo1    lfo2    output"
     "vcos mixer ar      atten   atten   atten"
     "adsr auxvca auxvca repeat  repeat  repeat";
 }
