@@ -2,7 +2,7 @@
 
 **Project:** MerrinLab Ultimate Synth  
 **Manual status:** Living manual  
-**Current playable state:** First browser voice with VCO 1, selectable noise, LFO 1 filter modulation, S&H filter modulation, LFO 2 VCA modulation, and optional ADSR envelope mode  
+**Current playable state:** First browser voice with VCO 1, selectable noise, LFO 1 filter modulation, S&H filter modulation, LFO 2 VCA modulation, optional ADSR envelope mode, and Repeat Gate triggering  
 
 ## 1. What this is
 
@@ -17,7 +17,7 @@ It is not a VST. It is not a JUCE app. It is not a full MFOS hardware emulation.
 The current goal is simple:
 
 ```text
-Make one safe, shaped, filterable sound using VCO 1, selectable noise, filter movement, level movement, optional envelope shaping, and simple stepped S&H filter movement.
+Make one safe, shaped, filterable sound using VCO 1, selectable noise, filter movement, level movement, optional envelope shaping, simple stepped S&H filter movement, and Repeat Gate envelope triggering.
 ```
 
 ## 2. What works now
@@ -25,7 +25,7 @@ Make one safe, shaped, filterable sound using VCO 1, selectable noise, filter mo
 The working part is the floating panel called:
 
 ```text
-First Voice v0.8
+First Voice v0.9
 ```
 
 This panel controls the current playable voice.
@@ -54,6 +54,8 @@ Current working controls:
 | LFO 2 Rate | Sets the speed of the VCA level movement. |
 | LFO-2 Mod | Sets how much LFO 2 moves the Main VCA level. |
 | Envelope Mode | Chooses simple AR or ADSR envelope behaviour. |
+| Repeat Gate | Turns repeated envelope triggering Off or On. |
+| Repeat Gate Rate | Sets how often Repeat Gate triggers the envelope. |
 | AR Attack | Sets simple AR opening speed. |
 | AR Release | Sets simple AR fade speed. |
 | ADSR Attack | Sets ADSR opening speed. |
@@ -106,45 +108,52 @@ LFO-2 Mod amount
 Main VCA level / tremolo stage
 ```
 
-The current envelope path is:
+The current envelope and trigger path is:
 
 ```text
 Gate Note / Release
+or
+Repeat Gate
   ↓
 Envelope Mode: AR or ADSR
   ↓
 Main VCA
 ```
 
-Only VCO 1, the selected noise source, LFO 1 filter modulation, S&H filter modulation, LFO 2 VCA modulation, and the selected envelope mode are active.
+Only VCO 1, the selected noise source, LFO 1 filter modulation, S&H filter modulation, LFO 2 VCA modulation, the selected envelope mode, and Repeat Gate triggering are active.
 
 ## 4. How to make a sound safely
 
 Use this order:
 
 1. Open the live preview page.
-2. Find the floating **First Voice v0.8** panel.
+2. Find the floating **First Voice v0.9** panel.
 3. Keep **Output** low at first.
 4. Keep **White NS Level** at 0 at first.
 5. Keep **LFO-1 Mod** at 0 at first.
 6. Keep **S&H Mod** at 0 at first.
 7. Keep **LFO-2 Mod** at 0 at first.
-8. Leave **Envelope Mode** on AR at first.
-9. Press **Start Audio**.
-10. Press **Gate Note**.
-11. Adjust **VCO 1 Level** if the oscillator is too quiet.
-12. Raise **White NS Level** slowly if you want noise.
-13. Adjust **Filter Cutoff** to set the base brightness.
-14. Raise **LFO-1 Mod** slowly if you want smooth filter movement.
-15. Raise **S&H Mod** slowly if you want stepped random filter movement.
-16. Raise **LFO-2 Mod** slowly if you want tremolo.
-17. Change **Envelope Mode** to ADSR only after the basic sound works.
-18. Press **Release** to let the selected envelope fade.
-19. Press **Panic Stop** if anything behaves unexpectedly.
+8. Keep **Repeat Gate** Off at first.
+9. Leave **Envelope Mode** on AR at first.
+10. Press **Start Audio**.
+11. Press **Gate Note**.
+12. Adjust **VCO 1 Level** if the oscillator is too quiet.
+13. Raise **White NS Level** slowly if you want noise.
+14. Adjust **Filter Cutoff** to set the base brightness.
+15. Raise **LFO-1 Mod** slowly if you want smooth filter movement.
+16. Raise **S&H Mod** slowly if you want stepped random filter movement.
+17. Raise **LFO-2 Mod** slowly if you want tremolo.
+18. Change **Envelope Mode** to ADSR only after the basic sound works.
+19. Turn **Repeat Gate** On only after audio is already started.
+20. Adjust **Repeat Gate Rate** slowly.
+21. Press **Release** to let the selected envelope fade, or turn **Repeat Gate** Off.
+22. Press **Panic Stop** if anything behaves unexpectedly.
 
 ## 5. How to stop the sound
 
 Use **Release** for normal note ending.
+
+Turn **Repeat Gate** Off to stop repeated triggering.
 
 Use **Panic Stop** when you want immediate silence.
 
@@ -155,6 +164,7 @@ Use **Panic Stop** when you want immediate silence.
 - stops LFO 1 filter movement
 - stops S&H filter movement
 - stops LFO 2 level movement
+- stops Repeat Gate triggering
 - clears the envelope/VCA path
 - sets the output to silent
 - closes the browser audio context
@@ -279,7 +289,7 @@ You should hear smooth filter brightness movement.
 
 ## 10. Testing Sample & Hold filter modulation
 
-Sample & Hold now moves the low-pass filter cutoff in stepped random changes.
+Sample & Hold moves the low-pass filter cutoff in stepped random changes.
 
 It does not affect pitch yet. It is not patchable yet.
 
@@ -327,7 +337,7 @@ LFO 2 stays inside the safe VCA/output path. It should not create output spikes.
 
 ## 12. Testing Envelope Mode
 
-**Envelope Mode** chooses how **Gate Note** and **Release** shape the Main VCA.
+**Envelope Mode** chooses how **Gate Note**, **Release**, and **Repeat Gate** shape the Main VCA.
 
 Current options:
 
@@ -356,15 +366,42 @@ ADSR mode uses:
 
 How ADSR behaves:
 
-1. **Gate Note** starts the envelope.
+1. **Gate Note** or **Repeat Gate** starts the envelope.
 2. The sound rises over **ADSR Attack**.
 3. The sound falls from peak to the sustain level over **ADSR Decay**.
-4. The sound stays at **ADSR Sustain** while Gate Note is held open.
-5. **Release** fades the sound using **ADSR Release**.
+4. The sound stays at **ADSR Sustain** while the gate is open.
+5. **Release** or the Repeat Gate release phase fades the sound using **ADSR Release**.
 
 LFO 2 tremolo still happens after the envelope, so tremolo can pulse either AR-shaped or ADSR-shaped notes.
 
-## 13. Why sine behaves differently
+## 13. Testing Repeat Gate
+
+Repeat Gate repeatedly triggers the current envelope.
+
+It does not change pitch. It is not a sequencer. It is not patchable yet.
+
+| Control | What it does |
+|---|---|
+| Repeat Gate | Turns repeated envelope triggering Off or On. |
+| Repeat Gate Rate | Controls how often the envelope is triggered. |
+| Envelope Mode | Chooses whether Repeat Gate triggers AR or ADSR behaviour. |
+
+Good test:
+
+1. Keep **Repeat Gate** Off.
+2. Press **Start Audio**.
+3. Press **Gate Note** once to confirm the voice works.
+4. Press **Release**.
+5. Set **Envelope Mode** to AR.
+6. Turn **Repeat Gate** On.
+7. Adjust **Repeat Gate Rate**.
+8. Change **Envelope Mode** to ADSR and test again.
+9. Turn **Repeat Gate** Off.
+10. Press **Panic Stop**.
+
+Repeat Gate should only trigger the current envelope path. It should not change pitch, add steps, start MIDI, or create a sequencer.
+
+## 14. Why sine behaves differently
 
 Sine is included because it is a useful basic waveform.
 
@@ -389,7 +426,7 @@ To test the filter clearly, use:
 - Pink Noise
 - Brown Noise
 
-## 14. What is still visual-only
+## 15. What is still visual-only
 
 Most of the large faceplate is still visual-only.
 
@@ -405,7 +442,6 @@ These are not active yet:
 - LOG-CV
 - LIN-CV
 - low-pass external CV inputs
-- Repeat Gate Rate
 - Attenuators
 - AUX VCA
 - State Variable VCF
@@ -421,9 +457,9 @@ These are not active yet:
 - presets
 - MIDI learn
 
-The **ADSR Env. Gen.** concept and **Sample & Hold** concept have now started to become active through the First Voice panel, but they are not yet patchable modules.
+The **ADSR Env. Gen.**, **Sample & Hold**, and **Repeat Gate** concepts have now started to become active through the First Voice panel, but they are not yet patchable modules.
 
-## 15. What not to expect yet
+## 16. What not to expect yet
 
 Do not expect:
 
@@ -432,9 +468,11 @@ Do not expect:
 - external input
 - real patch cables
 - full modulation routing
-- repeat gate triggering
+- sequencer behaviour
+- pitch changes from Repeat Gate
 - patchable ADSR routing
 - patchable Sample & Hold routing
+- patchable Repeat Gate routing
 - state-variable filter sound
 - Expander utility behaviour
 - MIDI input
@@ -443,7 +481,7 @@ Do not expect:
 - VST plugin behaviour
 - exact MFOS hardware emulation
 
-## 16. Current safe test patch
+## 17. Current safe test patch
 
 Use this simple patch for testing:
 
@@ -463,6 +501,8 @@ S&H Mod: 0 at first
 LFO 2 Rate: slow
 LFO-2 Mod: 0 at first
 Envelope Mode: AR first, then ADSR
+Repeat Gate: Off first
+Repeat Gate Rate: slow to medium
 AR Attack: short
 AR Release: medium
 ADSR Attack: short
@@ -476,16 +516,19 @@ Then test:
 
 1. Press **Start Audio**.
 2. Press **Gate Note** in AR mode.
-3. Raise **White NS Level** slowly.
-4. Raise **S&H Mod** slowly.
-5. Change **S&H Rate**.
-6. Raise **LFO-1 Mod** slowly and check it still works with S&H.
-7. Change **Envelope Mode** to ADSR.
-8. Press **Release** and check ADSR release still works.
-9. Raise **LFO-2 Mod** slowly and confirm tremolo still happens after the envelope.
-10. Press **Panic Stop**.
+3. Press **Release**.
+4. Turn **Repeat Gate** On.
+5. Change **Repeat Gate Rate**.
+6. Change **Envelope Mode** to ADSR.
+7. Confirm Repeat Gate still triggers the selected envelope.
+8. Raise **White NS Level** slowly.
+9. Raise **S&H Mod** slowly.
+10. Raise **LFO-1 Mod** slowly and check it still works with S&H.
+11. Raise **LFO-2 Mod** slowly and confirm tremolo still happens after the envelope.
+12. Turn **Repeat Gate** Off.
+13. Press **Panic Stop**.
 
-## 17. Manual update rule
+## 18. Manual update rule
 
 This is a living manual.
 
