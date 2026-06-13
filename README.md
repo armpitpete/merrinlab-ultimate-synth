@@ -22,9 +22,34 @@ Usable like software.
 
 ## Current status
 
-Fresh project scaffold.
+The project is currently frozen at the static dark faceplate preview checkpoint.
 
-No synth engine, UI framework, or plugin format has been selected yet.
+Live preview:
+
+```text
+https://armpitpete.github.io/merrinlab-ultimate-synth/faceplate-preview/
+```
+
+Checkpoint note:
+
+```text
+docs/Static_Faceplate_Preview_Checkpoint_v0.1.md
+```
+
+Label verification note:
+
+```text
+docs/Faceplate_Label_Verification_v0.1.md
+```
+
+Current boundary:
+
+- static browser preview only
+- no audio engine
+- no functional controls
+- no JUCE implementation
+- no VST implementation
+- no fake behaviour
 
 ## First design target
 
