@@ -208,6 +208,16 @@
       unit: "Hz",
     },
     {
+      key: "sampleHoldRate",
+      moduleSelector: ".sample-hold-module",
+      label: "Sample Rate",
+      type: "range",
+      min: 0.1,
+      max: 20,
+      step: 0.1,
+      unit: "Hz",
+    },
+    {
       key: "repeatGate",
       moduleSelector: ".repeat-module",
       label: "Gate LED",
@@ -308,6 +318,7 @@
 
     if (config.key === "repeatGateRate") return `${number.toFixed(0)} ${config.unit}`;
     if (config.key === "lfo1Rate") return `${number.toFixed(2)} ${config.unit}`;
+    if (config.key === "sampleHoldRate") return `${number.toFixed(1)} ${config.unit}`;
     if (config.key === "resonance") return `${number.toFixed(1)} ${config.unit}`;
     if (percentKeys.includes(config.key)) return `${number.toFixed(0)}%`;
     if (fineTuneKeys.includes(config.key)) return `${number.toFixed(0)} ${config.unit}`;
