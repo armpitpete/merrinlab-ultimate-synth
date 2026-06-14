@@ -1,6 +1,6 @@
-# ADSR Main Envelope and Effects Section Layout v0.1
+# ADSR Main Envelope and Effects Section Layout v0.2
 
-This pass removes the visible AR envelope from the faceplate, makes ADSR the single visible Envelope module, and groups Delay/Reverb into an Effects section.
+This pass removes the visible AR envelope from the faceplate, makes ADSR the single visible Envelope module, and groups Delay/Reverb into a separate full-width Effects strip.
 
 ## User directions
 
@@ -16,6 +16,10 @@ ADSR should be where DELAY and REVERB are
 Delay/Reverb should be in an Effects Section
 ```
 
+```text
+effects section made but stayed in the wrong place
+```
+
 ## Design rule
 
 ```text
@@ -25,6 +29,7 @@ The old AR faceplate module is hidden.
 ADSR is moved into the previous Delay/Reverb area.
 ADSR controls are shown vertically.
 Delay and Reverb are grouped together under one Effects section.
+Effects sits as its own full-width strip below the main faceplate grid, not squeezed into the upper voice area.
 ```
 
 ## Existing state key
@@ -44,6 +49,7 @@ Envelope = ADSR only
 Attack / Decay / Sustain / Release are visible
 AR is not visible on the faceplate
 Delay and Reverb sit inside Effects
+Effects appears below the main faceplate grid
 ```
 
 This remains a visual bridge/layout pass.
@@ -64,7 +70,7 @@ visible envelope layout
 ADSR position
 ADSR vertical control layout
 visible AR module hidden
-Effects section for Delay and Reverb
+full-width Effects strip for Delay and Reverb
 ```
 
 No change to:
@@ -94,6 +100,7 @@ The faceplate shows ADSR as the only visible Envelope module.
 The ADSR module appears where Delay/Reverb used to be.
 ADSR controls run vertically rather than horizontally.
 Delay and Reverb are grouped under an Effects section.
+Effects is a separate full-width strip below the main faceplate grid.
 The ADSR envelope still works.
 Delay and Reverb still work.
 ```
