@@ -104,6 +104,53 @@
       step: 0.01,
       unit: "",
     },
+    {
+      key: "vco3CoarseFreq",
+      moduleSelector: ".vco-bank .vco-module:nth-child(3)",
+      label: "Coarse Freq",
+      type: "range",
+      min: 55,
+      max: 880,
+      step: 1,
+      unit: "Hz",
+    },
+    {
+      key: "vco3FineCents",
+      moduleSelector: ".vco-bank .vco-module:nth-child(3)",
+      label: "Fine Freq",
+      type: "range",
+      min: -100,
+      max: 100,
+      step: 1,
+      unit: "cent",
+    },
+    {
+      key: "vco3Waveform",
+      moduleSelector: ".vco-bank .vco-module:nth-child(3)",
+      label: "Waveform",
+      type: "select",
+      options: waveOptions,
+    },
+    {
+      key: "vco3PulseWidth",
+      moduleSelector: ".vco-bank .vco-module:nth-child(3)",
+      label: "Pulse Width %",
+      type: "range",
+      min: 10,
+      max: 90,
+      step: 1,
+      unit: "%",
+    },
+    {
+      key: "vco3Level",
+      moduleSelector: ".mixer-module",
+      label: "VCO 3 Level",
+      type: "range",
+      min: 0,
+      max: 0.4,
+      step: 0.01,
+      unit: "",
+    },
   ];
 
   function normalizeText(text) {
@@ -130,9 +177,11 @@
     }
 
     const number = Number(value);
+    const levelKeys = ["vcoLevel", "vco2Level", "vco3Level"];
+    const fineTuneKeys = ["fineCents", "vco2FineCents", "vco3FineCents"];
 
-    if (config.key === "vcoLevel" || config.key === "vco2Level") return number.toFixed(2);
-    if (config.key === "fineCents" || config.key === "vco2FineCents") return `${number.toFixed(0)} ${config.unit}`;
+    if (levelKeys.includes(config.key)) return number.toFixed(2);
+    if (fineTuneKeys.includes(config.key)) return `${number.toFixed(0)} ${config.unit}`;
     return `${number.toFixed(0)} ${config.unit}`.trim();
   }
 
