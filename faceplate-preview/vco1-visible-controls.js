@@ -9,6 +9,11 @@
     ["pulse", "Pulse"],
   ];
 
+  const repeatGateOptions = [
+    ["off", "Off"],
+    ["on", "On"],
+  ];
+
   const visibleControlConfigs = [
     {
       key: "coarseFreq",
@@ -170,6 +175,13 @@
       max: 6500,
       step: 1,
       unit: "Hz",
+    },
+    {
+      key: "repeatGate",
+      moduleSelector: ".repeat-module",
+      label: "Gate LED",
+      type: "select",
+      options: repeatGateOptions,
     },
     {
       key: "repeatGateRate",
