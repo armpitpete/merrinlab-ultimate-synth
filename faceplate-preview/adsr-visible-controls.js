@@ -170,6 +170,15 @@
     });
   }
 
+  function loadEnvelopeModeBridge() {
+    if (document.querySelector('script[src="envelope-mode-visible-controls.js"]')) return;
+
+    const script = document.createElement("script");
+    script.src = "envelope-mode-visible-controls.js";
+    script.defer = true;
+    document.head.append(script);
+  }
+
   function initAdsrVisibleControls() {
     addStyles();
 
@@ -191,6 +200,7 @@
     });
 
     syncFromSourceControls();
+    loadEnvelopeModeBridge();
   }
 
   if (document.readyState === "loading") {
