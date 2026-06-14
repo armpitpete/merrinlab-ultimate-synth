@@ -56,7 +56,7 @@
         const slowTail = Math.pow(1 - position, 1.28);
         const lateBloom = Math.sin(position * Math.PI) * 0.18;
         const earlyReflection = index < context.sampleRate * 0.18 ? 0.42 : 1;
-        const stereoOffset = channel === 0 ? 0.91 : 1.0;
+        const stereoOffset = channel === 0 ? 0.89 : 1.0;
 
         channelData[index] = (Math.random() * 2 - 1) * (slowTail + lateBloom) * earlyReflection * stereoOffset * 0.55;
       }
@@ -74,6 +74,11 @@
       context,
       wetGain,
       preDelay,
+      rightDelay,
+      leftTone,
+      rightTone,
+      leftGain,
+      rightGain,
     } = activeCathedral;
 
     const now = context.currentTime;
@@ -82,6 +87,12 @@
 
     safeParam(wetGain.gain, wet, now, 0.04);
     safeParam(preDelay.delayTime, REVERB_PRE_DELAY_SECONDS, now, 0.04);
+
+    safeParam(rightDelay.delayTime, 0.006 + cathedralAmount * 0.018, now, 0.08);
+    safeParam(leftTone.frequency, 5000 - cathedralAmount * 2100, now, 0.14);
+    safeParam(rightTone.frequency, 4300 - cathedralAmount * 1700, now, 0.14);
+    safeParam(leftGain.gain, 0.92, now, 0.08);
+    safeParam(rightGain.gain, 1.0, now, 0.08);
   }
 
   function createCathedralLayer(context, source, destination) {
@@ -91,23 +102,54 @@
     const input = context.createGain();
     const preDelay = context.createDelay(0.12);
     const convolver = context.createConvolver();
+    const splitter = context.createChannelSplitter(2);
+    const merger = context.createChannelMerger(2);
+    const rightDelay = context.createDelay(0.04);
+    const leftTone = context.createBiquadFilter();
+    const rightTone = context.createBiquadFilter();
+    const leftGain = context.createGain();
+    const rightGain = context.createGain();
     const wetGain = context.createGain();
 
     preDelay.delayTime.value = REVERB_PRE_DELAY_SECONDS;
     convolver.buffer = createCathedralImpulse(context);
+
+    rightDelay.delayTime.value = 0.012;
+    leftTone.type = "lowpass";
+    rightTone.type = "lowpass";
+    leftTone.frequency.value = 4200;
+    rightTone.frequency.value = 3800;
+    leftGain.gain.value = 0.92;
+    rightGain.gain.value = 1.0;
     wetGain.gain.value = 0;
 
     previousConnect.call(source, input);
     previousConnect.call(input, preDelay);
     previousConnect.call(preDelay, convolver);
-    previousConnect.call(convolver, wetGain);
+    previousConnect.call(convolver, splitter);
+
+    splitter.connect(leftTone, 0);
+    splitter.connect(rightDelay, 1);
+    previousConnect.call(rightDelay, rightTone);
+    previousConnect.call(leftTone, leftGain);
+    previousConnect.call(rightTone, rightGain);
+    leftGain.connect(merger, 0, 0);
+    rightGain.connect(merger, 0, 1);
+    previousConnect.call(merger, wetGain);
     previousConnect.call(wetGain, destination);
 
     activeCathedral = {
       context,
       wetGain,
       preDelay,
+      rightDelay,
+      leftTone,
+      rightTone,
+      leftGain,
+      rightGain,
       convolver,
+      splitter,
+      merger,
     };
 
     applyCathedralParameters();
