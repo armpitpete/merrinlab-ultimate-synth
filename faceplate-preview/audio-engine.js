@@ -39,6 +39,9 @@
     adsrDecay: 0.25,
     adsrSustain: 0.65,
     adsrRelease: 0.5,
+    delayMix: 0,
+    delayTime: 0.25,
+    delayFeedback: 0.2,
     output: 0.08,
   };
 
@@ -62,6 +65,10 @@
   let filter = null;
   let mainVca = null;
   let tremoloGain = null;
+  let delayNode = null;
+  let delayFeedbackGain = null;
+  let delayDryGain = null;
+  let delayWetGain = null;
   let masterGain = null;
   let limiter = null;
   let repeatGateTimerId = null;
@@ -98,6 +105,9 @@
     adsrDecay: [0.005, 3],
     adsrSustain: [0, 1],
     adsrRelease: [0.02, 4],
+    delayMix: [0, 1],
+    delayTime: [0.05, 0.8],
+    delayFeedback: [0, 0.45],
     output: [0, 0.16],
   };
 
@@ -137,6 +147,9 @@
     adsrDecay: "ADSR Decay",
     adsrSustain: "ADSR Sustain",
     adsrRelease: "ADSR Release",
+    delayMix: "Delay Mix",
+    delayTime: "Delay Time",
+    delayFeedback: "Delay Feedback",
     output: "Output",
   };
 
@@ -170,6 +183,9 @@
     adsrDecay: "s",
     adsrSustain: "%",
     adsrRelease: "s",
+    delayMix: "%",
+    delayTime: "s",
+    delayFeedback: "%",
     output: "",
   };
 
@@ -286,6 +302,15 @@
     if (sampleHoldFilterSource) {
       safeRamp(sampleHoldFilterSource.offset, sampleHoldValue * getSafeSampleHoldDepth(), now, 0.02);
     }
+  }
+
+  function applyDelayParameters() {
+    if (!audioContext || !delayNode || !delayFeedbackGain || !delayWetGain) return;
+
+    const now = audioContext.currentTime;
+    safeRamp(delayNode.delayTime, clamp(state.delayTime, "delayTime"), now, 0.03);
+    safeRamp(delayFeedbackGain.gain, clamp(state.delayFeedback, "delayFeedback"), now, 0.03);
+    safeRamp(delayWetGain.gain, clamp(state.delayMix, "delayMix"), now, 0.03);
   }
 
   function updateSampleHoldValue() {
@@ -560,6 +585,18 @@
     lfo2Offset = audioContext.createConstantSource();
     lfo2Offset.offset.value = 1 - getSafeTremoloDepth() / 2;
 
+    delayNode = audioContext.createDelay(1.0);
+    delayNode.delayTime.value = clamp(state.delayTime, "delayTime");
+
+    delayFeedbackGain = audioContext.createGain();
+    delayFeedbackGain.gain.value = clamp(state.delayFeedback, "delayFeedback");
+
+    delayDryGain = audioContext.createGain();
+    delayDryGain.gain.value = 1;
+
+    delayWetGain = audioContext.createGain();
+    delayWetGain.gain.value = clamp(state.delayMix, "delayMix");
+
     masterGain = audioContext.createGain();
     masterGain.gain.value = state.output;
 
@@ -592,7 +629,13 @@
 
     filter.connect(mainVca);
     mainVca.connect(tremoloGain);
-    tremoloGain.connect(masterGain);
+    tremoloGain.connect(delayDryGain);
+    tremoloGain.connect(delayNode);
+    delayNode.connect(delayFeedbackGain);
+    delayFeedbackGain.connect(delayNode);
+    delayNode.connect(delayWetGain);
+    delayDryGain.connect(masterGain);
+    delayWetGain.connect(masterGain);
     masterGain.connect(limiter);
     limiter.connect(audioContext.destination);
 
@@ -712,6 +755,16 @@
       tremoloGain.gain.setValueAtTime(0, audioContext.currentTime);
     }
 
+    if (delayWetGain && audioContext) {
+      delayWetGain.gain.cancelScheduledValues(audioContext.currentTime);
+      delayWetGain.gain.setValueAtTime(0, audioContext.currentTime);
+    }
+
+    if (delayFeedbackGain && audioContext) {
+      delayFeedbackGain.gain.cancelScheduledValues(audioContext.currentTime);
+      delayFeedbackGain.gain.setValueAtTime(0, audioContext.currentTime);
+    }
+
     if (masterGain && audioContext) {
       masterGain.gain.cancelScheduledValues(audioContext.currentTime);
       masterGain.gain.setValueAtTime(0, audioContext.currentTime);
@@ -751,6 +804,10 @@
     filter = null;
     mainVca = null;
     tremoloGain = null;
+    delayNode = null;
+    delayFeedbackGain = null;
+    delayDryGain = null;
+    delayWetGain = null;
     masterGain = null;
     limiter = null;
 
@@ -789,6 +846,9 @@
       "envelopeMode",
       "repeatGate",
       "repeatGateRate",
+      "delayMix",
+      "delayTime",
+      "delayFeedback",
       "output",
     ].forEach(applyParameter);
   }
@@ -877,6 +937,10 @@
       setStatus(`Repeat Gate rate changed · ${formatValue("repeatGateRate", state.repeatGateRate)}`);
     }
 
+    if (key === "delayMix" || key === "delayTime" || key === "delayFeedback") {
+      applyDelayParameters();
+    }
+
     if (key === "output" && masterGain) {
       safeRamp(masterGain.gain, clamp(state.output, "output"), now, 0.02);
     }
@@ -892,7 +956,8 @@
     if (key === "fineCents" || key === "vco2FineCents" || key === "vco3FineCents") return `${Number(value).toFixed(0)} ${units[key]}`;
     if (key === "pulseWidth" || key === "vco2PulseWidth" || key === "vco3PulseWidth") return `${Number(value).toFixed(0)} ${units[key]}`;
     if (key === "lfo1Rate" || key === "lfo2Rate" || key === "sampleHoldRate" || key === "repeatGateRate") return `${Number(value).toFixed(2)} ${units[key]}`;
-    if (key === "lfo1Mod" || key === "lfo2Mod" || key === "sampleHoldMod" || key === "sampleHoldPitchMod" || key === "adsrSustain") return `${Math.round(Number(value) * 100)} ${units[key]}`;
+    if (key === "delayTime") return `${Number(value).toFixed(2)} ${units[key]}`;
+    if (key === "lfo1Mod" || key === "lfo2Mod" || key === "sampleHoldMod" || key === "sampleHoldPitchMod" || key === "adsrSustain" || key === "delayMix" || key === "delayFeedback") return `${Math.round(Number(value) * 100)} ${units[key]}`;
     if (key === "attack" || key === "release" || key === "adsrAttack" || key === "adsrDecay" || key === "adsrRelease") return `${Number(value).toFixed(2)} ${units[key]}`;
     if (key === "resonance") return `${Number(value).toFixed(1)} ${units[key]}`;
     return Number(value).toFixed(2);
@@ -1086,7 +1151,7 @@
     panel.setAttribute("aria-label", "First safe audible voice controls");
     panel.innerHTML = `
       <h2>First Voice v1.2</h2>
-      <p data-audio-status>Stopped · VCO 1 + VCO 2 + VCO 3 + noise + LFO/S&H + AR/ADSR + Repeat Gate · safe output</p>
+      <p data-audio-status>Stopped · VCO 1 + VCO 2 + VCO 3 + noise + LFO/S&H + AR/ADSR + Repeat Gate · Delay default-off · safe output</p>
     `;
 
     panel.append(
@@ -1157,6 +1222,12 @@
         createSlider("repeatGateRate", 0.1, 12, 0.1),
       ),
       createGroup(
+        "Delay",
+        createSlider("delayMix", 0, 1, 0.01),
+        createSlider("delayTime", 0.05, 0.8, 0.01),
+        createSlider("delayFeedback", 0, 0.45, 0.01),
+      ),
+      createGroup(
         "Output",
         createSlider("output", 0, 0.16, 0.005),
       ),
@@ -1164,7 +1235,7 @@
 
     const note = document.createElement("small");
     note.className = "audio-note";
-    note.textContent = "S&H Pitch Mod is optional and default-off. It moves VCO 1 pitch only. S&H filter modulation remains separate.";
+    note.textContent = "S&H Pitch Mod is optional and default-off. Delay is also default-off: raise Delay Mix to hear echo.";
     panel.append(note);
 
     document.head.append(style);
