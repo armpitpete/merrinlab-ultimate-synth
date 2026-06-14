@@ -4,7 +4,7 @@ Issue #50 records the first visible lowpass filter bridge.
 
 Active visible control:
 
-- Lowpass Initial Cutoff -> `filterCutoff`
+- Lowpass Initial Cutoff -> `cutoff`
 
 Implementation file:
 
