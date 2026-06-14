@@ -163,5 +163,9 @@
     syncFromSourceControls();
   }
 
-  document.addEventListener("DOMContentLoaded", initArVisibleControls);
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initArVisibleControls);
+  } else {
+    initArVisibleControls();
+  }
 })();
