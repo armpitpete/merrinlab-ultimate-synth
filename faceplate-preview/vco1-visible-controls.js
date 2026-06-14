@@ -176,6 +176,16 @@
       unit: "Hz",
     },
     {
+      key: "resonance",
+      moduleSelector: ".filter-lp-module",
+      label: "Resonance",
+      type: "range",
+      min: 0.1,
+      max: 12,
+      step: 0.1,
+      unit: "Q",
+    },
+    {
       key: "repeatGate",
       moduleSelector: ".repeat-module",
       label: "Gate LED",
@@ -275,6 +285,7 @@
     const fineTuneKeys = ["fineCents", "vco2FineCents", "vco3FineCents"];
 
     if (config.key === "repeatGateRate") return `${number.toFixed(0)} ${config.unit}`;
+    if (config.key === "resonance") return `${number.toFixed(1)} ${config.unit}`;
     if (levelKeys.includes(config.key)) return `${number.toFixed(0)}%`;
     if (fineTuneKeys.includes(config.key)) return `${number.toFixed(0)} ${config.unit}`;
     return `${number.toFixed(0)} ${config.unit}`.trim();
