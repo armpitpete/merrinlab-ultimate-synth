@@ -134,7 +134,7 @@ body {
 .ultimate-grid {
   display: grid;
   grid-template-columns: 3.25fr 0.95fr 1.15fr 1.15fr 1.15fr 1.05fr;
-  grid-template-rows: 190px 145px 250px 185px 170px;
+  grid-template-rows: 190px 145px 250px 185px 215px;
   grid-template-areas:
     "vcos mixer filter  filter  filter  sh"
     "vcos mixer ar      mainvca mainvca sh"
