@@ -198,6 +198,16 @@
       unit: "Q",
     },
     {
+      key: "lfo1Rate",
+      moduleSelector: ".lfo1-module",
+      label: "Rate",
+      type: "range",
+      min: 0.05,
+      max: 12,
+      step: 0.01,
+      unit: "Hz",
+    },
+    {
       key: "repeatGate",
       moduleSelector: ".repeat-module",
       label: "Gate LED",
@@ -297,6 +307,7 @@
     const fineTuneKeys = ["fineCents", "vco2FineCents", "vco3FineCents"];
 
     if (config.key === "repeatGateRate") return `${number.toFixed(0)} ${config.unit}`;
+    if (config.key === "lfo1Rate") return `${number.toFixed(2)} ${config.unit}`;
     if (config.key === "resonance") return `${number.toFixed(1)} ${config.unit}`;
     if (percentKeys.includes(config.key)) return `${number.toFixed(0)}%`;
     if (fineTuneKeys.includes(config.key)) return `${number.toFixed(0)} ${config.unit}`;
