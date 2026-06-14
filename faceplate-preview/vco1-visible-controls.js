@@ -396,10 +396,11 @@
   }
 
   function ensureDelayFaceplateModule() {
-    if (document.querySelector(".delay-module")) return;
+    if (document.querySelector(".delay-module")) return true;
 
     const repeatModule = document.querySelector(".repeat-module");
-    if (!repeatModule) return;
+    const ultimateGrid = document.querySelector(".ultimate-grid");
+    if (!ultimateGrid) return false;
 
     const delayModule = document.createElement("article");
     delayModule.className = "module delay-module compact-source-module";
@@ -412,7 +413,13 @@
       </div>
     `;
 
-    repeatModule.insertAdjacentElement("afterend", delayModule);
+    if (repeatModule) {
+      repeatModule.insertAdjacentElement("afterend", delayModule);
+    } else {
+      ultimateGrid.append(delayModule);
+    }
+
+    return true;
   }
 
   function updateVisibleControl(config, sourceValue) {
