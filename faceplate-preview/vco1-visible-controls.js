@@ -230,6 +230,18 @@
       toSourceValue: (value) => Number(value) / 100,
     },
     {
+      key: "lfo2Mod",
+      moduleSelector: ".main-vca-module",
+      label: "LFO-2 Mod",
+      type: "range",
+      min: 0,
+      max: 100,
+      step: 1,
+      unit: "%",
+      fromSourceValue: (value) => Number(value) * 100,
+      toSourceValue: (value) => Number(value) / 100,
+    },
+    {
       key: "repeatGate",
       moduleSelector: ".repeat-module",
       label: "Gate LED",
@@ -325,7 +337,7 @@
     }
 
     const number = Number(value);
-    const percentKeys = ["vcoLevel", "vco2Level", "vco3Level", "whiteNoiseLevel", "lfo1Mod", "sampleHoldMod"];
+    const percentKeys = ["vcoLevel", "vco2Level", "vco3Level", "whiteNoiseLevel", "lfo1Mod", "sampleHoldMod", "lfo2Mod"];
     const fineTuneKeys = ["fineCents", "vco2FineCents", "vco3FineCents"];
 
     if (config.key === "repeatGateRate") return `${number.toFixed(0)} ${config.unit}`;
