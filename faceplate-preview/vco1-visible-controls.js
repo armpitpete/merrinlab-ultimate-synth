@@ -171,6 +171,18 @@
       step: 1,
       unit: "Hz",
     },
+    {
+      key: "repeatGateRate",
+      moduleSelector: ".repeat-module",
+      label: "Gate Rate",
+      type: "range",
+      min: 6,
+      max: 720,
+      step: 1,
+      unit: "BPM",
+      fromSourceValue: (value) => Number(value) * 60,
+      toSourceValue: (value) => Number(value) / 60,
+    },
   ];
 
   function normalizeText(text) {
@@ -190,6 +202,14 @@
     return document.querySelector(`.audio-voice-panel [data-audio-control="${key}"]`);
   }
 
+  function getVisibleValue(config, value) {
+    return config.fromSourceValue ? config.fromSourceValue(value) : value;
+  }
+
+  function getSourceValue(config, value) {
+    return config.toSourceValue ? config.toSourceValue(value) : value;
+  }
+
   function formatReadout(config, value) {
     if (config.type === "select") {
       const option = config.options.find(([optionValue]) => optionValue === value);
@@ -200,32 +220,34 @@
     const levelKeys = ["vcoLevel", "vco2Level", "vco3Level", "whiteNoiseLevel"];
     const fineTuneKeys = ["fineCents", "vco2FineCents", "vco3FineCents"];
 
+    if (config.key === "repeatGateRate") return `${number.toFixed(0)} ${config.unit}`;
     if (levelKeys.includes(config.key)) return number.toFixed(2);
     if (fineTuneKeys.includes(config.key)) return `${number.toFixed(0)} ${config.unit}`;
     return `${number.toFixed(0)} ${config.unit}`.trim();
   }
 
-  function updateVisibleControl(config, value) {
+  function updateVisibleControl(config, sourceValue) {
     const visibleControl = document.querySelector(`[data-visible-audio-control="${config.key}"]`);
     if (!visibleControl) return;
 
-    visibleControl.value = value;
+    const visibleValue = getVisibleValue(config, sourceValue);
+    visibleControl.value = visibleValue;
 
     const wrapper = visibleControl.closest(".visible-audio-control-wrap");
     const readout = wrapper?.querySelector(".visible-audio-readout");
-    if (readout) readout.textContent = formatReadout(config, value);
+    if (readout) readout.textContent = formatReadout(config, visibleValue);
 
     if (config.type === "select") {
       const faceSwitch = wrapper?.parentElement?.querySelector(".switch-control");
-      if (faceSwitch) faceSwitch.textContent = formatReadout(config, value);
+      if (faceSwitch) faceSwitch.textContent = formatReadout(config, visibleValue);
     }
   }
 
-  function sendToExistingAudioControl(config, value) {
+  function sendToExistingAudioControl(config, visibleValue) {
     const sourceControl = findSourceControl(config.key);
     if (!sourceControl) return;
 
-    sourceControl.value = value;
+    sourceControl.value = getSourceValue(config, visibleValue);
     sourceControl.dispatchEvent(new Event("input", { bubbles: true }));
   }
 
@@ -248,16 +270,16 @@
       input.step = config.step;
     }
 
-    input.value = sourceControl.value;
+    input.value = getVisibleValue(config, sourceControl.value);
 
     input.addEventListener("input", () => {
       sendToExistingAudioControl(config, input.value);
-      updateVisibleControl(config, input.value);
+      updateVisibleControl(config, getSourceValue(config, input.value));
     });
 
     input.addEventListener("change", () => {
       sendToExistingAudioControl(config, input.value);
-      updateVisibleControl(config, input.value);
+      updateVisibleControl(config, getSourceValue(config, input.value));
     });
 
     return input;
@@ -280,7 +302,7 @@
     const input = createVisibleInput(config, sourceControl);
     const readout = document.createElement("output");
     readout.className = "visible-audio-readout";
-    readout.textContent = formatReadout(config, sourceControl.value);
+    readout.textContent = formatReadout(config, getVisibleValue(config, sourceControl.value));
 
     wrapper.append(input, readout);
     control.append(wrapper);
