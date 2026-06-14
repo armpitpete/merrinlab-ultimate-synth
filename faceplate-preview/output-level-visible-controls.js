@@ -132,6 +132,15 @@
     document.head.append(style);
   }
 
+  function loadLfoShapeControls() {
+    if (document.querySelector('script[src="lfo-shape-controls.js"]')) return;
+
+    const script = document.createElement("script");
+    script.src = "lfo-shape-controls.js";
+    script.defer = true;
+    document.head.append(script);
+  }
+
   function initVisibleOutputControl() {
     addStyles();
 
@@ -151,6 +160,7 @@
 
     const sourceControl = findSourceControl();
     if (sourceControl) updateVisibleControl(sourceControl.value);
+    loadLfoShapeControls();
   }
 
   if (document.readyState === "loading") {
