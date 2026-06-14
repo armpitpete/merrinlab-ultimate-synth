@@ -14,6 +14,12 @@ Follow-up test result:
 reverb behaves more like echo
 ```
 
+Reference implementation:
+
+```text
+SpectraSynth reverb sounded right, so this pass copies its generated cathedral impulse recipe.
+```
+
 ## Implementation
 
 A separate additive cathedral layer was added instead of rewriting the existing working reverb.
@@ -36,17 +42,27 @@ keep the existing room reverb
 add a second default-off cathedral tail at high Reverb Size
 ```
 
-## Change after echo-like test
+## SpectraSynth-style recipe
 
-The first #72 attempt used long reflection taps. That sounded too much like echo.
-
-The revised version replaces the long tap layer with a generated dense reverb tail:
+The revised layer now uses the SpectraSynth-style generated impulse method:
 
 ```text
-source -> short predelay -> generated dense impulse tail -> lowpass tone -> wet gain -> destination
+4.6 second stereo generated impulse
+45 ms pre-delay
+slowTail decay curve
+lateBloom swell
+softened first 180 ms
+slightly different left/right stereo offset
+wet gain capped at 0.38
 ```
 
-This should smear the sound into a continuous space rather than producing obvious repeat taps.
+This is designed to sound like a continuous space rather than separate echo repeats.
+
+## Routing
+
+```text
+source -> pre-delay -> generated cathedral impulse -> wet gain -> destination
+```
 
 ## Behaviour
 
@@ -73,16 +89,6 @@ uses a generated in-memory impulse tail
 uses only capped wet gain
 keeps Reverb Mix 0% silent/unchanged
 ```
-
-## Dense tail
-
-The revised layer uses a generated decaying noise tail of about:
-
-```text
-2.6 seconds
-```
-
-This is intended to feel more like cathedral reverb and less like echo.
 
 ## Not changed
 
