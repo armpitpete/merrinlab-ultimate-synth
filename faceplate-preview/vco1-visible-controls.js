@@ -14,16 +14,16 @@
     ["on", "On"],
   ];
 
+  const noteOptions = buildNoteOptions(33, 81);
+
   const visibleControlConfigs = [
     {
       key: "coarseFreq",
       moduleSelector: ".vco-bank .vco-module:first-child",
       label: "Coarse Freq",
-      type: "range",
-      min: 55,
-      max: 880,
-      step: 1,
-      unit: "Hz",
+      type: "select",
+      options: noteOptions,
+      matchNearestOption: true,
     },
     {
       key: "fineCents",
@@ -68,11 +68,9 @@
       key: "vco2CoarseFreq",
       moduleSelector: ".vco-bank .vco-module:nth-child(2)",
       label: "Coarse Freq",
-      type: "range",
-      min: 55,
-      max: 880,
-      step: 1,
-      unit: "Hz",
+      type: "select",
+      options: noteOptions,
+      matchNearestOption: true,
     },
     {
       key: "vco2FineCents",
@@ -117,11 +115,9 @@
       key: "vco3CoarseFreq",
       moduleSelector: ".vco-bank .vco-module:nth-child(3)",
       label: "Coarse Freq",
-      type: "range",
-      min: 55,
-      max: 880,
-      step: 1,
-      unit: "Hz",
+      type: "select",
+      options: noteOptions,
+      matchNearestOption: true,
     },
     {
       key: "vco3FineCents",
@@ -205,6 +201,38 @@
     },
   ];
 
+  function buildNoteOptions(minMidi, maxMidi) {
+    const names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    const options = [];
+
+    for (let midi = minMidi; midi <= maxMidi; midi += 1) {
+      const name = names[midi % 12];
+      const octave = Math.floor(midi / 12) - 1;
+      const frequency = 440 * Math.pow(2, (midi - 69) / 12);
+      const value = frequency.toFixed(3);
+      const labelFrequency = frequency < 100 ? frequency.toFixed(1) : frequency.toFixed(0);
+      options.push([value, `${name}${octave} · ${labelFrequency} Hz`]);
+    }
+
+    return options;
+  }
+
+  function findNearestOptionValue(options, value) {
+    const target = Number(value);
+    let nearest = options[0]?.[0] || value;
+    let nearestDistance = Number.POSITIVE_INFINITY;
+
+    options.forEach(([optionValue]) => {
+      const distance = Math.abs(Number(optionValue) - target);
+      if (distance < nearestDistance) {
+        nearest = optionValue;
+        nearestDistance = distance;
+      }
+    });
+
+    return nearest;
+  }
+
   function normalizeText(text) {
     return String(text || "").replace(/\s+/g, " ").trim();
   }
@@ -223,6 +251,10 @@
   }
 
   function getVisibleValue(config, value) {
+    if (config.matchNearestOption && config.options) {
+      return findNearestOptionValue(config.options, value);
+    }
+
     return config.fromSourceValue ? config.fromSourceValue(value) : value;
   }
 
@@ -232,7 +264,7 @@
 
   function formatReadout(config, value) {
     if (config.type === "select") {
-      const option = config.options.find(([optionValue]) => optionValue === value);
+      const option = config.options.find(([optionValue]) => String(optionValue) === String(value));
       return option ? option[1] : value;
     }
 
