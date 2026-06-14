@@ -1,6 +1,14 @@
 (() => {
   "use strict";
 
+  const waveOptions = [
+    ["sawtooth", "Saw"],
+    ["square", "Square"],
+    ["triangle", "Triangle"],
+    ["sine", "Sine"],
+    ["pulse", "Pulse"],
+  ];
+
   const visibleControlConfigs = [
     {
       key: "coarseFreq",
@@ -27,13 +35,7 @@
       moduleSelector: ".vco-bank .vco-module:first-child",
       label: "Waveform",
       type: "select",
-      options: [
-        ["sawtooth", "Saw"],
-        ["square", "Square"],
-        ["triangle", "Triangle"],
-        ["sine", "Sine"],
-        ["pulse", "Pulse"],
-      ],
+      options: waveOptions,
     },
     {
       key: "pulseWidth",
@@ -52,6 +54,53 @@
       type: "range",
       min: 0,
       max: 0.7,
+      step: 0.01,
+      unit: "",
+    },
+    {
+      key: "vco2CoarseFreq",
+      moduleSelector: ".vco-bank .vco-module:nth-child(2)",
+      label: "Coarse Freq",
+      type: "range",
+      min: 55,
+      max: 880,
+      step: 1,
+      unit: "Hz",
+    },
+    {
+      key: "vco2FineCents",
+      moduleSelector: ".vco-bank .vco-module:nth-child(2)",
+      label: "Fine Freq",
+      type: "range",
+      min: -100,
+      max: 100,
+      step: 1,
+      unit: "cent",
+    },
+    {
+      key: "vco2Waveform",
+      moduleSelector: ".vco-bank .vco-module:nth-child(2)",
+      label: "Waveform",
+      type: "select",
+      options: waveOptions,
+    },
+    {
+      key: "vco2PulseWidth",
+      moduleSelector: ".vco-bank .vco-module:nth-child(2)",
+      label: "Pulse Width %",
+      type: "range",
+      min: 10,
+      max: 90,
+      step: 1,
+      unit: "%",
+    },
+    {
+      key: "vco2Level",
+      moduleSelector: ".mixer-module",
+      label: "VCO 2 Level",
+      type: "range",
+      min: 0,
+      max: 0.45,
       step: 0.01,
       unit: "",
     },
@@ -82,13 +131,13 @@
 
     const number = Number(value);
 
-    if (config.key === "vcoLevel") return number.toFixed(2);
-    if (config.key === "fineCents") return `${number.toFixed(0)} ${config.unit}`;
+    if (config.key === "vcoLevel" || config.key === "vco2Level") return number.toFixed(2);
+    if (config.key === "fineCents" || config.key === "vco2FineCents") return `${number.toFixed(0)} ${config.unit}`;
     return `${number.toFixed(0)} ${config.unit}`.trim();
   }
 
   function updateVisibleControl(config, value) {
-    const visibleControl = document.querySelector(`[data-visible-vco1-control="${config.key}"]`);
+    const visibleControl = document.querySelector(`[data-visible-audio-control="${config.key}"]`);
     if (!visibleControl) return;
 
     visibleControl.value = value;
@@ -113,7 +162,7 @@
 
   function createVisibleInput(config, sourceControl) {
     const input = document.createElement(config.type === "select" ? "select" : "input");
-    input.dataset.visibleVco1Control = config.key;
+    input.dataset.visibleAudioControl = config.key;
     input.className = "visible-audio-control";
 
     if (config.type === "select") {
@@ -150,7 +199,7 @@
     const control = findControlByLabel(module, config.label);
     const sourceControl = findSourceControl(config.key);
 
-    if (!control || !sourceControl || control.querySelector(`[data-visible-vco1-control="${config.key}"]`)) {
+    if (!control || !sourceControl || control.querySelector(`[data-visible-audio-control="${config.key}"]`)) {
       return false;
     }
 
@@ -172,10 +221,10 @@
   }
 
   function addStyles() {
-    if (document.querySelector("#visible-vco1-audio-control-styles")) return;
+    if (document.querySelector("#visible-audio-control-styles")) return;
 
     const style = document.createElement("style");
-    style.id = "visible-vco1-audio-control-styles";
+    style.id = "visible-audio-control-styles";
     style.textContent = `
       .control.is-audio-linked {
         outline: 1px solid rgba(147, 211, 108, 0.45);
@@ -232,12 +281,12 @@
     });
   }
 
-  function initVisibleVco1Controls() {
+  function initVisibleOscillatorControls() {
     addStyles();
 
     const sourcePanel = document.querySelector(".audio-voice-panel");
     if (!sourcePanel) {
-      window.setTimeout(initVisibleVco1Controls, 50);
+      window.setTimeout(initVisibleOscillatorControls, 50);
       return;
     }
 
@@ -255,5 +304,5 @@
     syncFromExistingControls();
   }
 
-  document.addEventListener("DOMContentLoaded", initVisibleVco1Controls);
+  document.addEventListener("DOMContentLoaded", initVisibleOscillatorControls);
 })();
