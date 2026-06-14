@@ -161,6 +161,16 @@
       step: 0.005,
       unit: "",
     },
+    {
+      key: "filterCutoff",
+      moduleSelector: ".filter-lp-module",
+      label: "Initial Cutoff",
+      type: "range",
+      min: 80,
+      max: 8000,
+      step: 1,
+      unit: "Hz",
+    },
   ];
 
   function normalizeText(text) {
