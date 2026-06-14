@@ -2,26 +2,30 @@
 
 This pass adds a visible faceplate Envelope Mode selector and makes AR / ADSR behave like two modes of the same envelope area.
 
-## User correction
+## User corrections
 
 ```text
 AR and ADSR should in the same place, even morph into the correct one when selected
 ```
 
+```text
+they should be in the same module but only the activated one is visible
+```
+
 ## Design rule
 
 ```text
-AR and ADSR are two modes of the same envelope area.
-The faceplate should show one clear Envelope Mode selector.
-When AR is selected, the AR controls are active.
-When ADSR is selected, the ADSR controls are active.
-The inactive envelope section visually recedes.
+AR and ADSR are two modes of one Envelope module.
+The faceplate shows one clear Envelope Mode selector.
+When AR is selected, only the AR controls are visible.
+When ADSR is selected, only the ADSR controls are visible.
+The inactive envelope controls are hidden, not merely faded.
 ```
 
 ## Visible control
 
 ```text
-Envelope Mode / AR / ADSR
+Envelope / Mode / AR / ADSR
 ```
 
 ## Existing state key
@@ -37,8 +41,8 @@ The visible selector maps to the existing First Voice `envelopeMode` control.
 Mode behaviour:
 
 ```text
-AR selected: AR Generator is visually active; ADSR Env. Gen. recedes.
-ADSR selected: ADSR Env. Gen. is visually active; AR Generator recedes.
+AR selected: one Envelope module shows AR Generator controls.
+ADSR selected: the same Envelope module shows ADSR Env. Gen. controls.
 ```
 
 This is a visual bridge and morph-state pass only.
@@ -55,8 +59,10 @@ faceplate-preview/adsr-visible-controls.js
 Changed:
 
 ```text
+single visible Envelope module
 visible Envelope Mode selector
-AR / ADSR visual morph state
+AR / ADSR morph state
+inactive envelope controls hidden
 ```
 
 No change to:
@@ -84,9 +90,9 @@ JUCE/VST
 ## Good enough
 
 ```text
-The faceplate clearly shows Envelope Mode with AR / ADSR.
-Selecting ADSR uses the existing ADSR envelope mode.
-Selecting AR uses the existing AR envelope mode.
-The active envelope section is visually clear.
-The inactive section recedes rather than looking equally active.
+The faceplate clearly shows one Envelope module.
+The Envelope module contains the AR / ADSR selector.
+Selecting AR shows only AR controls.
+Selecting ADSR shows only ADSR controls.
+Selecting either option still uses the existing envelopeMode behaviour.
 ```
