@@ -87,6 +87,15 @@
     const style = document.createElement("style");
     style.id = "adsr-main-envelope-styles";
     style.textContent = `
+      .ultimate-grid {
+        grid-template-areas:
+          "vcos mixer filter  filter  filter  sh"
+          "vcos mixer ar      mainvca mainvca sh"
+          "vcos mixer ar      lfo1    lfo2    output"
+          "vcos mixer ar      atten   atten   atten"
+          "auxvca auxvca auxvca repeat  repeat  repeat";
+      }
+
       .ar-module.is-hidden-envelope-source {
         display: none !important;
       }
@@ -94,6 +103,11 @@
       .adsr-module.main-envelope-module {
         display: grid;
         gap: 10px;
+        grid-area: ar !important;
+      }
+
+      .aux-vca-module {
+        grid-area: auxvca;
       }
 
       .adsr-module.main-envelope-module .module-header h2::after {
