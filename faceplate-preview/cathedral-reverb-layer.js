@@ -22,7 +22,7 @@
     ));
   }
 
-  function safeParam(param, value, time, speed = 0.05) {
+  function safeParam(param, value, time, speed = 0.08) {
     param.cancelScheduledValues(time);
     param.setTargetAtTime(value, time, speed);
   }
@@ -37,7 +37,30 @@
 
   function getCathedralAmount() {
     const size = clamp01(state.size);
-    return Math.min(1, Math.max(0, (size - 0.35) / 0.65));
+    return Math.min(1, Math.max(0, (size - 0.45) / 0.55));
+  }
+
+  function createCathedralImpulse(context) {
+    const seconds = 2.6;
+    const sampleRate = context.sampleRate;
+    const length = Math.floor(sampleRate * seconds);
+    const impulse = context.createBuffer(2, length, sampleRate);
+
+    for (let channelIndex = 0; channelIndex < impulse.numberOfChannels; channelIndex += 1) {
+      const channel = impulse.getChannelData(channelIndex);
+      let previous = 0;
+
+      for (let i = 0; i < length; i += 1) {
+        const progress = i / length;
+        const decay = Math.pow(1 - progress, 3.3);
+        const build = Math.min(1, i / (sampleRate * 0.035));
+        const white = Math.random() * 2 - 1;
+        previous = previous * 0.72 + white * 0.28;
+        channel[i] = previous * decay * build * 0.42;
+      }
+    }
+
+    return impulse;
   }
 
   function applyCathedralParameters() {
@@ -49,24 +72,16 @@
       context,
       wetGain,
       tone,
-      delayA,
-      delayB,
-      delayC,
-      delayD,
+      preDelay,
     } = activeCathedral;
 
     const now = context.currentTime;
-    const size = clamp01(state.size);
     const cathedralAmount = getCathedralAmount();
-    const wet = clamp01(state.mix) * cathedralAmount * 0.48;
+    const wet = clamp01(state.mix) * cathedralAmount * 0.5;
 
-    safeParam(wetGain.gain, wet, now, 0.08);
-    safeParam(tone.frequency, 4200 - cathedralAmount * 1900, now, 0.12);
-
-    safeParam(delayA.delayTime, 0.28 + size * 0.22, now, 0.08);
-    safeParam(delayB.delayTime, 0.46 + size * 0.34, now, 0.08);
-    safeParam(delayC.delayTime, 0.72 + size * 0.38, now, 0.08);
-    safeParam(delayD.delayTime, 0.94 + size * 0.46, now, 0.08);
+    safeParam(wetGain.gain, wet, now, 0.12);
+    safeParam(preDelay.delayTime, 0.018 + cathedralAmount * 0.035, now, 0.08);
+    safeParam(tone.frequency, 4800 - cathedralAmount * 2100, now, 0.16);
   }
 
   function createCathedralLayer(context, source, destination) {
@@ -74,44 +89,21 @@
     if (!previousConnect) return;
 
     const input = context.createGain();
-    const delayA = context.createDelay(1.5);
-    const delayB = context.createDelay(1.5);
-    const delayC = context.createDelay(1.5);
-    const delayD = context.createDelay(1.5);
-    const gainA = context.createGain();
-    const gainB = context.createGain();
-    const gainC = context.createGain();
-    const gainD = context.createGain();
+    const preDelay = context.createDelay(0.08);
+    const convolver = context.createConvolver();
     const tone = context.createBiquadFilter();
     const wetGain = context.createGain();
 
-    delayA.delayTime.value = 0.38;
-    delayB.delayTime.value = 0.62;
-    delayC.delayTime.value = 0.92;
-    delayD.delayTime.value = 1.18;
-
-    gainA.gain.value = 0.28;
-    gainB.gain.value = 0.22;
-    gainC.gain.value = 0.17;
-    gainD.gain.value = 0.13;
-
+    preDelay.delayTime.value = 0.025;
+    convolver.buffer = createCathedralImpulse(context);
     tone.type = "lowpass";
-    tone.frequency.value = 3200;
+    tone.frequency.value = 3600;
     wetGain.gain.value = 0;
 
     previousConnect.call(source, input);
-    previousConnect.call(input, delayA);
-    previousConnect.call(input, delayB);
-    previousConnect.call(input, delayC);
-    previousConnect.call(input, delayD);
-    previousConnect.call(delayA, gainA);
-    previousConnect.call(delayB, gainB);
-    previousConnect.call(delayC, gainC);
-    previousConnect.call(delayD, gainD);
-    previousConnect.call(gainA, tone);
-    previousConnect.call(gainB, tone);
-    previousConnect.call(gainC, tone);
-    previousConnect.call(gainD, tone);
+    previousConnect.call(input, preDelay);
+    previousConnect.call(preDelay, convolver);
+    previousConnect.call(convolver, tone);
     previousConnect.call(tone, wetGain);
     previousConnect.call(wetGain, destination);
 
@@ -119,10 +111,8 @@
       context,
       wetGain,
       tone,
-      delayA,
-      delayB,
-      delayC,
-      delayD,
+      preDelay,
+      convolver,
     };
 
     applyCathedralParameters();
