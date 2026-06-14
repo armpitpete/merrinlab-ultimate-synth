@@ -8,6 +8,7 @@
 
   let patchedDelayNodes = [];
   let requestedDelayTime = 0.25;
+  let refreshTimerId = null;
 
   function dockFirstVoicePanel() {
     if (document.querySelector("#first-voice-panel-docking-styles")) return;
@@ -78,13 +79,22 @@
     });
   }
 
-  function updateDelayTimeInputs() {
-    document.querySelectorAll('[data-audio-control="delayTime"], [data-visible-audio-control="delayTime"]').forEach((control) => {
-      control.min = String(delayTimeRange.min);
-      control.max = String(delayTimeRange.max);
-      control.step = "0.01";
-    });
+  function forceDelayTimeControlRange(control) {
+    control.min = String(delayTimeRange.min);
+    control.max = String(delayTimeRange.max);
+    control.step = "0.01";
 
+    if (control.dataset.visibleAudioControl === "delayTime") {
+      control.title = "Delay Time: 0.05 s to 2.00 s";
+    }
+
+    if (control.dataset.audioControl === "delayTime") {
+      control.title = "Delay Time: 0.05 s to 2.00 s";
+    }
+  }
+
+  function updateDelayTimeInputs() {
+    document.querySelectorAll('[data-audio-control="delayTime"], [data-visible-audio-control="delayTime"]').forEach(forceDelayTimeControlRange);
     updateDelayTimeReadouts();
   }
 
@@ -96,6 +106,8 @@
 
     if (key === "delayTime") {
       requestedDelayTime = clampDelayTime(control.value);
+      control.value = String(requestedDelayTime);
+
       window.setTimeout(() => {
         updateDelayTimeInputs();
         applyRequestedDelayTime();
@@ -108,14 +120,34 @@
     }
   }
 
+  function startDelayRangeRefreshLoop() {
+    if (refreshTimerId !== null) return;
+
+    let refreshCount = 0;
+    refreshTimerId = window.setInterval(() => {
+      updateDelayTimeInputs();
+      refreshCount += 1;
+
+      if (refreshCount >= 80) {
+        window.clearInterval(refreshTimerId);
+        refreshTimerId = null;
+      }
+    }, 250);
+  }
+
   function extendDelayTimeRange() {
     patchCreateDelayMaxTime();
     updateDelayTimeInputs();
+    startDelayRangeRefreshLoop();
 
     document.addEventListener("input", handleDelayControlInput, true);
     document.addEventListener("change", handleDelayControlInput, true);
 
-    const observer = new MutationObserver(updateDelayTimeInputs);
+    const observer = new MutationObserver(() => {
+      updateDelayTimeInputs();
+      startDelayRangeRefreshLoop();
+    });
+
     observer.observe(document.body, {
       childList: true,
       subtree: true,
