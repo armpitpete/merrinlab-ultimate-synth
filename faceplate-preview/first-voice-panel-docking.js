@@ -274,6 +274,15 @@
     }
   }
 
+  function loadArGeneratorBridge() {
+    if (document.querySelector('script[src="ar-generator-visible-controls.js"]')) return;
+
+    const script = document.createElement("script");
+    script.src = "ar-generator-visible-controls.js";
+    script.defer = true;
+    document.head.append(script);
+  }
+
   patchAudioConnectForReverb();
   document.addEventListener("input", handleReverbInput);
   document.addEventListener("change", handleReverbInput);
@@ -281,5 +290,6 @@
   document.addEventListener("DOMContentLoaded", () => {
     dockFirstVoicePanel();
     installReverbUi();
+    loadArGeneratorBridge();
   });
 })();
