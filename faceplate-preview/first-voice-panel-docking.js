@@ -1,6 +1,14 @@
 (() => {
   "use strict";
 
+  const delayTimeRange = {
+    min: 0.05,
+    max: 2,
+  };
+
+  let patchedDelayNodes = [];
+  let requestedDelayTime = 0.25;
+
   function dockFirstVoicePanel() {
     if (document.querySelector("#first-voice-panel-docking-styles")) return;
 
@@ -20,5 +28,102 @@
     document.head.append(style);
   }
 
-  document.addEventListener("DOMContentLoaded", dockFirstVoicePanel);
+  function clampDelayTime(value) {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return requestedDelayTime;
+    return Math.min(delayTimeRange.max, Math.max(delayTimeRange.min, number));
+  }
+
+  function patchCreateDelayMaxTime() {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass || AudioContextClass.prototype.__merrinlabDelay2sPatched) return;
+
+    const originalCreateDelay = AudioContextClass.prototype.createDelay;
+
+    AudioContextClass.prototype.createDelay = function createDelayWithTwoSecondHeadroom(maxDelayTime) {
+      const safeMaxDelayTime = Math.max(Number(maxDelayTime) || 0, delayTimeRange.max);
+      const delayNode = originalCreateDelay.call(this, safeMaxDelayTime);
+      patchedDelayNodes.push(delayNode);
+      return delayNode;
+    };
+
+    AudioContextClass.prototype.__merrinlabDelay2sPatched = true;
+  }
+
+  function applyRequestedDelayTime() {
+    patchedDelayNodes = patchedDelayNodes.filter((delayNode) => delayNode?.delayTime);
+
+    patchedDelayNodes.forEach((delayNode) => {
+      try {
+        const now = delayNode.context?.currentTime || 0;
+        delayNode.delayTime.cancelScheduledValues(now);
+        delayNode.delayTime.setTargetAtTime(requestedDelayTime, now, 0.03);
+      } catch (_error) {
+        // Delay range extension is best-effort if a node has already been stopped.
+      }
+    });
+  }
+
+  function updateDelayTimeReadouts() {
+    const formatted = `${requestedDelayTime.toFixed(2)} s`;
+
+    document.querySelectorAll('[data-audio-readout="delayTime"]').forEach((readout) => {
+      readout.textContent = formatted;
+    });
+
+    document.querySelectorAll('[data-visible-audio-control="delayTime"]').forEach((control) => {
+      const wrapper = control.closest(".visible-audio-control-wrap");
+      const readout = wrapper?.querySelector(".visible-audio-readout");
+      if (readout) readout.textContent = formatted;
+    });
+  }
+
+  function updateDelayTimeInputs() {
+    document.querySelectorAll('[data-audio-control="delayTime"], [data-visible-audio-control="delayTime"]').forEach((control) => {
+      control.min = String(delayTimeRange.min);
+      control.max = String(delayTimeRange.max);
+      control.step = "0.01";
+    });
+
+    updateDelayTimeReadouts();
+  }
+
+  function handleDelayControlInput(event) {
+    const control = event.target.closest('[data-audio-control], [data-visible-audio-control]');
+    if (!control) return;
+
+    const key = control.dataset.audioControl || control.dataset.visibleAudioControl;
+
+    if (key === "delayTime") {
+      requestedDelayTime = clampDelayTime(control.value);
+      window.setTimeout(() => {
+        updateDelayTimeInputs();
+        applyRequestedDelayTime();
+      }, 0);
+      return;
+    }
+
+    if (key === "delayMix" || key === "delayFeedback") {
+      window.setTimeout(applyRequestedDelayTime, 0);
+    }
+  }
+
+  function extendDelayTimeRange() {
+    patchCreateDelayMaxTime();
+    updateDelayTimeInputs();
+
+    document.addEventListener("input", handleDelayControlInput, true);
+    document.addEventListener("change", handleDelayControlInput, true);
+
+    const observer = new MutationObserver(updateDelayTimeInputs);
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    dockFirstVoicePanel();
+    extendDelayTimeRange();
+  });
 })();
