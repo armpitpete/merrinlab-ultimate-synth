@@ -58,9 +58,11 @@
       label: "VCO 1 Level",
       type: "range",
       min: 0,
-      max: 0.7,
-      step: 0.01,
-      unit: "",
+      max: 100,
+      step: 1,
+      unit: "%",
+      fromSourceValue: (value) => (Number(value) / 0.7) * 100,
+      toSourceValue: (value) => (Number(value) / 100) * 0.7,
     },
     {
       key: "vco2CoarseFreq",
@@ -105,9 +107,11 @@
       label: "VCO 2 Level",
       type: "range",
       min: 0,
-      max: 0.45,
-      step: 0.01,
-      unit: "",
+      max: 100,
+      step: 1,
+      unit: "%",
+      fromSourceValue: (value) => (Number(value) / 0.45) * 100,
+      toSourceValue: (value) => (Number(value) / 100) * 0.45,
     },
     {
       key: "vco3CoarseFreq",
@@ -152,9 +156,11 @@
       label: "VCO 3 Level",
       type: "range",
       min: 0,
-      max: 0.4,
-      step: 0.01,
-      unit: "",
+      max: 100,
+      step: 1,
+      unit: "%",
+      fromSourceValue: (value) => (Number(value) / 0.4) * 100,
+      toSourceValue: (value) => (Number(value) / 100) * 0.4,
     },
     {
       key: "whiteNoiseLevel",
@@ -162,9 +168,11 @@
       label: "White NS Level",
       type: "range",
       min: 0,
-      max: 0.35,
-      step: 0.005,
-      unit: "",
+      max: 100,
+      step: 1,
+      unit: "%",
+      fromSourceValue: (value) => (Number(value) / 0.35) * 100,
+      toSourceValue: (value) => (Number(value) / 100) * 0.35,
     },
     {
       key: "cutoff",
@@ -233,7 +241,7 @@
     const fineTuneKeys = ["fineCents", "vco2FineCents", "vco3FineCents"];
 
     if (config.key === "repeatGateRate") return `${number.toFixed(0)} ${config.unit}`;
-    if (levelKeys.includes(config.key)) return number.toFixed(2);
+    if (levelKeys.includes(config.key)) return `${number.toFixed(0)}%`;
     if (fineTuneKeys.includes(config.key)) return `${number.toFixed(0)} ${config.unit}`;
     return `${number.toFixed(0)} ${config.unit}`.trim();
   }
