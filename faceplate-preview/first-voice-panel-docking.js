@@ -274,6 +274,15 @@
     }
   }
 
+  function loadDebugEnginePanelCollapse() {
+    if (document.querySelector('script[src="debug-engine-panel-collapse.js"]')) return;
+
+    const script = document.createElement("script");
+    script.src = "debug-engine-panel-collapse.js";
+    script.defer = true;
+    document.head.append(script);
+  }
+
   function loadArGeneratorBridge() {
     if (document.querySelector('script[src="ar-generator-visible-controls.js"]')) return;
 
@@ -290,6 +299,7 @@
   document.addEventListener("DOMContentLoaded", () => {
     dockFirstVoicePanel();
     installReverbUi();
+    loadDebugEnginePanelCollapse();
     loadArGeneratorBridge();
   });
 })();
