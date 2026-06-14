@@ -1,6 +1,10 @@
 (() => {
   "use strict";
 
+  const MAX_REVERB_WET_GAIN = 0.38;
+  const REVERB_DECAY_SECONDS = 4.6;
+  const REVERB_PRE_DELAY_SECONDS = 0.045;
+
   const state = {
     mix: 0,
     size: 0.45,
@@ -37,26 +41,24 @@
 
   function getCathedralAmount() {
     const size = clamp01(state.size);
-    return Math.min(1, Math.max(0, (size - 0.45) / 0.55));
+    return Math.min(1, Math.max(0, (size - 0.35) / 0.65));
   }
 
   function createCathedralImpulse(context) {
-    const seconds = 2.6;
-    const sampleRate = context.sampleRate;
-    const length = Math.floor(sampleRate * seconds);
-    const impulse = context.createBuffer(2, length, sampleRate);
+    const length = Math.max(1, Math.floor(context.sampleRate * REVERB_DECAY_SECONDS));
+    const impulse = context.createBuffer(2, length, context.sampleRate);
 
-    for (let channelIndex = 0; channelIndex < impulse.numberOfChannels; channelIndex += 1) {
-      const channel = impulse.getChannelData(channelIndex);
-      let previous = 0;
+    for (let channel = 0; channel < impulse.numberOfChannels; channel += 1) {
+      const channelData = impulse.getChannelData(channel);
 
-      for (let i = 0; i < length; i += 1) {
-        const progress = i / length;
-        const decay = Math.pow(1 - progress, 3.3);
-        const build = Math.min(1, i / (sampleRate * 0.035));
-        const white = Math.random() * 2 - 1;
-        previous = previous * 0.72 + white * 0.28;
-        channel[i] = previous * decay * build * 0.42;
+      for (let index = 0; index < length; index += 1) {
+        const position = index / length;
+        const slowTail = Math.pow(1 - position, 1.28);
+        const lateBloom = Math.sin(position * Math.PI) * 0.18;
+        const earlyReflection = index < context.sampleRate * 0.18 ? 0.42 : 1;
+        const stereoOffset = channel === 0 ? 0.91 : 1.0;
+
+        channelData[index] = (Math.random() * 2 - 1) * (slowTail + lateBloom) * earlyReflection * stereoOffset * 0.55;
       }
     }
 
@@ -71,17 +73,15 @@
     const {
       context,
       wetGain,
-      tone,
       preDelay,
     } = activeCathedral;
 
     const now = context.currentTime;
     const cathedralAmount = getCathedralAmount();
-    const wet = clamp01(state.mix) * cathedralAmount * 0.5;
+    const wet = clamp01(state.mix) * cathedralAmount * MAX_REVERB_WET_GAIN;
 
-    safeParam(wetGain.gain, wet, now, 0.12);
-    safeParam(preDelay.delayTime, 0.018 + cathedralAmount * 0.035, now, 0.08);
-    safeParam(tone.frequency, 4800 - cathedralAmount * 2100, now, 0.16);
+    safeParam(wetGain.gain, wet, now, 0.04);
+    safeParam(preDelay.delayTime, REVERB_PRE_DELAY_SECONDS, now, 0.04);
   }
 
   function createCathedralLayer(context, source, destination) {
@@ -89,28 +89,23 @@
     if (!previousConnect) return;
 
     const input = context.createGain();
-    const preDelay = context.createDelay(0.08);
+    const preDelay = context.createDelay(0.12);
     const convolver = context.createConvolver();
-    const tone = context.createBiquadFilter();
     const wetGain = context.createGain();
 
-    preDelay.delayTime.value = 0.025;
+    preDelay.delayTime.value = REVERB_PRE_DELAY_SECONDS;
     convolver.buffer = createCathedralImpulse(context);
-    tone.type = "lowpass";
-    tone.frequency.value = 3600;
     wetGain.gain.value = 0;
 
     previousConnect.call(source, input);
     previousConnect.call(input, preDelay);
     previousConnect.call(preDelay, convolver);
-    previousConnect.call(convolver, tone);
-    previousConnect.call(tone, wetGain);
+    previousConnect.call(convolver, wetGain);
     previousConnect.call(wetGain, destination);
 
     activeCathedral = {
       context,
       wetGain,
-      tone,
       preDelay,
       convolver,
     };
