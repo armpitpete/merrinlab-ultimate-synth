@@ -196,6 +196,15 @@
     document.head.append(style);
   }
 
+  function loadAdsrVisibleBridge() {
+    if (document.querySelector('script[src="adsr-visible-controls.js"]')) return;
+
+    const script = document.createElement("script");
+    script.src = "adsr-visible-controls.js";
+    script.defer = true;
+    document.head.append(script);
+  }
+
   function handleShapeInput(event) {
     const control = event.target.closest("[data-lfo-shape-control]");
     if (!control) return;
@@ -220,6 +229,7 @@
     addFaceplateShapeControl("lfo2");
     updateShapeControls("lfo1Shape");
     updateShapeControls("lfo2Shape");
+    loadAdsrVisibleBridge();
   }
 
   patchOscillatorCreation();
