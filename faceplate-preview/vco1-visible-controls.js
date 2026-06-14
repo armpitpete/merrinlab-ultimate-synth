@@ -270,6 +270,40 @@
       fromSourceValue: (value) => Number(value) * 60,
       toSourceValue: (value) => Number(value) / 60,
     },
+    {
+      key: "delayMix",
+      moduleSelector: ".delay-module",
+      label: "Mix",
+      type: "range",
+      min: 0,
+      max: 100,
+      step: 1,
+      unit: "%",
+      fromSourceValue: (value) => Number(value) * 100,
+      toSourceValue: (value) => Number(value) / 100,
+    },
+    {
+      key: "delayTime",
+      moduleSelector: ".delay-module",
+      label: "Time",
+      type: "range",
+      min: 0.05,
+      max: 0.8,
+      step: 0.01,
+      unit: "s",
+    },
+    {
+      key: "delayFeedback",
+      moduleSelector: ".delay-module",
+      label: "Feedback",
+      type: "range",
+      min: 0,
+      max: 45,
+      step: 1,
+      unit: "%",
+      fromSourceValue: (value) => Number(value) * 100,
+      toSourceValue: (value) => Number(value) / 100,
+    },
   ];
 
   function buildNoteOptions(minMidi, maxMidi) {
@@ -347,17 +381,38 @@
     }
 
     const number = Number(value);
-    const percentKeys = ["vcoLevel", "vco2Level", "vco3Level", "whiteNoiseLevel", "lfo1Mod", "sampleHoldMod", "lfo2Mod"];
+    const percentKeys = ["vcoLevel", "vco2Level", "vco3Level", "whiteNoiseLevel", "lfo1Mod", "sampleHoldMod", "lfo2Mod", "delayMix", "delayFeedback"];
     const fineTuneKeys = ["fineCents", "vco2FineCents", "vco3FineCents"];
 
     if (config.key === "repeatGateRate") return `${number.toFixed(0)} ${config.unit}`;
     if (config.key === "lfo1Rate") return `${number.toFixed(2)} ${config.unit}`;
     if (config.key === "lfo2Rate") return `${number.toFixed(2)} ${config.unit}`;
+    if (config.key === "delayTime") return `${number.toFixed(2)} ${config.unit}`;
     if (config.key === "sampleHoldRate") return `${number.toFixed(1)} ${config.unit}`;
     if (config.key === "resonance") return `${number.toFixed(1)} ${config.unit}`;
     if (percentKeys.includes(config.key)) return `${number.toFixed(0)}%`;
     if (fineTuneKeys.includes(config.key)) return `${number.toFixed(0)} ${config.unit}`;
     return `${number.toFixed(0)} ${config.unit}`.trim();
+  }
+
+  function ensureDelayFaceplateModule() {
+    if (document.querySelector(".delay-module")) return;
+
+    const repeatModule = document.querySelector(".repeat-module");
+    if (!repeatModule) return;
+
+    const delayModule = document.createElement("article");
+    delayModule.className = "module delay-module compact-source-module";
+    delayModule.innerHTML = `
+      <div class="module-header"><span class="status-light"></span><h2>Delay</h2></div>
+      <div class="control-grid three-up">
+        <div class="control"><div class="control-label">Mix</div><div class="knob knob-large"></div></div>
+        <div class="control"><div class="control-label">Time</div><div class="knob knob-large"></div></div>
+        <div class="control"><div class="control-label">Feedback</div><div class="knob knob-large"></div></div>
+      </div>
+    `;
+
+    repeatModule.insertAdjacentElement("afterend", delayModule);
   }
 
   function updateVisibleControl(config, sourceValue) {
@@ -493,6 +548,11 @@
         font-variant-numeric: tabular-nums;
         text-align: center;
       }
+
+      body.is-audio-started .delay-module .status-light {
+        background: #93d36c;
+        box-shadow: 0 0 10px rgba(147, 211, 108, 0.65);
+      }
     `;
 
     document.head.append(style);
@@ -515,6 +575,7 @@
       return;
     }
 
+    ensureDelayFaceplateModule();
     visibleControlConfigs.forEach(addVisibleControl);
 
     sourcePanel.addEventListener("input", (event) => {
