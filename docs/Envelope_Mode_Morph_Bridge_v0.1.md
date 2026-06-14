@@ -1,11 +1,19 @@
-# ADSR Main Envelope Layout v0.1
+# ADSR Main Envelope and Effects Section Layout v0.1
 
-This pass removes the visible AR envelope from the faceplate and makes ADSR the single visible Envelope module.
+This pass removes the visible AR envelope from the faceplate, makes ADSR the single visible Envelope module, and groups Delay/Reverb into an Effects section.
 
-## User direction
+## User directions
 
 ```text
 Remove AR then put ADSR in it's place. ADSR will change from horizontal to vertical
+```
+
+```text
+ADSR should be where DELAY and REVERB are
+```
+
+```text
+Delay/Reverb should be in an Effects Section
 ```
 
 ## Design rule
@@ -14,8 +22,9 @@ Remove AR then put ADSR in it's place. ADSR will change from horizontal to verti
 The faceplate now has one visible Envelope module.
 That module is ADSR.
 The old AR faceplate module is hidden.
-ADSR is moved into the old AR envelope position.
+ADSR is moved into the previous Delay/Reverb area.
 ADSR controls are shown vertically.
+Delay and Reverb are grouped together under one Effects section.
 ```
 
 ## Existing state key
@@ -34,6 +43,7 @@ Visible faceplate behaviour:
 Envelope = ADSR only
 Attack / Decay / Sustain / Release are visible
 AR is not visible on the faceplate
+Delay and Reverb sit inside Effects
 ```
 
 This remains a visual bridge/layout pass.
@@ -54,6 +64,7 @@ visible envelope layout
 ADSR position
 ADSR vertical control layout
 visible AR module hidden
+Effects section for Delay and Reverb
 ```
 
 No change to:
@@ -62,10 +73,10 @@ No change to:
 faceplate-preview/audio-engine.js
 ADSR envelope behaviour
 ADSR Attack / Decay / Sustain / Release behaviour
+Delay audio behaviour
+Reverb audio behaviour
 sockets
 routing matrix
-delay
-reverb
 LFO behaviour
 Sample & Hold behaviour
 VCO behaviour
@@ -80,7 +91,9 @@ JUCE/VST
 
 ```text
 The faceplate shows ADSR as the only visible Envelope module.
-The ADSR module appears where AR used to be.
+The ADSR module appears where Delay/Reverb used to be.
 ADSR controls run vertically rather than horizontally.
+Delay and Reverb are grouped under an Effects section.
 The ADSR envelope still works.
+Delay and Reverb still work.
 ```
