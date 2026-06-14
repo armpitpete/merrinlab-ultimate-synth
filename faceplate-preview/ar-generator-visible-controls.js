@@ -140,6 +140,15 @@
     });
   }
 
+  function loadOutputLevelBridge() {
+    if (document.querySelector('script[src="output-level-visible-controls.js"]')) return;
+
+    const script = document.createElement("script");
+    script.src = "output-level-visible-controls.js";
+    script.defer = true;
+    document.head.append(script);
+  }
+
   function initArVisibleControls() {
     addStyles();
 
@@ -161,6 +170,7 @@
     });
 
     syncFromSourceControls();
+    loadOutputLevelBridge();
   }
 
   if (document.readyState === "loading") {
