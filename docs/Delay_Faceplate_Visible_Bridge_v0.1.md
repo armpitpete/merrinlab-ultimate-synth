@@ -54,6 +54,13 @@ faceplate-preview/vco1-visible-controls.js
 
 The Delay module is created by the visible-control bridge if it is not already present in the HTML.
 
+The insertion is robust:
+
+```text
+If Repeat Gate exists, Delay is inserted after Repeat Gate.
+If Repeat Gate is missing, Delay is appended to the main faceplate grid.
+```
+
 ## Scope
 
 Changed:
