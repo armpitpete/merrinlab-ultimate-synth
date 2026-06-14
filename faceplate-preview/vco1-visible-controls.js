@@ -218,6 +218,18 @@
       unit: "Hz",
     },
     {
+      key: "sampleHoldMod",
+      moduleSelector: ".sample-hold-module",
+      label: "Filter Amount",
+      type: "range",
+      min: 0,
+      max: 100,
+      step: 1,
+      unit: "%",
+      fromSourceValue: (value) => Number(value) * 100,
+      toSourceValue: (value) => Number(value) / 100,
+    },
+    {
       key: "repeatGate",
       moduleSelector: ".repeat-module",
       label: "Gate LED",
@@ -313,7 +325,7 @@
     }
 
     const number = Number(value);
-    const percentKeys = ["vcoLevel", "vco2Level", "vco3Level", "whiteNoiseLevel", "lfo1Mod"];
+    const percentKeys = ["vcoLevel", "vco2Level", "vco3Level", "whiteNoiseLevel", "lfo1Mod", "sampleHoldMod"];
     const fineTuneKeys = ["fineCents", "vco2FineCents", "vco3FineCents"];
 
     if (config.key === "repeatGateRate") return `${number.toFixed(0)} ${config.unit}`;
