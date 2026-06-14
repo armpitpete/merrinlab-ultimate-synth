@@ -45,7 +45,7 @@
     document.body.classList.toggle("is-envelope-mode-adsr", safeMode === "adsr");
 
     document.querySelectorAll(".envelope-mode-current").forEach((readout) => {
-      readout.textContent = `${formatMode(safeMode)} active`;
+      readout.textContent = `${formatMode(safeMode)} controls visible`;
     });
   }
 
@@ -71,7 +71,7 @@
   }
 
   function addEnvelopeModePanel() {
-    if (document.querySelector(".envelope-mode-module")) return true;
+    if (document.querySelector(".envelope-combined-module")) return true;
 
     const arModule = document.querySelector(".ar-module");
     const adsrModule = document.querySelector(".adsr-module");
@@ -80,24 +80,28 @@
     const sourceControl = findSourceControl();
     if (!sourceControl) return false;
 
-    const modeModule = document.createElement("article");
-    modeModule.className = "module envelope-mode-module compact-source-module";
-    modeModule.innerHTML = `
-      <div class="module-header"><span class="status-light"></span><h2>Envelope Mode</h2></div>
+    const combinedModule = document.createElement("article");
+    combinedModule.className = "module envelope-combined-module compact-source-module";
+    combinedModule.innerHTML = `
+      <div class="module-header"><span class="status-light"></span><h2>Envelope</h2></div>
       <div class="envelope-mode-faceplate-body">
         <label class="envelope-mode-field">
-          <span>AR / ADSR</span>
+          <span>Mode</span>
         </label>
-        <div class="envelope-mode-current">AR active</div>
+        <div class="envelope-mode-current">AR controls visible</div>
+        <div class="envelope-active-slot" aria-label="Active envelope controls"></div>
       </div>
     `;
 
-    const field = modeModule.querySelector(".envelope-mode-field");
+    const field = combinedModule.querySelector(".envelope-mode-field");
+    const activeSlot = combinedModule.querySelector(".envelope-active-slot");
     const select = createModeSelect();
     select.value = getModeValue(sourceControl.value);
     field.append(select);
 
-    arModule.insertAdjacentElement("beforebegin", modeModule);
+    arModule.insertAdjacentElement("beforebegin", combinedModule);
+    activeSlot.append(arModule, adsrModule);
+
     updateVisibleControls(sourceControl.value);
     return true;
   }
@@ -108,7 +112,9 @@
     const style = document.createElement("style");
     style.id = "envelope-mode-visible-styles";
     style.textContent = `
-      .envelope-mode-module {
+      .envelope-combined-module {
+        display: grid;
+        gap: 10px;
         transition: box-shadow 180ms ease, opacity 180ms ease, transform 180ms ease;
       }
 
@@ -145,31 +151,35 @@
         text-transform: uppercase;
       }
 
-      .ar-module,
-      .adsr-module {
-        transition: opacity 180ms ease, filter 180ms ease, transform 180ms ease, outline-color 180ms ease;
+      .envelope-active-slot {
+        display: grid;
+        min-width: 0;
       }
 
-      body.is-envelope-mode-ar .ar-module,
-      body.is-envelope-mode-adsr .adsr-module {
+      .envelope-active-slot > .ar-module,
+      .envelope-active-slot > .adsr-module {
+        width: 100%;
+        margin: 0;
+        min-width: 0;
+        transition: opacity 140ms ease, transform 140ms ease;
+      }
+
+      body.is-envelope-mode-ar .envelope-active-slot > .ar-module,
+      body.is-envelope-mode-adsr .envelope-active-slot > .adsr-module {
+        display: grid;
         opacity: 1;
-        filter: none;
         transform: translateY(0);
-        outline: 1px solid rgba(147, 211, 108, 0.52);
-        outline-offset: 4px;
       }
 
-      body.is-envelope-mode-ar .adsr-module,
-      body.is-envelope-mode-adsr .ar-module {
-        opacity: 0.42;
-        filter: saturate(0.6) brightness(0.75);
-        transform: scale(0.985);
+      body.is-envelope-mode-ar .envelope-active-slot > .adsr-module,
+      body.is-envelope-mode-adsr .envelope-active-slot > .ar-module {
+        display: none !important;
       }
 
-      body.is-envelope-mode-ar .ar-module .status-light,
-      body.is-envelope-mode-adsr .adsr-module .status-light,
-      body.is-envelope-mode-ar .envelope-mode-module .status-light,
-      body.is-envelope-mode-adsr .envelope-mode-module .status-light {
+      body.is-envelope-mode-ar .envelope-active-slot > .ar-module .status-light,
+      body.is-envelope-mode-adsr .envelope-active-slot > .adsr-module .status-light,
+      body.is-envelope-mode-ar .envelope-combined-module > .module-header .status-light,
+      body.is-envelope-mode-adsr .envelope-combined-module > .module-header .status-light {
         background: #93d36c;
         box-shadow: 0 0 10px rgba(147, 211, 108, 0.65);
       }
