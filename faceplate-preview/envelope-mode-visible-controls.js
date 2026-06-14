@@ -21,10 +21,42 @@
     return true;
   }
 
-  function placeAdsrInEnvelopePosition() {
+  function findFirstEffectModule() {
+    return document.querySelector(".delay-module") || document.querySelector(".reverb-module");
+  }
+
+  function ensureEffectsSection(afterElement) {
+    let effectsSection = document.querySelector(".effects-section-module");
+    if (effectsSection) return effectsSection;
+
+    effectsSection = document.createElement("article");
+    effectsSection.className = "module effects-section-module compact-source-module";
+    effectsSection.innerHTML = `
+      <div class="module-header"><span class="status-light"></span><h2>Effects</h2></div>
+      <div class="effects-section-grid" aria-label="Delay and Reverb effects"></div>
+    `;
+
+    afterElement.insertAdjacentElement("afterend", effectsSection);
+    return effectsSection;
+  }
+
+  function moveEffectsIntoSection(effectsSection) {
+    const effectsGrid = effectsSection.querySelector(".effects-section-grid");
+    if (!effectsGrid) return;
+
+    [".delay-module", ".reverb-module"].forEach((selector) => {
+      const module = document.querySelector(selector);
+      if (!module || module.closest(".effects-section-module")) return;
+      module.classList.add("effect-child-module");
+      effectsGrid.append(module);
+    });
+  }
+
+  function placeAdsrInVoiceArea() {
     const arModule = document.querySelector(".ar-module");
     const adsrModule = document.querySelector(".adsr-module");
-    if (!arModule || !adsrModule) return false;
+    const firstEffectModule = findFirstEffectModule();
+    if (!arModule || !adsrModule || !firstEffectModule) return false;
 
     setAdsrMode();
 
@@ -32,7 +64,10 @@
     const title = adsrModule.querySelector(".module-header h2");
     if (title) title.textContent = "Envelope";
 
-    arModule.insertAdjacentElement("beforebegin", adsrModule);
+    firstEffectModule.insertAdjacentElement("beforebegin", adsrModule);
+    const effectsSection = ensureEffectsSection(adsrModule);
+    moveEffectsIntoSection(effectsSection);
+
     arModule.hidden = true;
     arModule.setAttribute("aria-hidden", "true");
     arModule.classList.add("is-hidden-envelope-source");
@@ -88,6 +123,32 @@
         background: #93d36c;
         box-shadow: 0 0 10px rgba(147, 211, 108, 0.65);
       }
+
+      .effects-section-module {
+        display: grid;
+        gap: 8px;
+      }
+
+      .effects-section-module > .module-header .status-light {
+        background: #93d36c;
+        box-shadow: 0 0 10px rgba(147, 211, 108, 0.48);
+      }
+
+      .effects-section-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .effects-section-grid > .module {
+        margin: 0;
+        min-width: 0;
+        width: 100%;
+      }
+
+      .effects-section-grid > .module .module-header h2 {
+        font-size: 0.78rem;
+      }
     `;
 
     document.head.append(style);
@@ -102,7 +163,7 @@
       return;
     }
 
-    const ready = placeAdsrInEnvelopePosition();
+    const ready = placeAdsrInVoiceArea();
     if (!ready) {
       window.setTimeout(initAdsrMainEnvelope, 100);
       return;
