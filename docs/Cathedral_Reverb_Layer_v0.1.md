@@ -8,6 +8,12 @@ Issue #72 increases the maximum reverb size so the high setting feels larger tha
 reverb works. At max it's like room reverb. At max I want cathedral reverb
 ```
 
+Follow-up test result:
+
+```text
+reverb behaves more like echo
+```
+
 ## Implementation
 
 A separate additive cathedral layer was added instead of rewriting the existing working reverb.
@@ -27,8 +33,20 @@ The safer #72 approach is:
 
 ```text
 keep the existing room reverb
-add a second default-off long-reflection layer at high Reverb Size
+add a second default-off cathedral tail at high Reverb Size
 ```
+
+## Change after echo-like test
+
+The first #72 attempt used long reflection taps. That sounded too much like echo.
+
+The revised version replaces the long tap layer with a generated dense reverb tail:
+
+```text
+source -> short predelay -> generated dense impulse tail -> lowpass tone -> wet gain -> destination
+```
+
+This should smear the sound into a continuous space rather than producing obvious repeat taps.
 
 ## Behaviour
 
@@ -49,21 +67,22 @@ The cathedral layer:
 
 ```text
 uses no feedback loop
-uses no convolution file
 uses no external impulse response
+uses no convolution file from disk
+uses a generated in-memory impulse tail
 uses only capped wet gain
 keeps Reverb Mix 0% silent/unchanged
 ```
 
-## Long reflection taps
+## Dense tail
 
-The added layer uses longer non-feedback reflections roughly in this region:
+The revised layer uses a generated decaying noise tail of about:
 
 ```text
-0.3 s to 1.4 s depending on Reverb Size
+2.6 seconds
 ```
 
-This is intended to make maximum Reverb Size feel much larger and more cathedral-like.
+This is intended to feel more like cathedral reverb and less like echo.
 
 ## Not changed
 
@@ -88,5 +107,6 @@ JUCE/VST
 Page loads.
 Reverb Mix 0% sounds unchanged.
 At Reverb Mix 60–100% and Reverb Size 100%, the space feels much larger than the previous room-style reverb.
+It does not behave like obvious echo.
 Panic Stop still works.
 ```
