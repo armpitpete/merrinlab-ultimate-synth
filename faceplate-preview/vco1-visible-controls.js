@@ -151,6 +151,16 @@
       step: 0.01,
       unit: "",
     },
+    {
+      key: "whiteNoiseLevel",
+      moduleSelector: ".mixer-module",
+      label: "White NS Level",
+      type: "range",
+      min: 0,
+      max: 0.35,
+      step: 0.005,
+      unit: "",
+    },
   ];
 
   function normalizeText(text) {
@@ -177,7 +187,7 @@
     }
 
     const number = Number(value);
-    const levelKeys = ["vcoLevel", "vco2Level", "vco3Level"];
+    const levelKeys = ["vcoLevel", "vco2Level", "vco3Level", "whiteNoiseLevel"];
     const fineTuneKeys = ["fineCents", "vco2FineCents", "vco3FineCents"];
 
     if (levelKeys.includes(config.key)) return number.toFixed(2);
