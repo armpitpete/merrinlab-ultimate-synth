@@ -242,6 +242,16 @@
       toSourceValue: (value) => Number(value) / 100,
     },
     {
+      key: "lfo2Rate",
+      moduleSelector: ".lfo2-module",
+      label: "Rate",
+      type: "range",
+      min: 0.05,
+      max: 12,
+      step: 0.01,
+      unit: "Hz",
+    },
+    {
       key: "repeatGate",
       moduleSelector: ".repeat-module",
       label: "Gate LED",
@@ -342,6 +352,7 @@
 
     if (config.key === "repeatGateRate") return `${number.toFixed(0)} ${config.unit}`;
     if (config.key === "lfo1Rate") return `${number.toFixed(2)} ${config.unit}`;
+    if (config.key === "lfo2Rate") return `${number.toFixed(2)} ${config.unit}`;
     if (config.key === "sampleHoldRate") return `${number.toFixed(1)} ${config.unit}`;
     if (config.key === "resonance") return `${number.toFixed(1)} ${config.unit}`;
     if (percentKeys.includes(config.key)) return `${number.toFixed(0)}%`;
