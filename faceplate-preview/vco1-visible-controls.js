@@ -176,6 +176,18 @@
       unit: "Hz",
     },
     {
+      key: "lfo1Mod",
+      moduleSelector: ".filter-lp-module",
+      label: "LFO-1 Mod",
+      type: "range",
+      min: 0,
+      max: 100,
+      step: 1,
+      unit: "%",
+      fromSourceValue: (value) => Number(value) * 100,
+      toSourceValue: (value) => Number(value) / 100,
+    },
+    {
       key: "resonance",
       moduleSelector: ".filter-lp-module",
       label: "Resonance",
@@ -281,12 +293,12 @@
     }
 
     const number = Number(value);
-    const levelKeys = ["vcoLevel", "vco2Level", "vco3Level", "whiteNoiseLevel"];
+    const percentKeys = ["vcoLevel", "vco2Level", "vco3Level", "whiteNoiseLevel", "lfo1Mod"];
     const fineTuneKeys = ["fineCents", "vco2FineCents", "vco3FineCents"];
 
     if (config.key === "repeatGateRate") return `${number.toFixed(0)} ${config.unit}`;
     if (config.key === "resonance") return `${number.toFixed(1)} ${config.unit}`;
-    if (levelKeys.includes(config.key)) return `${number.toFixed(0)}%`;
+    if (percentKeys.includes(config.key)) return `${number.toFixed(0)}%`;
     if (fineTuneKeys.includes(config.key)) return `${number.toFixed(0)} ${config.unit}`;
     return `${number.toFixed(0)} ${config.unit}`.trim();
   }
