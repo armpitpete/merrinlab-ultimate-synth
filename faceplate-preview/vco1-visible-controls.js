@@ -15,6 +15,7 @@
   ];
 
   const noteOptions = buildNoteOptions(33, 81);
+  const centsOptions = buildCentsOptions();
 
   const visibleControlConfigs = [
     {
@@ -29,11 +30,9 @@
       key: "fineCents",
       moduleSelector: ".vco-bank .vco-module:first-child",
       label: "Fine Freq",
-      type: "range",
-      min: -100,
-      max: 100,
-      step: 1,
-      unit: "cent",
+      type: "select",
+      options: centsOptions,
+      matchNearestOption: true,
     },
     {
       key: "waveform",
@@ -76,11 +75,9 @@
       key: "vco2FineCents",
       moduleSelector: ".vco-bank .vco-module:nth-child(2)",
       label: "Fine Freq",
-      type: "range",
-      min: -100,
-      max: 100,
-      step: 1,
-      unit: "cent",
+      type: "select",
+      options: centsOptions,
+      matchNearestOption: true,
     },
     {
       key: "vco2Waveform",
@@ -123,11 +120,9 @@
       key: "vco3FineCents",
       moduleSelector: ".vco-bank .vco-module:nth-child(3)",
       label: "Fine Freq",
-      type: "range",
-      min: -100,
-      max: 100,
-      step: 1,
-      unit: "cent",
+      type: "select",
+      options: centsOptions,
+      matchNearestOption: true,
     },
     {
       key: "vco3Waveform",
@@ -215,6 +210,13 @@
     }
 
     return options;
+  }
+
+  function buildCentsOptions() {
+    return [-50, -25, -12, -7, -5, -3, 0, 3, 5, 7, 12, 25, 50].map((value) => {
+      const sign = value > 0 ? "+" : "";
+      return [String(value), `${sign}${value} cent`];
+    });
   }
 
   function findNearestOptionValue(options, value) {
