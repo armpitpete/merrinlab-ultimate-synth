@@ -1,51 +1,42 @@
-# Envelope Mode Morph Bridge v0.1
+# ADSR Main Envelope Layout v0.1
 
-This pass adds a visible faceplate Envelope Mode selector and makes AR / ADSR behave like two modes of the same envelope area.
+This pass removes the visible AR envelope from the faceplate and makes ADSR the single visible Envelope module.
 
-## User corrections
-
-```text
-AR and ADSR should in the same place, even morph into the correct one when selected
-```
+## User direction
 
 ```text
-they should be in the same module but only the activated one is visible
+Remove AR then put ADSR in it's place. ADSR will change from horizontal to vertical
 ```
 
 ## Design rule
 
 ```text
-AR and ADSR are two modes of one Envelope module.
-The faceplate shows one clear Envelope Mode selector.
-When AR is selected, only the AR controls are visible.
-When ADSR is selected, only the ADSR controls are visible.
-The inactive envelope controls are hidden, not merely faded.
-```
-
-## Visible control
-
-```text
-Envelope / Mode / AR / ADSR
+The faceplate now has one visible Envelope module.
+That module is ADSR.
+The old AR faceplate module is hidden.
+ADSR is moved into the old AR envelope position.
+ADSR controls are shown vertically.
 ```
 
 ## Existing state key
 
+The bridge forces the existing envelope mode to:
+
 ```text
-envelopeMode
+envelopeMode = adsr
 ```
 
 ## Behaviour
 
-The visible selector maps to the existing First Voice `envelopeMode` control.
-
-Mode behaviour:
+Visible faceplate behaviour:
 
 ```text
-AR selected: one Envelope module shows AR Generator controls.
-ADSR selected: the same Envelope module shows ADSR Env. Gen. controls.
+Envelope = ADSR only
+Attack / Decay / Sustain / Release are visible
+AR is not visible on the faceplate
 ```
 
-This is a visual bridge and morph-state pass only.
+This remains a visual bridge/layout pass.
 
 ## Implementation files
 
@@ -59,20 +50,18 @@ faceplate-preview/adsr-visible-controls.js
 Changed:
 
 ```text
-single visible Envelope module
-visible Envelope Mode selector
-AR / ADSR morph state
-inactive envelope controls hidden
+visible envelope layout
+ADSR position
+ADSR vertical control layout
+visible AR module hidden
 ```
 
 No change to:
 
 ```text
 faceplate-preview/audio-engine.js
-AR envelope behaviour
 ADSR envelope behaviour
 ADSR Attack / Decay / Sustain / Release behaviour
-AR Attack / Release behaviour
 sockets
 routing matrix
 delay
@@ -90,9 +79,8 @@ JUCE/VST
 ## Good enough
 
 ```text
-The faceplate clearly shows one Envelope module.
-The Envelope module contains the AR / ADSR selector.
-Selecting AR shows only AR controls.
-Selecting ADSR shows only ADSR controls.
-Selecting either option still uses the existing envelopeMode behaviour.
+The faceplate shows ADSR as the only visible Envelope module.
+The ADSR module appears where AR used to be.
+ADSR controls run vertically rather than horizontally.
+The ADSR envelope still works.
 ```
