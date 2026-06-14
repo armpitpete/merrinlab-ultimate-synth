@@ -25,28 +25,34 @@
     return document.querySelector(".delay-module") || document.querySelector(".reverb-module");
   }
 
-  function ensureEffectsSection(afterElement) {
+  function ensureEffectsSection() {
+    const ultimateGrid = document.querySelector(".ultimate-grid");
+    if (!ultimateGrid) return null;
+
     let effectsSection = document.querySelector(".effects-section-module");
-    if (effectsSection) return effectsSection;
+    if (!effectsSection) {
+      effectsSection = document.createElement("article");
+      effectsSection.className = "module effects-section-module compact-source-module";
+      effectsSection.innerHTML = `
+        <div class="module-header"><span class="status-light"></span><h2>Effects</h2></div>
+        <div class="effects-section-grid" aria-label="Delay and Reverb effects"></div>
+      `;
+    }
 
-    effectsSection = document.createElement("article");
-    effectsSection.className = "module effects-section-module compact-source-module";
-    effectsSection.innerHTML = `
-      <div class="module-header"><span class="status-light"></span><h2>Effects</h2></div>
-      <div class="effects-section-grid" aria-label="Delay and Reverb effects"></div>
-    `;
+    if (effectsSection.previousElementSibling !== ultimateGrid) {
+      ultimateGrid.insertAdjacentElement("afterend", effectsSection);
+    }
 
-    afterElement.insertAdjacentElement("afterend", effectsSection);
     return effectsSection;
   }
 
   function moveEffectsIntoSection(effectsSection) {
-    const effectsGrid = effectsSection.querySelector(".effects-section-grid");
+    const effectsGrid = effectsSection?.querySelector(".effects-section-grid");
     if (!effectsGrid) return;
 
     [".delay-module", ".reverb-module"].forEach((selector) => {
       const module = document.querySelector(selector);
-      if (!module || module.closest(".effects-section-module")) return;
+      if (!module || module.closest(".effects-section-grid")) return;
       module.classList.add("effect-child-module");
       effectsGrid.append(module);
     });
@@ -65,7 +71,7 @@
     if (title) title.textContent = "Envelope";
 
     firstEffectModule.insertAdjacentElement("beforebegin", adsrModule);
-    const effectsSection = ensureEffectsSection(adsrModule);
+    const effectsSection = ensureEffectsSection();
     moveEffectsIntoSection(effectsSection);
 
     arModule.hidden = true;
@@ -127,6 +133,12 @@
       .effects-section-module {
         display: grid;
         gap: 8px;
+        margin-top: 10px;
+        width: 100%;
+      }
+
+      .effects-section-module > .module-header {
+        justify-content: center;
       }
 
       .effects-section-module > .module-header .status-light {
@@ -137,11 +149,12 @@
       .effects-section-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
+        gap: 10px;
       }
 
       .effects-section-grid > .module {
         margin: 0;
+        min-height: 145px;
         min-width: 0;
         width: 100%;
       }
