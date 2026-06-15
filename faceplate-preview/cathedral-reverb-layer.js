@@ -186,13 +186,18 @@
     applyCathedralParameters();
   }
 
-  function loadRepeatGateLedFlashLayer() {
-    if (document.querySelector('script[src="repeat-gate-led-flash-layer.js"]')) return;
+  function loadScriptOnce(src) {
+    if (document.querySelector(`script[src="${src}"]`)) return;
 
     const script = document.createElement("script");
-    script.src = "repeat-gate-led-flash-layer.js";
+    script.src = src;
     script.defer = true;
     document.head.append(script);
+  }
+
+  function loadAuxiliaryLayers() {
+    loadScriptOnce("repeat-gate-led-flash-layer.js");
+    loadScriptOnce("state-variable-vcf-bp-balance-runtime.js");
   }
 
   patchConnect();
@@ -200,8 +205,8 @@
   document.addEventListener("change", handleControl);
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", loadRepeatGateLedFlashLayer);
+    document.addEventListener("DOMContentLoaded", loadAuxiliaryLayers);
   } else {
-    loadRepeatGateLedFlashLayer();
+    loadAuxiliaryLayers();
   }
 })();
