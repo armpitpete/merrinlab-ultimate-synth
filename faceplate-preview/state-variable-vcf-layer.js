@@ -4,11 +4,14 @@
   const CUTOFF_MIN = 90;
   const DEFAULT_CUTOFF_MAX = 8500;
   const BANDPASS_CUTOFF_MAX = 16000;
+  const CUTOFF_SLIDER_MIN = 0;
+  const CUTOFF_SLIDER_MAX = 1000;
 
   const state = {
     mode: "bandpass",
     cutoff: 900,
     resonance: 0.7,
+    bpWidth: 0.55,
     level: 0,
   };
 
@@ -60,6 +63,21 @@
     return clamp(state.cutoff, CUTOFF_MIN, cutoffMaxForMode(), 900);
   }
 
+  function frequencyToCutoffSlider(frequency, maxCutoff = cutoffMaxForMode()) {
+    const safeFrequency = clamp(frequency, CUTOFF_MIN, maxCutoff, 900);
+    const minLog = Math.log(CUTOFF_MIN);
+    const maxLog = Math.log(maxCutoff);
+    const position = (Math.log(safeFrequency) - minLog) / (maxLog - minLog);
+    return Math.round(clamp(position, 0, 1, 0) * CUTOFF_SLIDER_MAX);
+  }
+
+  function cutoffSliderToFrequency(sliderValue, maxCutoff = cutoffMaxForMode()) {
+    const position = clamp(sliderValue, CUTOFF_SLIDER_MIN, CUTOFF_SLIDER_MAX, 0) / CUTOFF_SLIDER_MAX;
+    const minLog = Math.log(CUTOFF_MIN);
+    const maxLog = Math.log(maxCutoff);
+    return Math.exp(minLog + position * (maxLog - minLog));
+  }
+
   function cutoffPosition(maxCutoff = cutoffMaxForMode()) {
     const minLog = Math.log(CUTOFF_MIN);
     const maxLog = Math.log(maxCutoff);
@@ -70,6 +88,10 @@
   function resonanceAmount() {
     const uiQ = clamp(state.resonance, 0.1, 24, 0.7);
     return clamp((uiQ - 0.1) / (24 - 0.1), 0, 1, 0);
+  }
+
+  function bpWidthAmount() {
+    return clamp(state.bpWidth, 0, 1, 0.55);
   }
 
   function lowpassQ() {
@@ -88,7 +110,10 @@
 
   function bandpassQ() {
     const amount = resonanceAmount();
-    return 0.85 + Math.pow(amount, 1.2) * 18;
+    const narrowness = 1 - bpWidthAmount();
+    const widthQ = 0.75 + Math.pow(narrowness, 1.35) * 18;
+    const resonanceQ = Math.pow(amount, 1.25) * (2.5 + Math.pow(narrowness, 0.8) * 7.5);
+    return clamp(widthQ + resonanceQ, 0.7, 32, 4);
   }
 
   function effectiveQ() {
@@ -109,7 +134,7 @@
       return 0.34 + Math.pow(position, 0.75) * 0.72;
     }
 
-    return 4.9 + Math.pow(amount, 0.7) * 1.8;
+    return 3.9 + Math.pow(1 - bpWidthAmount(), 0.75) * 1.7 + Math.pow(amount, 0.7) * 1.2;
   }
 
   function levelAmount() {
@@ -207,19 +232,25 @@
   function updateReadouts() {
     const currentCutoff = cutoff();
     const maxCutoff = cutoffMaxForMode();
+    const cutoffSliderValue = frequencyToCutoffSlider(currentCutoff, maxCutoff);
 
     document.querySelectorAll('[data-svf-control="mode"]').forEach((control) => {
       control.value = state.mode;
     });
 
     document.querySelectorAll('[data-svf-control="cutoff"]').forEach((control) => {
-      control.min = String(CUTOFF_MIN);
-      control.max = String(maxCutoff);
-      control.value = String(Math.round(currentCutoff));
+      control.min = String(CUTOFF_SLIDER_MIN);
+      control.max = String(CUTOFF_SLIDER_MAX);
+      control.step = "1";
+      control.value = String(cutoffSliderValue);
     });
 
     document.querySelectorAll('[data-svf-control="resonance"]').forEach((control) => {
       control.value = String(state.resonance.toFixed(1));
+    });
+
+    document.querySelectorAll('[data-svf-control="bpWidth"]').forEach((control) => {
+      control.value = String(Math.round(bpWidthAmount() * 100));
     });
 
     document.querySelectorAll('[data-svf-control="level"]').forEach((control) => {
@@ -236,6 +267,10 @@
 
     document.querySelectorAll('[data-svf-readout="resonance"]').forEach((readout) => {
       readout.textContent = `${state.resonance.toFixed(1)} Q`;
+    });
+
+    document.querySelectorAll('[data-svf-readout="bpWidth"]').forEach((readout) => {
+      readout.textContent = state.mode === "bandpass" ? `${Math.round(bpWidthAmount() * 100)}% wide` : "BP only";
     });
 
     document.querySelectorAll('[data-svf-readout="level"]').forEach((readout) => {
@@ -279,6 +314,27 @@
     grid.append(levelControl);
   }
 
+  function addBpWidthControl() {
+    const module = findModule();
+    if (!module || module.querySelector('[data-svf-control="bpWidth"]')) return;
+
+    const grid = module.querySelector(".control-grid.three-up");
+    if (!grid) return;
+
+    const widthControl = document.createElement("div");
+    widthControl.className = "control is-audio-linked state-variable-vcf-width-control";
+    widthControl.innerHTML = `
+      <div class="control-label">BP Width</div>
+      <div class="knob"></div>
+      <div class="svf-control-wrap">
+        <input type="range" min="0" max="100" step="1" value="55" data-svf-control="bpWidth">
+        <output class="svf-readout" data-svf-readout="bpWidth">55% wide</output>
+      </div>
+    `;
+
+    grid.append(widthControl);
+  }
+
   function addModeControl() {
     const module = findModule();
     if (!module || module.querySelector('[data-svf-control="mode"]')) return;
@@ -306,10 +362,12 @@
 
     const cutoffControl = findControlByLabel("Initial COF");
     const resonanceControl = findControlByLabel("Resonance");
+    const cutoffSliderValue = frequencyToCutoffSlider(state.cutoff, cutoffMaxForMode());
 
-    addRangeControl(cutoffControl, "cutoff", CUTOFF_MIN, cutoffMaxForMode(), 1, Math.max(state.cutoff, CUTOFF_MIN), `${Math.max(state.cutoff, CUTOFF_MIN)} Hz`);
+    addRangeControl(cutoffControl, "cutoff", CUTOFF_SLIDER_MIN, CUTOFF_SLIDER_MAX, 1, cutoffSliderValue, `${state.cutoff} Hz`);
     addRangeControl(resonanceControl, "resonance", 0.1, 24, 0.1, state.resonance, `${state.resonance.toFixed(1)} Q`);
     addLevelControl();
+    addBpWidthControl();
     addModeControl();
 
     module.classList.add("is-state-variable-vcf-active");
@@ -339,8 +397,9 @@
       state.cutoff = cutoff();
     }
 
-    if (key === "cutoff") state.cutoff = clamp(control.value, CUTOFF_MIN, cutoffMaxForMode(), state.cutoff);
+    if (key === "cutoff") state.cutoff = cutoffSliderToFrequency(control.value, cutoffMaxForMode());
     if (key === "resonance") state.resonance = clamp(control.value, 0.1, 24, state.resonance);
+    if (key === "bpWidth") state.bpWidth = clamp(Number(control.value) / 100, 0, 1, state.bpWidth);
     if (key === "level") state.level = clamp(Number(control.value) / 100, 0, 1, state.level);
 
     updateReadouts();
