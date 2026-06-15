@@ -108,9 +108,19 @@
     setOpen(false, button);
   }
 
+  function loadDelayUpgradeLayer() {
+    if (document.querySelector('script[src="delay-upgrade-layer.js"]')) return;
+
+    const script = document.createElement("script");
+    script.src = "delay-upgrade-layer.js";
+    script.defer = true;
+    document.head.append(script);
+  }
+
   function init() {
     addStyles();
     installToggle();
+    loadDelayUpgradeLayer();
   }
 
   if (document.readyState === "loading") {
