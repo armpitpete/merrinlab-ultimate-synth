@@ -1,19 +1,9 @@
 (() => {
   "use strict";
 
-  const MAX_EFFECTIVE_Q = 64;
-  const LOWPASS_MIN_Q = 0.6;
-  const LOWPASS_MAX_Q = 13;
-  const BANDPASS_MIN_Q = 0.85;
-  const BANDPASS_MAX_Q = 24;
-  const BANDPASS_BASE_GAIN = 6.2;
-  const BANDPASS_RESONANCE_GAIN = 3.5;
-  const BANDPASS_BODY_GAIN = 1.7;
-  const BANDPASS_BODY_RESONANCE_GAIN = 1.4;
-  const MODE_GAIN = {
-    highpass: 1.15,
-    lowpass: 1.1,
-  };
+  const CUTOFF_MIN = 40;
+  const DEFAULT_CUTOFF_MAX = 8500;
+  const BANDPASS_CUTOFF_MAX = 16000;
 
   const state = {
     mode: "bandpass",
@@ -45,7 +35,7 @@
     ));
   }
 
-  function safeParam(param, value, time, speed = 0.05) {
+  function safeParam(param, value, time, speed = 0.045) {
     param.cancelScheduledValues(time);
     param.setTargetAtTime(value, time, speed);
   }
@@ -62,78 +52,72 @@
     return "BP";
   }
 
+  function cutoffMaxForMode() {
+    return state.mode === "bandpass" ? BANDPASS_CUTOFF_MAX : DEFAULT_CUTOFF_MAX;
+  }
+
+  function cutoff() {
+    return clamp(state.cutoff, CUTOFF_MIN, cutoffMaxForMode(), 900);
+  }
+
+  function cutoffPosition(maxCutoff = cutoffMaxForMode()) {
+    const minLog = Math.log(CUTOFF_MIN);
+    const maxLog = Math.log(maxCutoff);
+    const currentLog = Math.log(cutoff());
+    return clamp((currentLog - minLog) / (maxLog - minLog), 0, 1, 0);
+  }
+
   function resonanceAmount() {
     const uiQ = clamp(state.resonance, 0.1, 24, 0.7);
     return clamp((uiQ - 0.1) / (24 - 0.1), 0, 1, 0);
   }
 
-  function cutoffAmount() {
-    return clamp((state.cutoff - 40) / (8500 - 40), 0, 1, 0);
+  function lowpassQ() {
+    const amount = resonanceAmount();
+    const position = cutoffPosition(DEFAULT_CUTOFF_MAX);
+    const lowCutoffGuard = 0.28 + Math.pow(position, 0.8) * 0.72;
+    return 0.7 + Math.pow(amount, 1.25) * 15 * lowCutoffGuard;
+  }
+
+  function highpassQ() {
+    const amount = resonanceAmount();
+    const position = cutoffPosition(DEFAULT_CUTOFF_MAX);
+    const lowCutoffGuard = 0.08 + Math.pow(position, 1.2) * 0.92;
+    return 0.55 + Math.pow(amount, 1.55) * 8 * lowCutoffGuard;
+  }
+
+  function bandpassQ() {
+    const amount = resonanceAmount();
+    return 0.85 + Math.pow(amount, 1.2) * 18;
   }
 
   function effectiveQ() {
-    const normalized = resonanceAmount();
-    return 0.1 + Math.pow(normalized, 2.15) * MAX_EFFECTIVE_Q;
+    if (state.mode === "lowpass") return lowpassQ();
+    if (state.mode === "highpass") return highpassQ();
+    return bandpassQ();
   }
 
-  function effectiveLowpassQ() {
-    const normalized = resonanceAmount();
-    const lowFrequencyRestraint = 0.22 + Math.sqrt(cutoffAmount()) * 0.78;
-    return LOWPASS_MIN_Q + Math.pow(normalized, 1.7) * LOWPASS_MAX_Q * lowFrequencyRestraint;
-  }
-
-  function effectiveBandpassQ() {
-    const normalized = resonanceAmount();
-    return BANDPASS_MIN_Q + Math.pow(normalized, 1.35) * BANDPASS_MAX_Q;
-  }
-
-  function effectiveBandpassBodyQ() {
-    const normalized = resonanceAmount();
-    return 0.65 + Math.pow(normalized, 1.05) * 5.5;
-  }
-
-  function effectiveQForMode() {
-    if (state.mode === "bandpass") return effectiveBandpassQ();
-    if (state.mode === "lowpass") return effectiveLowpassQ();
-    return effectiveQ();
+  function modeGain() {
+    const amount = resonanceAmount();
+    if (state.mode === "lowpass") return 1.06 + (1 - cutoffPosition(DEFAULT_CUTOFF_MAX)) * 0.16;
+    if (state.mode === "highpass") return 0.9 + cutoffPosition(DEFAULT_CUTOFF_MAX) * 0.22;
+    return 4.9 + Math.pow(amount, 0.7) * 1.8;
   }
 
   function levelAmount() {
     return clamp(state.level, 0, 1, 0);
   }
 
-  function modeGain() {
-    if (state.mode === "bandpass") {
-      return BANDPASS_BASE_GAIN + Math.pow(resonanceAmount(), 0.65) * BANDPASS_RESONANCE_GAIN;
-    }
-
-    return MODE_GAIN[state.mode] || BANDPASS_BASE_GAIN;
-  }
-
-  function bandpassBodyGain() {
-    if (state.mode !== "bandpass") return 0;
-    return BANDPASS_BODY_GAIN + Math.pow(resonanceAmount(), 0.85) * BANDPASS_BODY_RESONANCE_GAIN;
-  }
-
   function applySvfParameters() {
     if (!activeSvf) return;
 
-    const { context, filter, bpBodyFilter, bpBodyGain, dryGain, wetGain } = activeSvf;
+    const { context, filter, dryGain, wetGain } = activeSvf;
     const now = context.currentTime;
     const amount = levelAmount();
-    const cutoff = clamp(state.cutoff, 40, 16000, 900);
 
     filter.type = filterTypeForMode(state.mode);
-    safeParam(filter.frequency, cutoff, now, 0.04);
-    safeParam(filter.Q, effectiveQForMode(), now, 0.04);
-
-    if (bpBodyFilter && bpBodyGain) {
-      bpBodyFilter.type = "bandpass";
-      safeParam(bpBodyFilter.frequency, cutoff, now, 0.04);
-      safeParam(bpBodyFilter.Q, effectiveBandpassBodyQ(), now, 0.04);
-      safeParam(bpBodyGain.gain, bandpassBodyGain(), now, 0.035);
-    }
-
+    safeParam(filter.frequency, cutoff(), now, 0.04);
+    safeParam(filter.Q, effectiveQ(), now, 0.04);
     safeParam(dryGain.gain, 1 - amount, now, 0.035);
     safeParam(wetGain.gain, amount * modeGain(), now, 0.035);
   }
@@ -145,18 +129,12 @@
     const input = context.createGain();
     const dryGain = context.createGain();
     const filter = context.createBiquadFilter();
-    const bpBodyFilter = context.createBiquadFilter();
-    const bpBodyGain = context.createGain();
     const wetGain = context.createGain();
     const outputBus = context.createGain();
 
     filter.type = filterTypeForMode(state.mode);
-    filter.frequency.value = state.cutoff;
-    filter.Q.value = effectiveQForMode();
-    bpBodyFilter.type = "bandpass";
-    bpBodyFilter.frequency.value = state.cutoff;
-    bpBodyFilter.Q.value = effectiveBandpassBodyQ();
-    bpBodyGain.gain.value = 0;
+    filter.frequency.value = cutoff();
+    filter.Q.value = effectiveQ();
     dryGain.gain.value = 1;
     wetGain.gain.value = 0;
     outputBus.gain.value = 1;
@@ -164,10 +142,7 @@
     previousConnect.call(source, input);
     previousConnect.call(input, dryGain);
     previousConnect.call(input, filter);
-    previousConnect.call(input, bpBodyFilter);
     previousConnect.call(filter, wetGain);
-    previousConnect.call(bpBodyFilter, bpBodyGain);
-    previousConnect.call(bpBodyGain, wetGain);
     previousConnect.call(dryGain, outputBus);
     previousConnect.call(wetGain, outputBus);
     previousConnect.call(outputBus, destination);
@@ -175,8 +150,6 @@
     activeSvf = {
       context,
       filter,
-      bpBodyFilter,
-      bpBodyGain,
       dryGain,
       wetGain,
       outputBus,
@@ -224,12 +197,16 @@
   }
 
   function updateReadouts() {
+    const currentCutoff = cutoff();
+    const maxCutoff = cutoffMaxForMode();
+
     document.querySelectorAll('[data-svf-control="mode"]').forEach((control) => {
       control.value = state.mode;
     });
 
     document.querySelectorAll('[data-svf-control="cutoff"]').forEach((control) => {
-      control.value = String(Math.round(state.cutoff));
+      control.max = String(maxCutoff);
+      control.value = String(Math.round(currentCutoff));
     });
 
     document.querySelectorAll('[data-svf-control="resonance"]').forEach((control) => {
@@ -245,7 +222,7 @@
     });
 
     document.querySelectorAll('[data-svf-readout="cutoff"]').forEach((readout) => {
-      readout.textContent = `${Math.round(state.cutoff)} Hz`;
+      readout.textContent = `${Math.round(currentCutoff)} Hz`;
     });
 
     document.querySelectorAll('[data-svf-readout="resonance"]').forEach((readout) => {
@@ -321,7 +298,7 @@
     const cutoffControl = findControlByLabel("Initial COF");
     const resonanceControl = findControlByLabel("Resonance");
 
-    addRangeControl(cutoffControl, "cutoff", 40, 16000, 1, state.cutoff, `${state.cutoff} Hz`);
+    addRangeControl(cutoffControl, "cutoff", CUTOFF_MIN, cutoffMaxForMode(), 1, state.cutoff, `${state.cutoff} Hz`);
     addRangeControl(resonanceControl, "resonance", 0.1, 24, 0.1, state.resonance, `${state.resonance.toFixed(1)} Q`);
     addLevelControl();
     addModeControl();
@@ -348,8 +325,12 @@
 
     const key = control.dataset.svfControl;
 
-    if (key === "mode") state.mode = control.value;
-    if (key === "cutoff") state.cutoff = clamp(control.value, 40, 16000, state.cutoff);
+    if (key === "mode") {
+      state.mode = control.value;
+      state.cutoff = cutoff();
+    }
+
+    if (key === "cutoff") state.cutoff = clamp(control.value, CUTOFF_MIN, cutoffMaxForMode(), state.cutoff);
     if (key === "resonance") state.resonance = clamp(control.value, 0.1, 24, state.resonance);
     if (key === "level") state.level = clamp(Number(control.value) / 100, 0, 1, state.level);
 
