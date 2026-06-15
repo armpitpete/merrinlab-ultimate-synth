@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const CUTOFF_MIN = 40;
+  const CUTOFF_MIN = 90;
   const DEFAULT_CUTOFF_MAX = 8500;
   const BANDPASS_CUTOFF_MAX = 16000;
 
@@ -75,15 +75,15 @@
   function lowpassQ() {
     const amount = resonanceAmount();
     const position = cutoffPosition(DEFAULT_CUTOFF_MAX);
-    const lowCutoffGuard = 0.28 + Math.pow(position, 0.8) * 0.72;
-    return 0.7 + Math.pow(amount, 1.25) * 15 * lowCutoffGuard;
+    const lowCutoffGuard = 0.32 + Math.pow(position, 0.8) * 0.68;
+    return 0.7 + Math.pow(amount, 1.2) * 16 * lowCutoffGuard;
   }
 
   function highpassQ() {
     const amount = resonanceAmount();
     const position = cutoffPosition(DEFAULT_CUTOFF_MAX);
-    const lowCutoffGuard = 0.08 + Math.pow(position, 1.2) * 0.92;
-    return 0.55 + Math.pow(amount, 1.55) * 8 * lowCutoffGuard;
+    const lowCutoffGuard = 0.03 + Math.pow(position, 1.45) * 0.97;
+    return 0.5 + Math.pow(amount, 1.7) * 7 * lowCutoffGuard;
   }
 
   function bandpassQ() {
@@ -99,8 +99,16 @@
 
   function modeGain() {
     const amount = resonanceAmount();
-    if (state.mode === "lowpass") return 1.06 + (1 - cutoffPosition(DEFAULT_CUTOFF_MAX)) * 0.16;
-    if (state.mode === "highpass") return 0.9 + cutoffPosition(DEFAULT_CUTOFF_MAX) * 0.22;
+    const position = cutoffPosition(DEFAULT_CUTOFF_MAX);
+
+    if (state.mode === "lowpass") {
+      return 1.04 + (1 - position) * 0.12;
+    }
+
+    if (state.mode === "highpass") {
+      return 0.34 + Math.pow(position, 0.75) * 0.72;
+    }
+
     return 4.9 + Math.pow(amount, 0.7) * 1.8;
   }
 
@@ -205,6 +213,7 @@
     });
 
     document.querySelectorAll('[data-svf-control="cutoff"]').forEach((control) => {
+      control.min = String(CUTOFF_MIN);
       control.max = String(maxCutoff);
       control.value = String(Math.round(currentCutoff));
     });
@@ -298,7 +307,7 @@
     const cutoffControl = findControlByLabel("Initial COF");
     const resonanceControl = findControlByLabel("Resonance");
 
-    addRangeControl(cutoffControl, "cutoff", CUTOFF_MIN, cutoffMaxForMode(), 1, state.cutoff, `${state.cutoff} Hz`);
+    addRangeControl(cutoffControl, "cutoff", CUTOFF_MIN, cutoffMaxForMode(), 1, Math.max(state.cutoff, CUTOFF_MIN), `${Math.max(state.cutoff, CUTOFF_MIN)} Hz`);
     addRangeControl(resonanceControl, "resonance", 0.1, 24, 0.1, state.resonance, `${state.resonance.toFixed(1)} Q`);
     addLevelControl();
     addModeControl();
