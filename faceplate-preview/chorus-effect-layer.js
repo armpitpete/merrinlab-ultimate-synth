@@ -245,11 +245,20 @@
       }
 
       .effects-section-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
       }
     `;
 
     document.head.append(style);
+  }
+
+  function loadDriveEffectLayer() {
+    if (document.querySelector('script[src="drive-overdrive-layer.js"]')) return;
+
+    const script = document.createElement("script");
+    script.src = "drive-overdrive-layer.js";
+    script.defer = true;
+    document.head.append(script);
   }
 
   function initChorus() {
@@ -262,6 +271,7 @@
     }
 
     syncChorusControls();
+    loadDriveEffectLayer();
   }
 
   document.addEventListener("input", handleChorusInput);
