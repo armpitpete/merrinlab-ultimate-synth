@@ -2,7 +2,8 @@
   "use strict";
 
   const state = {
-    lag: 0.35,
+    lag: 0.25,
+    sensitivity: 0.65,
     amount: 0,
     envelope: 0,
     baseReverbMix: 0,
@@ -51,7 +52,7 @@
 
     analyser = context.createAnalyser();
     analyser.fftSize = 512;
-    analyser.smoothingTimeConstant = 0.15;
+    analyser.smoothingTimeConstant = 0.08;
     analyserData = new Float32Array(analyser.fftSize);
 
     previousConnect.call(source, analyser);
@@ -99,12 +100,20 @@
       control.value = String(state.lag);
     });
 
+    document.querySelectorAll('[data-ef-control="sensitivity"]').forEach((control) => {
+      control.value = String(Math.round(state.sensitivity * 100));
+    });
+
     document.querySelectorAll('[data-ef-control="amount"]').forEach((control) => {
       control.value = String(Math.round(state.amount * 100));
     });
 
     document.querySelectorAll('[data-ef-readout="lag"]').forEach((readout) => {
       readout.textContent = `${state.lag.toFixed(2)} s`;
+    });
+
+    document.querySelectorAll('[data-ef-readout="sensitivity"]').forEach((readout) => {
+      readout.textContent = `${Math.round(state.sensitivity * 100)}%`;
     });
 
     document.querySelectorAll('[data-ef-readout="amount"]').forEach((readout) => {
@@ -115,13 +124,18 @@
       readout.textContent = `${Math.round(state.envelope * 100)}%`;
     });
 
+    document.querySelectorAll('[data-ef-readout="dynamic-mix"]').forEach((readout) => {
+      const dynamicLift = state.envelope * state.amount * 0.75;
+      readout.textContent = `+${Math.round(dynamicLift * 100)}%`;
+    });
+
     document.querySelectorAll('.envelope-follower-level-fill').forEach((bar) => {
       bar.style.transform = `scaleX(${clamp(state.envelope, 0, 1, 0)})`;
     });
   }
 
   function applyDynamicReverb() {
-    const dynamicLift = state.envelope * state.amount * (1 - state.baseReverbMix);
+    const dynamicLift = state.envelope * state.amount * 0.75;
     setReverbMix(state.baseReverbMix + dynamicLift);
   }
 
@@ -135,8 +149,9 @@
       previousTime = now;
 
       const rms = calculateRms();
-      const target = clamp(rms * 5, 0, 1, 0);
-      const lag = clamp(state.lag, 0.02, 1.5, 0.35);
+      const sensitivity = 8 + state.sensitivity * 34;
+      const target = clamp(Math.pow(rms * sensitivity, 0.7), 0, 1, 0);
+      const lag = clamp(state.lag, 0.02, 1.5, 0.25);
       const coefficient = 1 - Math.exp(-dt / lag);
 
       state.envelope += (target - state.envelope) * coefficient;
@@ -162,14 +177,26 @@
       const wrapper = document.createElement("div");
       wrapper.className = "ef-control-wrap";
       wrapper.innerHTML = `
-        <input type="range" min="0.02" max="1.5" step="0.01" value="0.35" data-ef-control="lag">
-        <output class="ef-readout" data-ef-readout="lag">0.35 s</output>
+        <input type="range" min="0.02" max="1.5" step="0.01" value="0.25" data-ef-control="lag">
+        <output class="ef-readout" data-ef-readout="lag">0.25 s</output>
       `;
       lagControl.append(wrapper);
     }
 
     const controlsGrid = module.querySelector(".control-grid");
     if (controlsGrid && !module.querySelector('[data-ef-control="amount"]')) {
+      const sensitivityControl = document.createElement("div");
+      sensitivityControl.className = "control is-audio-linked envelope-follower-sensitivity-control";
+      sensitivityControl.innerHTML = `
+        <div class="control-label">Sensitivity</div>
+        <div class="knob knob-large"></div>
+        <div class="ef-control-wrap">
+          <input type="range" min="0" max="100" step="1" value="65" data-ef-control="sensitivity">
+          <output class="ef-readout" data-ef-readout="sensitivity">65%</output>
+        </div>
+      `;
+      controlsGrid.append(sensitivityControl);
+
       const amountControl = document.createElement("div");
       amountControl.className = "control is-audio-linked envelope-follower-amount-control";
       amountControl.innerHTML = `
@@ -190,6 +217,15 @@
         <output class="ef-readout" data-ef-readout="level">0%</output>
       `;
       controlsGrid.append(levelControl);
+
+      const dynamicControl = document.createElement("div");
+      dynamicControl.className = "control is-audio-linked envelope-follower-dynamic-control";
+      dynamicControl.innerHTML = `
+        <div class="control-label">Reverb Lift</div>
+        <div class="mini-display">Dynamic</div>
+        <output class="ef-readout" data-ef-readout="dynamic-mix">+0%</output>
+      `;
+      controlsGrid.append(dynamicControl);
     }
 
     module.classList.add("is-envelope-follower-active");
@@ -202,6 +238,7 @@
 
     const key = control.dataset.efControl;
     if (key === "lag") state.lag = clamp(control.value, 0.02, 1.5, state.lag);
+    if (key === "sensitivity") state.sensitivity = clamp(Number(control.value) / 100, 0, 1, state.sensitivity);
     if (key === "amount") state.amount = clamp(Number(control.value) / 100, 0, 1, state.amount);
 
     syncFollowerReadouts();
