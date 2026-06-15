@@ -239,6 +239,15 @@
     document.head.append(style);
   }
 
+  function loadSelfResonanceLayer() {
+    if (document.querySelector('script[src="filter-self-resonance-layer.js"]')) return;
+
+    const script = document.createElement("script");
+    script.src = "filter-self-resonance-layer.js";
+    script.defer = true;
+    document.head.append(script);
+  }
+
   function initDrive() {
     patchConnect();
     addStyles();
@@ -249,6 +258,7 @@
     }
 
     syncDriveControls();
+    loadSelfResonanceLayer();
   }
 
   document.addEventListener("input", handleDriveInput);
