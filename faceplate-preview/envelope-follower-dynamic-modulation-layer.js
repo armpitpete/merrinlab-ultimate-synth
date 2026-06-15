@@ -2,8 +2,8 @@
   "use strict";
 
   const state = {
-    lag: 0.25,
-    sensitivity: 0.65,
+    lag: 0.18,
+    sensitivity: 0.75,
     amount: 0,
     envelope: 0,
     baseReverbMix: 0,
@@ -11,9 +11,11 @@
   };
 
   let previousConnect = null;
+  let analyserInput = null;
   let analyser = null;
   let analyserData = null;
   let animationId = null;
+  let connectedTapCount = 0;
 
   function clamp(value, min, max, fallback = min) {
     const number = Number(value);
@@ -46,17 +48,32 @@
     state.internalUpdate = false;
   }
 
-  function createEnvelopeTap(context, source) {
-    if (analyser && analyser.context === context) return;
-    if (!previousConnect) return;
+  function ensureAnalyserBus(context) {
+    if (analyser && analyser.context === context && analyserInput) return true;
+    if (!previousConnect) return false;
+
+    analyserInput = context.createGain();
+    analyserInput.gain.value = 1;
 
     analyser = context.createAnalyser();
     analyser.fftSize = 512;
-    analyser.smoothingTimeConstant = 0.08;
+    analyser.smoothingTimeConstant = 0.03;
     analyserData = new Float32Array(analyser.fftSize);
 
-    previousConnect.call(source, analyser);
+    previousConnect.call(analyserInput, analyser);
     startEnvelopeLoop();
+    return true;
+  }
+
+  function tapOutputSource(context, source) {
+    if (!ensureAnalyserBus(context)) return;
+
+    try {
+      previousConnect.call(source, analyserInput);
+      connectedTapCount += 1;
+    } catch (_error) {
+      // If a node cannot be tapped, keep the main output path working.
+    }
   }
 
   function patchConnect() {
@@ -69,7 +86,7 @@
 
       try {
         if (isDestinationNode(destination)) {
-          createEnvelopeTap(this.context, this);
+          tapOutputSource(this.context, this);
         }
       } catch (_error) {
         // Envelope follower is optional. The main synth path must keep working.
@@ -93,6 +110,10 @@
     }
 
     return Math.sqrt(sum / analyserData.length);
+  }
+
+  function dynamicLift() {
+    return state.envelope * state.amount * 0.95;
   }
 
   function syncFollowerReadouts() {
@@ -125,8 +146,11 @@
     });
 
     document.querySelectorAll('[data-ef-readout="dynamic-mix"]').forEach((readout) => {
-      const dynamicLift = state.envelope * state.amount * 0.75;
-      readout.textContent = `+${Math.round(dynamicLift * 100)}%`;
+      readout.textContent = `+${Math.round(dynamicLift() * 100)}%`;
+    });
+
+    document.querySelectorAll('[data-ef-readout="tap-count"]').forEach((readout) => {
+      readout.textContent = `${connectedTapCount} taps`;
     });
 
     document.querySelectorAll('.envelope-follower-level-fill').forEach((bar) => {
@@ -135,8 +159,7 @@
   }
 
   function applyDynamicReverb() {
-    const dynamicLift = state.envelope * state.amount * 0.75;
-    setReverbMix(state.baseReverbMix + dynamicLift);
+    setReverbMix(state.baseReverbMix + dynamicLift());
   }
 
   function startEnvelopeLoop() {
@@ -149,9 +172,9 @@
       previousTime = now;
 
       const rms = calculateRms();
-      const sensitivity = 8 + state.sensitivity * 34;
-      const target = clamp(Math.pow(rms * sensitivity, 0.7), 0, 1, 0);
-      const lag = clamp(state.lag, 0.02, 1.5, 0.25);
+      const sensitivityScale = 18 + state.sensitivity * 72;
+      const target = clamp(Math.pow(rms * sensitivityScale, 0.55), 0, 1, 0);
+      const lag = clamp(state.lag, 0.02, 1.5, 0.18);
       const coefficient = 1 - Math.exp(-dt / lag);
 
       state.envelope += (target - state.envelope) * coefficient;
@@ -177,8 +200,8 @@
       const wrapper = document.createElement("div");
       wrapper.className = "ef-control-wrap";
       wrapper.innerHTML = `
-        <input type="range" min="0.02" max="1.5" step="0.01" value="0.25" data-ef-control="lag">
-        <output class="ef-readout" data-ef-readout="lag">0.25 s</output>
+        <input type="range" min="0.02" max="1.5" step="0.01" value="0.18" data-ef-control="lag">
+        <output class="ef-readout" data-ef-readout="lag">0.18 s</output>
       `;
       lagControl.append(wrapper);
     }
@@ -191,8 +214,8 @@
         <div class="control-label">Sensitivity</div>
         <div class="knob knob-large"></div>
         <div class="ef-control-wrap">
-          <input type="range" min="0" max="100" step="1" value="65" data-ef-control="sensitivity">
-          <output class="ef-readout" data-ef-readout="sensitivity">65%</output>
+          <input type="range" min="0" max="100" step="1" value="75" data-ef-control="sensitivity">
+          <output class="ef-readout" data-ef-readout="sensitivity">75%</output>
         </div>
       `;
       controlsGrid.append(sensitivityControl);
@@ -226,6 +249,15 @@
         <output class="ef-readout" data-ef-readout="dynamic-mix">+0%</output>
       `;
       controlsGrid.append(dynamicControl);
+
+      const tapControl = document.createElement("div");
+      tapControl.className = "control is-audio-linked envelope-follower-tap-control";
+      tapControl.innerHTML = `
+        <div class="control-label">EF Tap</div>
+        <div class="mini-display">Output Mix</div>
+        <output class="ef-readout" data-ef-readout="tap-count">0 taps</output>
+      `;
+      controlsGrid.append(tapControl);
     }
 
     module.classList.add("is-envelope-follower-active");
