@@ -2,9 +2,12 @@
   "use strict";
 
   const MAX_EFFECTIVE_Q = 64;
+  const BANDPASS_MIN_Q = 0.85;
+  const BANDPASS_MAX_Q = 24;
+  const BANDPASS_BASE_GAIN = 4.8;
+  const BANDPASS_RESONANCE_GAIN = 2.2;
   const MODE_GAIN = {
     highpass: 1.15,
-    bandpass: 3.2,
     lowpass: 1.1,
   };
 
@@ -55,10 +58,24 @@
     return "BP";
   }
 
-  function effectiveQ() {
+  function resonanceAmount() {
     const uiQ = clamp(state.resonance, 0.1, 24, 0.7);
-    const normalized = clamp((uiQ - 0.1) / (24 - 0.1), 0, 1, 0);
+    return clamp((uiQ - 0.1) / (24 - 0.1), 0, 1, 0);
+  }
+
+  function effectiveQ() {
+    const normalized = resonanceAmount();
     return 0.1 + Math.pow(normalized, 2.15) * MAX_EFFECTIVE_Q;
+  }
+
+  function effectiveBandpassQ() {
+    const normalized = resonanceAmount();
+    return BANDPASS_MIN_Q + Math.pow(normalized, 1.35) * BANDPASS_MAX_Q;
+  }
+
+  function effectiveQForMode() {
+    if (state.mode === "bandpass") return effectiveBandpassQ();
+    return effectiveQ();
   }
 
   function levelAmount() {
@@ -66,7 +83,11 @@
   }
 
   function modeGain() {
-    return MODE_GAIN[state.mode] || MODE_GAIN.bandpass;
+    if (state.mode === "bandpass") {
+      return BANDPASS_BASE_GAIN + Math.pow(resonanceAmount(), 0.65) * BANDPASS_RESONANCE_GAIN;
+    }
+
+    return MODE_GAIN[state.mode] || BANDPASS_BASE_GAIN;
   }
 
   function applySvfParameters() {
@@ -78,7 +99,7 @@
 
     filter.type = filterTypeForMode(state.mode);
     safeParam(filter.frequency, clamp(state.cutoff, 40, 8500, 900), now, 0.04);
-    safeParam(filter.Q, effectiveQ(), now, 0.04);
+    safeParam(filter.Q, effectiveQForMode(), now, 0.04);
     safeParam(dryGain.gain, 1 - amount, now, 0.035);
     safeParam(wetGain.gain, amount * modeGain(), now, 0.035);
   }
@@ -95,7 +116,7 @@
 
     filter.type = filterTypeForMode(state.mode);
     filter.frequency.value = state.cutoff;
-    filter.Q.value = effectiveQ();
+    filter.Q.value = effectiveQForMode();
     dryGain.gain.value = 1;
     wetGain.gain.value = 0;
     outputBus.gain.value = 1;
