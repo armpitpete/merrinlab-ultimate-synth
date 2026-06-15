@@ -108,7 +108,7 @@
     const { context, filter, bpBodyFilter, bpBodyGain, dryGain, wetGain } = activeSvf;
     const now = context.currentTime;
     const amount = levelAmount();
-    const cutoff = clamp(state.cutoff, 40, 8500, 900);
+    const cutoff = clamp(state.cutoff, 40, 16000, 900);
 
     filter.type = filterTypeForMode(state.mode);
     safeParam(filter.frequency, cutoff, now, 0.04);
@@ -308,7 +308,7 @@
     const cutoffControl = findControlByLabel("Initial COF");
     const resonanceControl = findControlByLabel("Resonance");
 
-    addRangeControl(cutoffControl, "cutoff", 40, 8500, 1, state.cutoff, `${state.cutoff} Hz`);
+    addRangeControl(cutoffControl, "cutoff", 40, 16000, 1, state.cutoff, `${state.cutoff} Hz`);
     addRangeControl(resonanceControl, "resonance", 0.1, 24, 0.1, state.resonance, `${state.resonance.toFixed(1)} Q`);
     addLevelControl();
     addModeControl();
@@ -336,7 +336,7 @@
     const key = control.dataset.svfControl;
 
     if (key === "mode") state.mode = control.value;
-    if (key === "cutoff") state.cutoff = clamp(control.value, 40, 8500, state.cutoff);
+    if (key === "cutoff") state.cutoff = clamp(control.value, 40, 16000, state.cutoff);
     if (key === "resonance") state.resonance = clamp(control.value, 0.1, 24, state.resonance);
     if (key === "level") state.level = clamp(Number(control.value) / 100, 0, 1, state.level);
 
