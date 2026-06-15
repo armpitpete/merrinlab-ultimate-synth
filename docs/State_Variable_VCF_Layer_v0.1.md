@@ -1,6 +1,6 @@
-# State Variable VCF Layer v0.4
+# State Variable VCF Layer v0.5
 
-This pass activates the existing State Variable VCF faceplate module as a safe, default-off filter layer, fixes the HP/BP/LP mode selector display, prevents the SV VCF from behaving independently of the VCO/mixer path, strengthens SV VCF level/resonance response, and clarifies Gate Off labelling.
+This pass activates the existing State Variable VCF faceplate module as a safe, default-off filter layer, fixes the HP/BP/LP mode selector display, prevents the SV VCF from behaving independently of the VCO/mixer path, strengthens SV VCF level/resonance response, clarifies Gate Off labelling, and changes SV VCF Level from parallel-add to dry/filtered crossfade.
 
 ## User request
 
@@ -35,7 +35,7 @@ It seems to work independant of the VCOs
 
 That is not the intended behaviour.
 
-v0.3 restricts the SV VCF wet path to the main synth output node only.
+v0.3 restricted the SV VCF wet path to the main synth output node only.
 
 ```text
 main synth output -> SV VCF wet path -> output
@@ -51,7 +51,7 @@ User observed:
 SV VCF Level resonance has little to medium effect. Where is Gate off?
 ```
 
-v0.4 strengthens the audible response by:
+v0.4 strengthened the audible response by:
 
 ```text
 raising the SV VCF wet gain cap
@@ -64,7 +64,29 @@ The visible Resonance range stays the same:
 0.1 Q to 24 Q
 ```
 
-The internal filter Q is now stronger at high settings so resonance should be easier to hear.
+The internal filter Q is stronger at high settings so resonance should be easier to hear.
+
+## Crossfade correction
+
+User then observed:
+
+```text
+BP very quiet VCO is always playing and not affected by VCF
+```
+
+That confirmed the SV VCF was still behaving like a parallel added copy, while the dry VCO path remained audible beside it.
+
+v0.5 changes SV VCF Level to a dry/filtered crossfade:
+
+```text
+Level 0% = dry synth unchanged
+Level 50% = dry + filtered mix
+Level 100% = filtered SV VCF output only
+```
+
+This means at high SV VCF Level, the VCO path should be affected by the selected SV VCF mode rather than simply playing beside it.
+
+BP mode also gets extra internal compensation so it is not much quieter than HP/LP.
 
 ## Gate Off clarification
 
@@ -76,7 +98,7 @@ Release
 
 That button is the Gate Off control.
 
-v0.4 relabels it to:
+v0.4 relabelled it to:
 
 ```text
 Gate Off / Release
@@ -99,11 +121,11 @@ Level
 
 ## Behaviour
 
-The State Variable VCF is a parallel wet filter layer in this first safe version.
+The State Variable VCF now acts as an output crossfade layer.
 
 ```text
-Dry synth sound -> output
-Main synth output -> SV VCF wet path -> HP/BP/LP filter -> output
+Main synth output -> dry gain      -> output bus -> output
+Main synth output -> SV VCF filter -> wet gain   -> output bus -> output
 ```
 
 The main sound stays unchanged when Level is 0%.
@@ -152,11 +174,11 @@ Changed:
 
 ```text
 State Variable VCF faceplate controls
-parallel SV VCF wet filter path
 HP/BP/LP selector visibility fix
 SV VCF source restricted to main synth output node
-stronger SV VCF wet level cap
 stronger internal resonance curve
+BP level compensation
+SV VCF Level changed from parallel add to dry/filtered crossfade
 Debug / Engine Panel Gate Off label
 ```
 
@@ -187,7 +209,9 @@ State Variable VCF shows active controls.
 HP/BP/LP selector remains visible.
 Mode readout updates without overwriting the selector.
 Level 0% leaves the sound unchanged.
-Raising Level makes the SV VCF audible only when the main synth is audible.
+Level 100% makes the output mostly/only SV VCF filtered.
+The dry VCO should not keep playing beside the SV VCF at Level 100%.
+BP mode should no longer be extremely quiet.
 VCO/Mixer levels down means no SV VCF sound.
 HP/BP/LP mode changes the filter character.
 Initial COF changes the cutoff/centre frequency.
