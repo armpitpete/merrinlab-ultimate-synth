@@ -213,10 +213,20 @@
     document.head.append(style);
   }
 
+  function loadChorusEffectLayer() {
+    if (document.querySelector('script[src="chorus-effect-layer.js"]')) return;
+
+    const script = document.createElement("script");
+    script.src = "chorus-effect-layer.js";
+    script.defer = true;
+    document.head.append(script);
+  }
+
   function initDelayUpgradeLayer() {
     patchConnect();
     addStyles();
     syncDelayControls();
+    loadChorusEffectLayer();
     window.setTimeout(syncDelayControls, 250);
     window.setTimeout(syncDelayControls, 750);
   }
