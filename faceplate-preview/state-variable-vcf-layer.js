@@ -112,23 +112,24 @@
     return 0.5 + Math.pow(amount, 1.7) * 7 * lowCutoffGuard;
   }
 
-  function bandpassQ() {
-    const amount = resonanceAmount();
-    const narrowness = 1 - bpWidthAmount();
-    const widthQ = 0.85 + Math.pow(narrowness, 1.25) * 6.5;
-    const resonanceQ = Math.pow(amount, 1.05) * 17;
-    return clamp(widthQ + resonanceQ, 0.85, 28, 4);
+  function bandpassEdges() {
+    const width = bpWidthAmount();
+    const centre = cutoff();
+    const octaveWidth = 0.08 + Math.pow(width, 1.15) * 4.7;
+    const halfWidthRatio = Math.pow(2, octaveWidth / 2);
+    const lowEdge = clamp(centre / halfWidthRatio, CUTOFF_MIN, BANDPASS_CUTOFF_MAX, CUTOFF_MIN);
+    const highEdge = clamp(centre * halfWidthRatio, CUTOFF_MIN, BANDPASS_CUTOFF_MAX, BANDPASS_CUTOFF_MAX);
+
+    return { centre, lowEdge, highEdge, width };
   }
 
   function effectiveQ() {
     if (state.mode === "lowpass") return lowpassQ();
     if (state.mode === "highpass") return highpassQ();
-    return bandpassQ();
+    return 0.707;
   }
 
   function modeGain() {
-    const amount = resonanceAmount();
-    const width = bpWidthAmount();
     const position = cutoffPosition(DEFAULT_CUTOFF_MAX);
 
     if (state.mode === "lowpass") {
@@ -139,7 +140,22 @@
       return 0.34 + Math.pow(position, 0.75) * 0.72;
     }
 
-    return 5.4 + Math.pow(1 - width, 0.85) * 1.2 + Math.pow(amount, 0.75) * 0.65;
+    return 1;
+  }
+
+  function bpWindowGain() {
+    const width = bpWidthAmount();
+    const amount = resonanceAmount();
+    const openAmount = Math.pow(width, 0.65);
+    return 0.03 + openAmount * 0.97 + amount * 0.18;
+  }
+
+  function bpPeakQ() {
+    return 0.8 + Math.pow(resonanceAmount(), 1.1) * 15;
+  }
+
+  function bpPeakGain() {
+    return Math.pow(resonanceAmount(), 0.9) * 19;
   }
 
   function levelAmount() {
@@ -149,13 +165,36 @@
   function applySvfParameters() {
     if (!activeSvf) return;
 
-    const { context, filter, dryGain, wetGain } = activeSvf;
+    const {
+      context,
+      filter,
+      modeFilterGain,
+      bpHighpass,
+      bpLowpass,
+      bpPeak,
+      bpGain,
+      dryGain,
+      wetGain,
+    } = activeSvf;
     const now = context.currentTime;
     const amount = levelAmount();
+    const isBandpass = state.mode === "bandpass";
 
     filter.type = filterTypeForMode(state.mode);
     safeParam(filter.frequency, cutoff(), now, 0.04);
     safeParam(filter.Q, effectiveQ(), now, 0.04);
+    safeParam(modeFilterGain.gain, isBandpass ? 0 : 1, now, 0.02);
+
+    const edges = bandpassEdges();
+    safeParam(bpHighpass.frequency, edges.lowEdge, now, 0.04);
+    safeParam(bpHighpass.Q, 0.72, now, 0.04);
+    safeParam(bpLowpass.frequency, edges.highEdge, now, 0.04);
+    safeParam(bpLowpass.Q, 0.72, now, 0.04);
+    safeParam(bpPeak.frequency, edges.centre, now, 0.04);
+    safeParam(bpPeak.Q, bpPeakQ(), now, 0.04);
+    safeParam(bpPeak.gain, bpPeakGain(), now, 0.04);
+    safeParam(bpGain.gain, isBandpass ? bpWindowGain() : 0, now, 0.025);
+
     safeParam(dryGain.gain, 1 - amount, now, 0.035);
     safeParam(wetGain.gain, amount * modeGain(), now, 0.035);
   }
@@ -167,6 +206,11 @@
     const input = context.createGain();
     const dryGain = context.createGain();
     const filter = context.createBiquadFilter();
+    const modeFilterGain = context.createGain();
+    const bpHighpass = context.createBiquadFilter();
+    const bpLowpass = context.createBiquadFilter();
+    const bpPeak = context.createBiquadFilter();
+    const bpGain = context.createGain();
     const wetGain = context.createGain();
     const analyser = context.createAnalyser();
     const outputBus = context.createGain();
@@ -179,6 +223,11 @@
     filter.type = filterTypeForMode(state.mode);
     filter.frequency.value = cutoff();
     filter.Q.value = effectiveQ();
+    modeFilterGain.gain.value = state.mode === "bandpass" ? 0 : 1;
+    bpHighpass.type = "highpass";
+    bpLowpass.type = "lowpass";
+    bpPeak.type = "peaking";
+    bpGain.gain.value = 0;
     dryGain.gain.value = 1;
     wetGain.gain.value = 0;
     outputBus.gain.value = 1;
@@ -186,7 +235,13 @@
     previousConnect.call(source, input);
     previousConnect.call(input, dryGain);
     previousConnect.call(input, filter);
-    previousConnect.call(filter, wetGain);
+    previousConnect.call(filter, modeFilterGain);
+    previousConnect.call(modeFilterGain, wetGain);
+    previousConnect.call(input, bpHighpass);
+    previousConnect.call(bpHighpass, bpLowpass);
+    previousConnect.call(bpLowpass, bpPeak);
+    previousConnect.call(bpPeak, bpGain);
+    previousConnect.call(bpGain, wetGain);
     previousConnect.call(wetGain, analyser);
     previousConnect.call(analyser, outputBus);
     previousConnect.call(dryGain, outputBus);
@@ -195,6 +250,11 @@
     activeSvf = {
       context,
       filter,
+      modeFilterGain,
+      bpHighpass,
+      bpLowpass,
+      bpPeak,
+      bpGain,
       dryGain,
       wetGain,
       analyser,
