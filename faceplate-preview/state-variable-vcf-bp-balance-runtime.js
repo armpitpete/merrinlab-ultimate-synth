@@ -76,7 +76,7 @@
     const centre = cutoffFromSlider();
     const position = bpPosition();
     const width = widthAmount();
-    const lowCentreWidthScale = 0.44 + Math.pow(position, 0.55) * 0.56;
+    const lowCentreWidthScale = 0.24 + Math.pow(position, 0.55) * 0.76;
     const octaveWidth = (0.05 + Math.pow(width, 1.15) * 3.1) * lowCentreWidthScale;
     const ratio = Math.pow(2, octaveWidth / 2);
 
@@ -89,7 +89,7 @@
 
   function bpFrequencyMakeup() {
     const position = bpPosition();
-    const lowScale = 0.36 + Math.pow(position, 0.75) * 0.64;
+    const lowScale = 0.25 + Math.pow(position, 0.75) * 0.75;
     const highScale = 1 + Math.pow(position, 2.15) * 2.45;
     return lowScale * highScale;
   }
@@ -105,7 +105,7 @@
 
   function bpPeakGain() {
     const position = bpPosition();
-    const frequencyScale = 0.28 + Math.pow(position, 0.72) * 0.92;
+    const frequencyScale = 0.22 + Math.pow(position, 0.72) * 0.98;
     return Math.pow(resonanceAmount(), 0.9) * 16 * frequencyScale;
   }
 
