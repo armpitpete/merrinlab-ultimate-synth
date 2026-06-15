@@ -6,6 +6,7 @@
   const BANDPASS_CUTOFF_MAX = 16000;
   const CUTOFF_SLIDER_MIN = 0;
   const CUTOFF_SLIDER_MAX = 1000;
+  const MONITOR_POSITION_KEY = "merrinlab-sv-vcf-monitor-position";
 
   const state = {
     mode: "bandpass",
@@ -17,6 +18,9 @@
 
   let previousConnect = null;
   let activeSvf = null;
+  let monitorPanel = null;
+  let monitorRaf = null;
+  let dragState = null;
 
   function clamp(value, min, max, fallback = min) {
     const number = Number(value);
@@ -164,7 +168,13 @@
     const dryGain = context.createGain();
     const filter = context.createBiquadFilter();
     const wetGain = context.createGain();
+    const analyser = context.createAnalyser();
     const outputBus = context.createGain();
+
+    analyser.fftSize = 2048;
+    analyser.smoothingTimeConstant = 0.78;
+    analyser.minDecibels = -95;
+    analyser.maxDecibels = -12;
 
     filter.type = filterTypeForMode(state.mode);
     filter.frequency.value = cutoff();
@@ -177,8 +187,9 @@
     previousConnect.call(input, dryGain);
     previousConnect.call(input, filter);
     previousConnect.call(filter, wetGain);
+    previousConnect.call(wetGain, analyser);
+    previousConnect.call(analyser, outputBus);
     previousConnect.call(dryGain, outputBus);
-    previousConnect.call(wetGain, outputBus);
     previousConnect.call(outputBus, destination);
 
     activeSvf = {
@@ -186,10 +197,12 @@
       filter,
       dryGain,
       wetGain,
+      analyser,
       outputBus,
     };
 
     applySvfParameters();
+    startMonitorDrawing();
   }
 
   function patchConnect() {
@@ -277,6 +290,8 @@
     document.querySelectorAll('[data-svf-readout="level"]').forEach((readout) => {
       readout.textContent = `${Math.round(state.level * 100)}%`;
     });
+
+    updateMonitorText();
   }
 
   function addRangeControl(targetControl, key, min, max, step, value, readout) {
@@ -387,6 +402,193 @@
     gateOffButton.title = "Close the gate and let the envelope release";
   }
 
+  function monitorPosition() {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(MONITOR_POSITION_KEY) || "null");
+      if (saved && Number.isFinite(saved.left) && Number.isFinite(saved.top)) return saved;
+    } catch (_error) {
+      // Ignore saved-position errors.
+    }
+
+    return { left: 24, top: 96 };
+  }
+
+  function saveMonitorPosition(left, top) {
+    try {
+      window.localStorage.setItem(MONITOR_POSITION_KEY, JSON.stringify({ left, top }));
+    } catch (_error) {
+      // Position memory is optional.
+    }
+  }
+
+  function createFloatingMonitor() {
+    if (monitorPanel) return monitorPanel;
+
+    const position = monitorPosition();
+    monitorPanel = document.createElement("aside");
+    monitorPanel.className = "svf-floating-monitor";
+    monitorPanel.style.left = `${position.left}px`;
+    monitorPanel.style.top = `${position.top}px`;
+    monitorPanel.innerHTML = `
+      <div class="svf-floating-monitor-header" data-svf-monitor-drag>
+        <strong>SV VCF Monitor</strong>
+        <span>drag</span>
+      </div>
+      <div class="svf-monitor-readouts">
+        <span data-svf-monitor-readout="mode">BP</span>
+        <span data-svf-monitor-readout="cutoff">900 Hz</span>
+        <span data-svf-monitor-readout="width">55% wide</span>
+        <span data-svf-monitor-readout="resonance">0.7 Q</span>
+        <span data-svf-monitor-readout="level">0%</span>
+      </div>
+      <label>Wet waveform</label>
+      <canvas class="svf-monitor-canvas" data-svf-monitor-waveform width="280" height="82"></canvas>
+      <label>Wet spectrum</label>
+      <canvas class="svf-monitor-canvas" data-svf-monitor-spectrum width="280" height="104"></canvas>
+    `;
+
+    document.body.append(monitorPanel);
+    installMonitorDrag(monitorPanel);
+    updateMonitorText();
+    return monitorPanel;
+  }
+
+  function installMonitorDrag(panel) {
+    const handle = panel.querySelector("[data-svf-monitor-drag]");
+    if (!handle) return;
+
+    handle.addEventListener("pointerdown", (event) => {
+      const rect = panel.getBoundingClientRect();
+      dragState = {
+        pointerId: event.pointerId,
+        offsetX: event.clientX - rect.left,
+        offsetY: event.clientY - rect.top,
+      };
+      handle.setPointerCapture(event.pointerId);
+    });
+
+    handle.addEventListener("pointermove", (event) => {
+      if (!dragState || dragState.pointerId !== event.pointerId) return;
+
+      const maxLeft = Math.max(0, window.innerWidth - panel.offsetWidth);
+      const maxTop = Math.max(0, window.innerHeight - panel.offsetHeight);
+      const left = clamp(event.clientX - dragState.offsetX, 0, maxLeft, 0);
+      const top = clamp(event.clientY - dragState.offsetY, 0, maxTop, 0);
+
+      panel.style.left = `${left}px`;
+      panel.style.top = `${top}px`;
+    });
+
+    handle.addEventListener("pointerup", (event) => {
+      if (!dragState || dragState.pointerId !== event.pointerId) return;
+      const rect = panel.getBoundingClientRect();
+      saveMonitorPosition(rect.left, rect.top);
+      dragState = null;
+    });
+  }
+
+  function updateMonitorText() {
+    if (!monitorPanel) return;
+
+    const readout = (key, value) => {
+      const target = monitorPanel.querySelector(`[data-svf-monitor-readout="${key}"]`);
+      if (target) target.textContent = value;
+    };
+
+    readout("mode", labelForMode(state.mode));
+    readout("cutoff", `${Math.round(cutoff())} Hz`);
+    readout("width", state.mode === "bandpass" ? `${Math.round(bpWidthAmount() * 100)}% wide` : "BP only");
+    readout("resonance", `${state.resonance.toFixed(1)} Q`);
+    readout("level", `${Math.round(state.level * 100)}% wet`);
+  }
+
+  function clearCanvas(canvas) {
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "rgba(11, 14, 18, 0.92)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    return ctx;
+  }
+
+  function drawWaveform(canvas, analyser) {
+    const ctx = clearCanvas(canvas);
+    const data = new Uint8Array(analyser.fftSize);
+    analyser.getByteTimeDomainData(data);
+
+    ctx.strokeStyle = "rgba(147, 211, 108, 0.96)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+
+    for (let index = 0; index < data.length; index += 1) {
+      const x = (index / (data.length - 1)) * canvas.width;
+      const y = (data[index] / 255) * canvas.height;
+      if (index === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(215, 184, 132, 0.28)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, canvas.height / 2);
+    ctx.lineTo(canvas.width, canvas.height / 2);
+    ctx.stroke();
+  }
+
+  function drawSpectrum(canvas, analyser) {
+    const ctx = clearCanvas(canvas);
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteFrequencyData(data);
+
+    const barCount = 84;
+    const nyquist = analyser.context.sampleRate / 2;
+    const minLog = Math.log(CUTOFF_MIN);
+    const maxLog = Math.log(nyquist);
+
+    ctx.fillStyle = "rgba(215, 184, 132, 0.72)";
+    for (let index = 0; index < barCount; index += 1) {
+      const fraction = index / (barCount - 1);
+      const frequency = Math.exp(minLog + fraction * (maxLog - minLog));
+      const bin = clamp(Math.round((frequency / nyquist) * data.length), 0, data.length - 1, 0);
+      const value = data[bin] / 255;
+      const x = (index / barCount) * canvas.width;
+      const width = Math.ceil(canvas.width / barCount);
+      const height = value * canvas.height;
+      ctx.fillRect(x, canvas.height - height, width, height);
+    }
+
+    const markerPosition = clamp((Math.log(cutoff()) - minLog) / (maxLog - minLog), 0, 1, 0);
+    const markerX = markerPosition * canvas.width;
+    ctx.strokeStyle = "rgba(147, 211, 108, 0.95)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(markerX, 0);
+    ctx.lineTo(markerX, canvas.height);
+    ctx.stroke();
+  }
+
+  function drawMonitorFrame() {
+    if (!monitorPanel || !activeSvf?.analyser) {
+      monitorRaf = window.requestAnimationFrame(drawMonitorFrame);
+      return;
+    }
+
+    const waveform = monitorPanel.querySelector("[data-svf-monitor-waveform]");
+    const spectrum = monitorPanel.querySelector("[data-svf-monitor-spectrum]");
+
+    if (waveform) drawWaveform(waveform, activeSvf.analyser);
+    if (spectrum) drawSpectrum(spectrum, activeSvf.analyser);
+    updateMonitorText();
+
+    monitorRaf = window.requestAnimationFrame(drawMonitorFrame);
+  }
+
+  function startMonitorDrawing() {
+    createFloatingMonitor();
+    if (monitorRaf !== null) return;
+    monitorRaf = window.requestAnimationFrame(drawMonitorFrame);
+  }
+
   function handleInput(event) {
     const control = event.target.closest("[data-svf-control]");
     if (!control) return;
@@ -461,6 +663,77 @@
         box-shadow: 0 0 0 2px rgba(147, 211, 108, 0.18);
         outline: none;
       }
+
+      .svf-floating-monitor {
+        background: rgba(24, 18, 14, 0.96);
+        border: 1px solid rgba(215, 184, 132, 0.52);
+        border-radius: 14px;
+        box-shadow: 0 18px 42px rgba(0, 0, 0, 0.42);
+        color: #f3e8da;
+        display: grid;
+        gap: 7px;
+        left: 24px;
+        padding: 9px;
+        position: fixed;
+        top: 96px;
+        width: 300px;
+        z-index: 9999;
+      }
+
+      .svf-floating-monitor-header {
+        align-items: center;
+        cursor: move;
+        display: flex;
+        justify-content: space-between;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        user-select: none;
+      }
+
+      .svf-floating-monitor-header strong {
+        color: #f3e8da;
+        font-size: 0.72rem;
+      }
+
+      .svf-floating-monitor-header span {
+        color: #d6c8b5;
+        font-size: 0.58rem;
+      }
+
+      .svf-monitor-readouts {
+        display: grid;
+        gap: 4px;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
+
+      .svf-monitor-readouts span {
+        background: rgba(11, 14, 18, 0.72);
+        border: 1px solid rgba(215, 184, 132, 0.18);
+        border-radius: 7px;
+        color: #d6c8b5;
+        font-size: 0.56rem;
+        overflow: hidden;
+        padding: 4px 3px;
+        text-align: center;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .svf-floating-monitor label {
+        color: #d7b884;
+        font-size: 0.58rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .svf-monitor-canvas {
+        background: #0b0e12;
+        border: 1px solid rgba(215, 184, 132, 0.2);
+        border-radius: 8px;
+        display: block;
+        height: auto;
+        width: 100%;
+      }
     `;
 
     document.head.append(style);
@@ -471,6 +744,7 @@
     addStyles();
     installControls();
     labelGateOffButton();
+    createFloatingMonitor();
   }
 
   document.addEventListener("input", handleInput);
