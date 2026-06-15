@@ -110,10 +110,18 @@
     };
   }
 
+  function bpFrequencyMakeup() {
+    const position = cutoffPosition(BANDPASS_CUTOFF_MAX);
+    const lowTame = 0.65 + Math.pow(position, 0.5) * 0.35;
+    const highLift = 1 + Math.pow(position, 2) * 2.2;
+    return lowTame * highLift;
+  }
+
   function bpWindowGain() {
     const width = bpWidthAmount();
     const amount = resonanceAmount();
-    return 0.08 + Math.pow(width, 0.7) * 0.55 + amount * 0.12;
+    const baseGain = 0.08 + Math.pow(width, 0.7) * 0.55 + amount * 0.12;
+    return baseGain * bpFrequencyMakeup();
   }
 
   function bpPeakQ() {
