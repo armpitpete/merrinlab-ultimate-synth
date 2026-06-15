@@ -1,8 +1,12 @@
 (() => {
   "use strict";
 
-  const MAX_WET_GAIN = 0.95;
   const MAX_EFFECTIVE_Q = 64;
+  const MODE_GAIN = {
+    highpass: 1.15,
+    bandpass: 3.2,
+    lowpass: 1.1,
+  };
 
   const state = {
     mode: "bandpass",
@@ -57,16 +61,26 @@
     return 0.1 + Math.pow(normalized, 2.15) * MAX_EFFECTIVE_Q;
   }
 
+  function levelAmount() {
+    return clamp(state.level, 0, 1, 0);
+  }
+
+  function modeGain() {
+    return MODE_GAIN[state.mode] || MODE_GAIN.bandpass;
+  }
+
   function applySvfParameters() {
     if (!activeSvf) return;
 
-    const { context, filter, wetGain } = activeSvf;
+    const { context, filter, dryGain, wetGain } = activeSvf;
     const now = context.currentTime;
+    const amount = levelAmount();
 
     filter.type = filterTypeForMode(state.mode);
     safeParam(filter.frequency, clamp(state.cutoff, 40, 8500, 900), now, 0.04);
     safeParam(filter.Q, effectiveQ(), now, 0.04);
-    safeParam(wetGain.gain, clamp(state.level, 0, 1, 0) * MAX_WET_GAIN, now, 0.04);
+    safeParam(dryGain.gain, 1 - amount, now, 0.035);
+    safeParam(wetGain.gain, amount * modeGain(), now, 0.035);
   }
 
   function createSvfLayer(context, source, destination) {
@@ -74,23 +88,32 @@
     if (!previousConnect || !isMainSynthOutputNode(source)) return;
 
     const input = context.createGain();
+    const dryGain = context.createGain();
     const filter = context.createBiquadFilter();
     const wetGain = context.createGain();
+    const outputBus = context.createGain();
 
     filter.type = filterTypeForMode(state.mode);
     filter.frequency.value = state.cutoff;
     filter.Q.value = effectiveQ();
+    dryGain.gain.value = 1;
     wetGain.gain.value = 0;
+    outputBus.gain.value = 1;
 
     previousConnect.call(source, input);
+    previousConnect.call(input, dryGain);
     previousConnect.call(input, filter);
     previousConnect.call(filter, wetGain);
-    previousConnect.call(wetGain, destination);
+    previousConnect.call(dryGain, outputBus);
+    previousConnect.call(wetGain, outputBus);
+    previousConnect.call(outputBus, destination);
 
     activeSvf = {
       context,
       filter,
+      dryGain,
       wetGain,
+      outputBus,
     };
 
     applySvfParameters();
@@ -102,17 +125,16 @@
     previousConnect = window.AudioNode.prototype.connect;
 
     window.AudioNode.prototype.connect = function connectWithStateVariableVcf(destination, ...rest) {
-      const result = previousConnect.call(this, destination, ...rest);
-
       try {
         if (isDestinationNode(destination) && isMainSynthOutputNode(this)) {
           createSvfLayer(this.context, this, destination);
+          return destination;
         }
       } catch (_error) {
-        // State Variable VCF is optional. The dry synth path must keep working.
+        // If insertion fails, fall back to the normal dry output.
       }
 
-      return result;
+      return previousConnect.call(this, destination, ...rest);
     };
 
     window.AudioNode.prototype.__merrinlabStateVariableVcfPatched = true;
