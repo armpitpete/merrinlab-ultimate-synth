@@ -4,8 +4,10 @@
   const MAX_EFFECTIVE_Q = 64;
   const BANDPASS_MIN_Q = 0.85;
   const BANDPASS_MAX_Q = 24;
-  const BANDPASS_BASE_GAIN = 4.8;
-  const BANDPASS_RESONANCE_GAIN = 2.2;
+  const BANDPASS_BASE_GAIN = 6.2;
+  const BANDPASS_RESONANCE_GAIN = 3.5;
+  const BANDPASS_BODY_GAIN = 1.7;
+  const BANDPASS_BODY_RESONANCE_GAIN = 1.4;
   const MODE_GAIN = {
     highpass: 1.15,
     lowpass: 1.1,
@@ -73,6 +75,11 @@
     return BANDPASS_MIN_Q + Math.pow(normalized, 1.35) * BANDPASS_MAX_Q;
   }
 
+  function effectiveBandpassBodyQ() {
+    const normalized = resonanceAmount();
+    return 0.65 + Math.pow(normalized, 1.05) * 5.5;
+  }
+
   function effectiveQForMode() {
     if (state.mode === "bandpass") return effectiveBandpassQ();
     return effectiveQ();
@@ -90,16 +97,30 @@
     return MODE_GAIN[state.mode] || BANDPASS_BASE_GAIN;
   }
 
+  function bandpassBodyGain() {
+    if (state.mode !== "bandpass") return 0;
+    return BANDPASS_BODY_GAIN + Math.pow(resonanceAmount(), 0.85) * BANDPASS_BODY_RESONANCE_GAIN;
+  }
+
   function applySvfParameters() {
     if (!activeSvf) return;
 
-    const { context, filter, dryGain, wetGain } = activeSvf;
+    const { context, filter, bpBodyFilter, bpBodyGain, dryGain, wetGain } = activeSvf;
     const now = context.currentTime;
     const amount = levelAmount();
+    const cutoff = clamp(state.cutoff, 40, 8500, 900);
 
     filter.type = filterTypeForMode(state.mode);
-    safeParam(filter.frequency, clamp(state.cutoff, 40, 8500, 900), now, 0.04);
+    safeParam(filter.frequency, cutoff, now, 0.04);
     safeParam(filter.Q, effectiveQForMode(), now, 0.04);
+
+    if (bpBodyFilter && bpBodyGain) {
+      bpBodyFilter.type = "bandpass";
+      safeParam(bpBodyFilter.frequency, cutoff, now, 0.04);
+      safeParam(bpBodyFilter.Q, effectiveBandpassBodyQ(), now, 0.04);
+      safeParam(bpBodyGain.gain, bandpassBodyGain(), now, 0.035);
+    }
+
     safeParam(dryGain.gain, 1 - amount, now, 0.035);
     safeParam(wetGain.gain, amount * modeGain(), now, 0.035);
   }
@@ -111,12 +132,18 @@
     const input = context.createGain();
     const dryGain = context.createGain();
     const filter = context.createBiquadFilter();
+    const bpBodyFilter = context.createBiquadFilter();
+    const bpBodyGain = context.createGain();
     const wetGain = context.createGain();
     const outputBus = context.createGain();
 
     filter.type = filterTypeForMode(state.mode);
     filter.frequency.value = state.cutoff;
     filter.Q.value = effectiveQForMode();
+    bpBodyFilter.type = "bandpass";
+    bpBodyFilter.frequency.value = state.cutoff;
+    bpBodyFilter.Q.value = effectiveBandpassBodyQ();
+    bpBodyGain.gain.value = 0;
     dryGain.gain.value = 1;
     wetGain.gain.value = 0;
     outputBus.gain.value = 1;
@@ -124,7 +151,10 @@
     previousConnect.call(source, input);
     previousConnect.call(input, dryGain);
     previousConnect.call(input, filter);
+    previousConnect.call(input, bpBodyFilter);
     previousConnect.call(filter, wetGain);
+    previousConnect.call(bpBodyFilter, bpBodyGain);
+    previousConnect.call(bpBodyGain, wetGain);
     previousConnect.call(dryGain, outputBus);
     previousConnect.call(wetGain, outputBus);
     previousConnect.call(outputBus, destination);
@@ -132,6 +162,8 @@
     activeSvf = {
       context,
       filter,
+      bpBodyFilter,
+      bpBodyGain,
       dryGain,
       wetGain,
       outputBus,
