@@ -115,9 +115,9 @@
   function bandpassQ() {
     const amount = resonanceAmount();
     const narrowness = 1 - bpWidthAmount();
-    const widthQ = 0.85 + Math.pow(narrowness, 1.35) * 16;
-    const resonanceQ = Math.pow(amount, 1.25) * (2.2 + Math.pow(narrowness, 0.8) * 7.3);
-    return clamp(widthQ + resonanceQ, 0.85, 30, 4);
+    const widthQ = 0.85 + Math.pow(narrowness, 1.25) * 6.5;
+    const resonanceQ = Math.pow(amount, 1.05) * 17;
+    return clamp(widthQ + resonanceQ, 0.85, 28, 4);
   }
 
   function effectiveQ() {
@@ -139,7 +139,7 @@
       return 0.34 + Math.pow(position, 0.75) * 0.72;
     }
 
-    return 4.4 + Math.pow(width, 0.8) * 2.7 + Math.pow(amount, 0.7) * 1.1;
+    return 5.4 + Math.pow(1 - width, 0.85) * 1.2 + Math.pow(amount, 0.75) * 0.65;
   }
 
   function levelAmount() {
