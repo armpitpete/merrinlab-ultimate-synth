@@ -139,7 +139,7 @@
     });
 
     document.querySelectorAll('[data-svf-readout="mode"]').forEach((readout) => {
-      readout.textContent = labelForMode(state.mode);
+      readout.textContent = `${labelForMode(state.mode)} active`;
     });
 
     document.querySelectorAll('[data-svf-readout="cutoff"]').forEach((readout) => {
@@ -153,9 +153,6 @@
     document.querySelectorAll('[data-svf-readout="level"]').forEach((readout) => {
       readout.textContent = `${Math.round(state.level * 100)}%`;
     });
-
-    const selector = findModule()?.querySelector(".selector");
-    if (selector) selector.textContent = `${labelForMode(state.mode)} output active`;
   }
 
   function addRangeControl(targetControl, key, min, max, step, value, readout) {
@@ -208,7 +205,7 @@
         <option value="bandpass">BP</option>
         <option value="lowpass">LP</option>
       </select>
-      <output class="svf-readout" data-svf-readout="mode">BP</output>
+      <output class="svf-readout" data-svf-readout="mode">BP active</output>
     `;
   }
 
@@ -274,6 +271,7 @@
         font-size: 0.62rem;
         font-variant-numeric: tabular-nums;
         text-align: center;
+        white-space: nowrap;
       }
 
       .state-variable-vcf-mode-selector {
