@@ -111,9 +111,9 @@
   function bandpassQ() {
     const amount = resonanceAmount();
     const narrowness = 1 - bpWidthAmount();
-    const widthQ = 0.75 + Math.pow(narrowness, 1.35) * 18;
-    const resonanceQ = Math.pow(amount, 1.25) * (2.5 + Math.pow(narrowness, 0.8) * 7.5);
-    return clamp(widthQ + resonanceQ, 0.7, 32, 4);
+    const widthQ = 0.85 + Math.pow(narrowness, 1.35) * 16;
+    const resonanceQ = Math.pow(amount, 1.25) * (2.2 + Math.pow(narrowness, 0.8) * 7.3);
+    return clamp(widthQ + resonanceQ, 0.85, 30, 4);
   }
 
   function effectiveQ() {
@@ -124,6 +124,7 @@
 
   function modeGain() {
     const amount = resonanceAmount();
+    const width = bpWidthAmount();
     const position = cutoffPosition(DEFAULT_CUTOFF_MAX);
 
     if (state.mode === "lowpass") {
@@ -134,7 +135,7 @@
       return 0.34 + Math.pow(position, 0.75) * 0.72;
     }
 
-    return 3.9 + Math.pow(1 - bpWidthAmount(), 0.75) * 1.7 + Math.pow(amount, 0.7) * 1.2;
+    return 4.4 + Math.pow(width, 0.8) * 2.7 + Math.pow(amount, 0.7) * 1.1;
   }
 
   function levelAmount() {
