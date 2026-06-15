@@ -148,6 +148,15 @@
     document.head.append(style);
   }
 
+  function loadRepeatGateBpmEntryLayer() {
+    if (document.querySelector('script[src="repeat-gate-bpm-entry-layer.js"]')) return;
+
+    const script = document.createElement("script");
+    script.src = "repeat-gate-bpm-entry-layer.js";
+    script.defer = true;
+    document.head.append(script);
+  }
+
   function initRepeatGateLedFlash() {
     addStyles();
 
@@ -157,6 +166,7 @@
     }
 
     syncFromControls();
+    loadRepeatGateBpmEntryLayer();
   }
 
   document.addEventListener("input", handleControlInput, true);
