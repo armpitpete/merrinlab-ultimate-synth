@@ -1,7 +1,8 @@
 (() => {
   "use strict";
 
-  const MAX_WET_GAIN = 0.62;
+  const MAX_WET_GAIN = 0.95;
+  const MAX_EFFECTIVE_Q = 64;
 
   const state = {
     mode: "bandpass",
@@ -50,6 +51,12 @@
     return "BP";
   }
 
+  function effectiveQ() {
+    const uiQ = clamp(state.resonance, 0.1, 24, 0.7);
+    const normalized = clamp((uiQ - 0.1) / (24 - 0.1), 0, 1, 0);
+    return 0.1 + Math.pow(normalized, 2.15) * MAX_EFFECTIVE_Q;
+  }
+
   function applySvfParameters() {
     if (!activeSvf) return;
 
@@ -58,7 +65,7 @@
 
     filter.type = filterTypeForMode(state.mode);
     safeParam(filter.frequency, clamp(state.cutoff, 40, 8500, 900), now, 0.04);
-    safeParam(filter.Q, clamp(state.resonance, 0.1, 24, 0.7), now, 0.04);
+    safeParam(filter.Q, effectiveQ(), now, 0.04);
     safeParam(wetGain.gain, clamp(state.level, 0, 1, 0) * MAX_WET_GAIN, now, 0.04);
   }
 
@@ -72,7 +79,7 @@
 
     filter.type = filterTypeForMode(state.mode);
     filter.frequency.value = state.cutoff;
-    filter.Q.value = state.resonance;
+    filter.Q.value = effectiveQ();
     wetGain.gain.value = 0;
 
     previousConnect.call(source, input);
@@ -236,6 +243,17 @@
     return true;
   }
 
+  function labelGateOffButton() {
+    const gateOffButton = document.querySelector('[data-audio-action="gate-off"]');
+    if (!gateOffButton) {
+      window.setTimeout(labelGateOffButton, 100);
+      return;
+    }
+
+    gateOffButton.textContent = "Gate Off / Release";
+    gateOffButton.title = "Close the gate and let the envelope release";
+  }
+
   function handleInput(event) {
     const control = event.target.closest("[data-svf-control]");
     if (!control) return;
@@ -314,6 +332,7 @@
     patchConnect();
     addStyles();
     installControls();
+    labelGateOffButton();
   }
 
   document.addEventListener("input", handleInput);
