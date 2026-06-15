@@ -168,6 +168,15 @@
     document.head.append(style);
   }
 
+  function loadEnvelopeFollowerLayer() {
+    if (document.querySelector('script[src="envelope-follower-dynamic-modulation-layer.js"]')) return;
+
+    const script = document.createElement("script");
+    script.src = "envelope-follower-dynamic-modulation-layer.js";
+    script.defer = true;
+    document.head.append(script);
+  }
+
   function initSelfResonance() {
     patchConnect();
     addStyles();
@@ -176,6 +185,7 @@
     state.resonance = readNumberFromControl('[data-visible-audio-control="resonance"]', readNumberFromControl('[data-audio-control="resonance"]', state.resonance));
 
     syncSelfResonanceControls();
+    loadEnvelopeFollowerLayer();
     window.setTimeout(syncSelfResonanceControls, 300);
     window.setTimeout(syncSelfResonanceControls, 900);
   }
