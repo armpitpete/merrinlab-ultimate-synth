@@ -1,6 +1,6 @@
-# State Variable VCF Layer v0.3
+# State Variable VCF Layer v0.4
 
-This pass activates the existing State Variable VCF faceplate module as a safe, default-off filter layer, fixes the HP/BP/LP mode selector display, and prevents the SV VCF from behaving independently of the VCO/mixer path.
+This pass activates the existing State Variable VCF faceplate module as a safe, default-off filter layer, fixes the HP/BP/LP mode selector display, prevents the SV VCF from behaving independently of the VCO/mixer path, strengthens SV VCF level/resonance response, and clarifies Gate Off labelling.
 
 ## User request
 
@@ -42,6 +42,45 @@ main synth output -> SV VCF wet path -> output
 ```
 
 It should no longer latch onto any other output-bound layer.
+
+## Response-strength correction
+
+User observed:
+
+```text
+SV VCF Level resonance has little to medium effect. Where is Gate off?
+```
+
+v0.4 strengthens the audible response by:
+
+```text
+raising the SV VCF wet gain cap
+mapping the visible Resonance control to a stronger internal filter Q curve
+```
+
+The visible Resonance range stays the same:
+
+```text
+0.1 Q to 24 Q
+```
+
+The internal filter Q is now stronger at high settings so resonance should be easier to hear.
+
+## Gate Off clarification
+
+The old Debug / Engine Panel button said:
+
+```text
+Release
+```
+
+That button is the Gate Off control.
+
+v0.4 relabels it to:
+
+```text
+Gate Off / Release
+```
 
 ## Goal
 
@@ -116,6 +155,9 @@ State Variable VCF faceplate controls
 parallel SV VCF wet filter path
 HP/BP/LP selector visibility fix
 SV VCF source restricted to main synth output node
+stronger SV VCF wet level cap
+stronger internal resonance curve
+Debug / Engine Panel Gate Off label
 ```
 
 No change to:
@@ -149,6 +191,7 @@ Raising Level makes the SV VCF audible only when the main synth is audible.
 VCO/Mixer levels down means no SV VCF sound.
 HP/BP/LP mode changes the filter character.
 Initial COF changes the cutoff/centre frequency.
-Resonance changes the sharpness.
+Resonance has a stronger audible effect than before.
+The Debug / Engine Panel button says Gate Off / Release instead of only Release.
 Panic Stop still works.
 ```
