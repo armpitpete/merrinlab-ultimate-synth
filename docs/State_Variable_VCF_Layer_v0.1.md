@@ -1,6 +1,6 @@
-# State Variable VCF Layer v0.2
+# State Variable VCF Layer v0.3
 
-This pass activates the existing State Variable VCF faceplate module as a safe, default-off filter layer and fixes the HP/BP/LP mode selector display.
+This pass activates the existing State Variable VCF faceplate module as a safe, default-off filter layer, fixes the HP/BP/LP mode selector display, and prevents the SV VCF from behaving independently of the VCO/mixer path.
 
 ## User request
 
@@ -25,6 +25,24 @@ HP / BP / LP selector
 BP active readout
 ```
 
+## Behaviour correction
+
+User observed:
+
+```text
+It seems to work independant of the VCOs
+```
+
+That is not the intended behaviour.
+
+v0.3 restricts the SV VCF wet path to the main synth output node only.
+
+```text
+main synth output -> SV VCF wet path -> output
+```
+
+It should no longer latch onto any other output-bound layer.
+
 ## Goal
 
 Make the existing State Variable VCF module useful without changing the main low-pass filter.
@@ -46,10 +64,18 @@ The State Variable VCF is a parallel wet filter layer in this first safe version
 
 ```text
 Dry synth sound -> output
-SV VCF wet path -> HP/BP/LP filter -> output
+Main synth output -> SV VCF wet path -> HP/BP/LP filter -> output
 ```
 
 The main sound stays unchanged when Level is 0%.
+
+The SV VCF should follow the main synth output:
+
+```text
+VCO/Mixer levels down = no SV VCF sound
+Gate closed = no SV VCF sound after release
+Output silent = no SV VCF sound
+```
 
 ## Defaults
 
@@ -89,6 +115,7 @@ Changed:
 State Variable VCF faceplate controls
 parallel SV VCF wet filter path
 HP/BP/LP selector visibility fix
+SV VCF source restricted to main synth output node
 ```
 
 No change to:
@@ -118,7 +145,8 @@ State Variable VCF shows active controls.
 HP/BP/LP selector remains visible.
 Mode readout updates without overwriting the selector.
 Level 0% leaves the sound unchanged.
-Raising Level makes the SV VCF audible.
+Raising Level makes the SV VCF audible only when the main synth is audible.
+VCO/Mixer levels down means no SV VCF sound.
 HP/BP/LP mode changes the filter character.
 Initial COF changes the cutoff/centre frequency.
 Resonance changes the sharpness.
