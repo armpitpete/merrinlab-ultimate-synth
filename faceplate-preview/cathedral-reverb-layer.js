@@ -186,7 +186,22 @@
     applyCathedralParameters();
   }
 
+  function loadRepeatGateLedFlashLayer() {
+    if (document.querySelector('script[src="repeat-gate-led-flash-layer.js"]')) return;
+
+    const script = document.createElement("script");
+    script.src = "repeat-gate-led-flash-layer.js";
+    script.defer = true;
+    document.head.append(script);
+  }
+
   patchConnect();
   document.addEventListener("input", handleControl);
   document.addEventListener("change", handleControl);
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", loadRepeatGateLedFlashLayer);
+  } else {
+    loadRepeatGateLedFlashLayer();
+  }
 })();
