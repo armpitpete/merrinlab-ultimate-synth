@@ -1,11 +1,28 @@
-# State Variable VCF Layer v0.1
+# State Variable VCF Layer v0.2
 
-This pass activates the existing State Variable VCF faceplate module as a safe, default-off filter layer.
+This pass activates the existing State Variable VCF faceplate module as a safe, default-off filter layer and fixes the HP/BP/LP mode selector display.
 
 ## User request
 
 ```text
 works. Next State Variable VCF
+```
+
+## Screenshot correction
+
+The first version activated the controls, but the mode selector collapsed into plain text:
+
+```text
+BP output active
+```
+
+That meant the module showed the current mode but did not keep the HP/BP/LP selector visible.
+
+v0.2 keeps the actual mode dropdown visible and uses a separate readout:
+
+```text
+HP / BP / LP selector
+BP active readout
 ```
 
 ## Goal
@@ -71,6 +88,7 @@ Changed:
 ```text
 State Variable VCF faceplate controls
 parallel SV VCF wet filter path
+HP/BP/LP selector visibility fix
 ```
 
 No change to:
@@ -97,6 +115,8 @@ JUCE/VST
 
 ```text
 State Variable VCF shows active controls.
+HP/BP/LP selector remains visible.
+Mode readout updates without overwriting the selector.
 Level 0% leaves the sound unchanged.
 Raising Level makes the SV VCF audible.
 HP/BP/LP mode changes the filter character.
