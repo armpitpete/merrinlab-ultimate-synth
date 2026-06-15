@@ -2,6 +2,8 @@
   "use strict";
 
   const MAX_EFFECTIVE_Q = 64;
+  const LOWPASS_MIN_Q = 0.6;
+  const LOWPASS_MAX_Q = 13;
   const BANDPASS_MIN_Q = 0.85;
   const BANDPASS_MAX_Q = 24;
   const BANDPASS_BASE_GAIN = 6.2;
@@ -65,9 +67,19 @@
     return clamp((uiQ - 0.1) / (24 - 0.1), 0, 1, 0);
   }
 
+  function cutoffAmount() {
+    return clamp((state.cutoff - 40) / (8500 - 40), 0, 1, 0);
+  }
+
   function effectiveQ() {
     const normalized = resonanceAmount();
     return 0.1 + Math.pow(normalized, 2.15) * MAX_EFFECTIVE_Q;
+  }
+
+  function effectiveLowpassQ() {
+    const normalized = resonanceAmount();
+    const lowFrequencyRestraint = 0.22 + Math.sqrt(cutoffAmount()) * 0.78;
+    return LOWPASS_MIN_Q + Math.pow(normalized, 1.7) * LOWPASS_MAX_Q * lowFrequencyRestraint;
   }
 
   function effectiveBandpassQ() {
@@ -82,6 +94,7 @@
 
   function effectiveQForMode() {
     if (state.mode === "bandpass") return effectiveBandpassQ();
+    if (state.mode === "lowpass") return effectiveLowpassQ();
     return effectiveQ();
   }
 
