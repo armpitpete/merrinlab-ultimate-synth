@@ -26,6 +26,13 @@
     ));
   }
 
+  function isMainSynthOutputNode(node) {
+    return Boolean(node && (
+      (typeof DynamicsCompressorNode !== "undefined" && node instanceof DynamicsCompressorNode) ||
+      node.constructor?.name === "DynamicsCompressorNode"
+    ));
+  }
+
   function safeParam(param, value, time, speed = 0.05) {
     param.cancelScheduledValues(time);
     param.setTargetAtTime(value, time, speed);
@@ -57,7 +64,7 @@
 
   function createSvfLayer(context, source, destination) {
     if (activeSvf && activeSvf.context === context) return;
-    if (!previousConnect) return;
+    if (!previousConnect || !isMainSynthOutputNode(source)) return;
 
     const input = context.createGain();
     const filter = context.createBiquadFilter();
@@ -91,7 +98,7 @@
       const result = previousConnect.call(this, destination, ...rest);
 
       try {
-        if (isDestinationNode(destination)) {
+        if (isDestinationNode(destination) && isMainSynthOutputNode(this)) {
           createSvfLayer(this.context, this, destination);
         }
       } catch (_error) {
