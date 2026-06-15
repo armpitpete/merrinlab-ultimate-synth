@@ -167,9 +167,19 @@
     document.head.append(style);
   }
 
+  function loadStateVariableVcfLayer() {
+    if (document.querySelector('script[src="state-variable-vcf-layer.js"]')) return;
+
+    const script = document.createElement("script");
+    script.src = "state-variable-vcf-layer.js";
+    script.defer = true;
+    document.head.append(script);
+  }
+
   function initBpmEntry() {
     addStyles();
     installBpmEntry();
+    loadStateVariableVcfLayer();
     window.setTimeout(() => updateReadout(readCurrentBpm()), 300);
   }
 
