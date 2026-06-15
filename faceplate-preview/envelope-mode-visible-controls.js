@@ -102,41 +102,75 @@
 
       .adsr-module.main-envelope-module {
         display: grid;
-        gap: 10px;
+        gap: 8px;
         grid-area: ar !important;
+        overflow: hidden;
+        padding: 10px 8px;
       }
 
       .aux-vca-module {
         grid-area: auxvca;
       }
 
+      .adsr-module.main-envelope-module .module-header {
+        justify-content: center;
+        margin-bottom: 6px;
+      }
+
+      .adsr-module.main-envelope-module .module-header h2 {
+        font-size: 1rem;
+        letter-spacing: 0.12em;
+        white-space: nowrap;
+      }
+
       .adsr-module.main-envelope-module .module-header h2::after {
         content: " ADSR";
         color: #93d36c;
-        font-size: 0.72em;
+        font-size: 0.68em;
         letter-spacing: 0.08em;
       }
 
       .adsr-module.adsr-vertical-module .adsr-knob-row {
         display: grid;
         grid-template-columns: minmax(0, 1fr);
-        gap: 8px;
+        gap: 7px;
       }
 
       .adsr-module.adsr-vertical-module .adsr-knob-row .control {
         align-items: center;
         display: grid;
-        grid-template-columns: 72px minmax(42px, 58px) minmax(0, 1fr);
-        gap: 8px;
+        grid-template-columns: 58px 46px minmax(0, 1fr);
+        gap: 6px;
+        min-height: 58px;
         min-width: 0;
+        padding: 7px 6px;
+      }
+
+      .adsr-module.adsr-vertical-module .adsr-knob-row .control-label {
+        font-size: 0.62rem;
+        letter-spacing: 0.05em;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .adsr-module.adsr-vertical-module .adsr-knob-row .knob {
+        height: 42px;
+        width: 42px;
       }
 
       .adsr-module.adsr-vertical-module .adsr-visible-control-wrap {
         margin-top: 0;
+        min-width: 0;
+      }
+
+      .adsr-module.adsr-vertical-module .adsr-visible-readout {
+        font-size: 0.62rem;
+        line-height: 1;
       }
 
       .adsr-module.adsr-vertical-module .adsr-io-row {
-        margin-top: 8px;
+        display: none !important;
       }
 
       .adsr-module.main-envelope-module .status-light {
