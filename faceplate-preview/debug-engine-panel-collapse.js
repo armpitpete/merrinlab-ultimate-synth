@@ -47,6 +47,10 @@
         text-transform: none;
       }
 
+      .ultimate-grid {
+        grid-template-rows: 350px 165px 270px 255px 215px;
+      }
+
       .audio-voice-panel {
         max-height: 0 !important;
         opacity: 0 !important;
