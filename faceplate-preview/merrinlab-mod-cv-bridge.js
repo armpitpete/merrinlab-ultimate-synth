@@ -72,11 +72,19 @@
     if (visibleReadout) visibleReadout.textContent = formatHz(base);
   }
 
-  function applyCurrentModulation() {
+  function applyCurrentModulation({ forceWrite = false } = {}) {
     if (!readControls() || state.baseCutoff === null) return;
 
     const applied = calculateAppliedCutoff();
     state.appliedCutoff = applied;
+
+    // Disconnected mode is observational only. Incoming messages and depth edits
+    // may update the monitor, but they must not write into the filter control.
+    // forceWrite is used only for the one explicit disconnect restore-to-base.
+    if (!state.connected && !forceWrite) {
+      syncUi();
+      return;
+    }
 
     applying = true;
     try {
@@ -93,7 +101,7 @@
   function recordBaseCutoff(value) {
     if (applying || !finite(value)) return;
     state.baseCutoff = clamp(Number(value), CUTOFF_MIN, CUTOFF_MAX);
-    window.requestAnimationFrame(applyCurrentModulation);
+    window.requestAnimationFrame(() => applyCurrentModulation());
   }
 
   function installCutoffObservers() {
@@ -210,9 +218,10 @@
     });
 
     bridgeUi.querySelector("[data-modcv-connect]").addEventListener("click", () => {
+      const wasConnected = state.connected;
       state.connected = !state.connected;
       state.lastEvent = state.connected ? "CONNECTED" : "DISCONNECTED";
-      applyCurrentModulation();
+      applyCurrentModulation({ forceWrite: wasConnected && !state.connected });
     });
 
     bridgeUi.querySelector("[data-modcv-clear]").addEventListener("click", () => {
@@ -319,9 +328,10 @@
       applyCurrentModulation();
     },
     disconnect() {
+      const wasConnected = state.connected;
       state.connected = false;
       state.lastEvent = "DISCONNECTED";
-      applyCurrentModulation();
+      applyCurrentModulation({ forceWrite: wasConnected });
     },
     clear() {
       state.incoming = 0;
