@@ -1,0 +1,877 @@
+:root {
+  --bg: #1a1714;
+  --panel: #2a2622;
+  --panel-2: #332e29;
+  --panel-3: #1f1b18;
+  --line: #54473a;
+  --text: #e8dccd;
+  --muted: #b6a792;
+  --accent: #d18439;
+  --green: #76b25d;
+  --shadow: rgba(0, 0, 0, 0.45);
+}
+
+* { box-sizing: border-box; }
+
+html,
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at top left, rgba(255,255,255,0.05), transparent 28%),
+    linear-gradient(180deg, #201b17, #161311);
+  color: var(--text);
+  font-family: Inter, Arial, Helvetica, sans-serif;
+}
+
+body {
+  min-width: 1720px;
+  overflow-x: auto;
+}
+
+.app-shell {
+  width: 1680px;
+  max-width: none;
+  margin: 12px auto;
+  padding: 10px;
+  border: 1px solid #120f0c;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.03), transparent 18%),
+    var(--bg);
+  box-shadow:
+    0 10px 30px var(--shadow),
+    inset 0 0 0 1px rgba(255,255,255,0.03);
+}
+
+.top-bar {
+  display: grid;
+  grid-template-columns: 1.25fr 2fr;
+  gap: 10px;
+  align-items: stretch;
+  margin-bottom: 10px;
+}
+
+.brand-block,
+.top-control,
+.module,
+.vco-bank {
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.05), transparent 100%),
+    var(--panel);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.03),
+    inset 0 -12px 24px rgba(0,0,0,0.18);
+}
+
+.brand-block { padding: 15px 18px; }
+
+.brand-title {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.brand-subtitle {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.top-controls {
+  display: grid;
+  grid-template-columns: 1.3fr repeat(4, 0.7fr);
+  gap: 10px;
+}
+
+.top-control {
+  padding: 10px 12px;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 8px;
+}
+
+.top-label {
+  color: var(--muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+}
+
+.display-box,
+.selector,
+.mini-display,
+.menu-button,
+.switch-control {
+  min-height: 40px;
+  border: 1px solid #171310;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0.25), rgba(255,255,255,0.03)),
+    var(--panel-3);
+  color: var(--text);
+  display: grid;
+  place-items: center;
+  padding: 0 10px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
+}
+
+.display-box {
+  width: 100%;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.small-display { min-width: 72px; }
+
+.menu-button {
+  width: 100%;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.ultimate-grid {
+  display: grid;
+  grid-template-columns: 3.25fr 0.95fr 1.15fr 1.15fr 1.15fr 1.05fr;
+  grid-template-rows: 220px 165px 270px 255px 215px;
+  grid-template-areas:
+    "vcos mixer filter  filter  filter  sh"
+    "vcos mixer ar      mainvca mainvca sh"
+    "vcos mixer ar      lfo1    lfo2    output"
+    "vcos mixer ar      atten   atten   atten"
+    "adsr auxvca auxvca repeat  repeat  repeat";
+  gap: 10px;
+}
+
+.expander-grid {
+  display: grid;
+  grid-template-columns: 1.45fr 1fr 1.1fr 1fr 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.module {
+  min-height: 0;
+  padding: 12px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.05), transparent 100%),
+    linear-gradient(180deg, rgba(0,0,0,0.08), rgba(0,0,0,0.15)),
+    var(--panel-2);
+  overflow: hidden;
+}
+
+.vco-bank {
+  grid-area: vcos;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.045), transparent 100%),
+    linear-gradient(180deg, rgba(0,0,0,0.08), rgba(0,0,0,0.16)),
+    var(--panel-2);
+}
+
+.vco-strip {
+  min-height: 0;
+  padding: 12px 10px;
+  border-right: 1px solid var(--line);
+  display: grid;
+  align-content: start;
+  background: linear-gradient(180deg, rgba(255,255,255,0.025), transparent 100%);
+}
+
+.vco-strip:last-child { border-right: 0; }
+
+.mixer-module { grid-area: mixer; }
+.filter-lp-module { grid-area: filter; }
+.sample-hold-module { grid-area: sh; }
+.ar-module { grid-area: ar; }
+.main-vca-module { grid-area: mainvca; }
+.aux-vca-module { grid-area: auxvca; }
+.lfo1-module { grid-area: lfo1; }
+.lfo2-module { grid-area: lfo2; }
+.output-module { grid-area: output; }
+.repeat-module { grid-area: repeat; }
+.attenuators-module { grid-area: atten; }
+.adsr-module { grid-area: adsr; }
+
+.mixer-strip {
+  display: grid;
+  align-content: start;
+  padding: 12px 10px;
+}
+
+.lowpass-strip,
+.vca-strip,
+.adsr-module {
+  display: grid;
+  align-content: start;
+  padding: 10px 12px;
+}
+
+.ar-strip {
+  display: grid;
+  align-content: start;
+  padding: 10px 11px;
+}
+
+.lfo-module {
+  display: grid;
+  align-content: start;
+  padding: 10px 11px;
+}
+
+.utility-module {
+  min-height: 225px;
+  padding: 11px;
+  border-color: #41382f;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.025), transparent 100%),
+    linear-gradient(180deg, rgba(0,0,0,0.16), rgba(0,0,0,0.28)),
+    #24211e;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.018),
+    inset 0 -10px 20px rgba(0,0,0,0.2);
+}
+
+.module-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.vco-strip .module-header,
+.mixer-strip .module-header,
+.ar-title {
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.lowpass-title,
+.vca-title,
+.lfo-title,
+.atten-title,
+.adsr-title {
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.lfo-title { margin-bottom: 8px; }
+
+.module-header h2 {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  line-height: 1.08;
+}
+
+.vco-module .module-header h2,
+.mixer-module .module-header h2,
+.ar-module .module-header h2 {
+  font-size: 0.9rem;
+}
+
+.lowpass-title h2,
+.vca-title h2 {
+  font-size: 0.86rem;
+  letter-spacing: 0.085em;
+  white-space: nowrap;
+}
+
+.lowpass-title h2 span {
+  font-size: 0.76rem;
+  letter-spacing: 0.06em;
+}
+
+.lfo-title h2 {
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+}
+
+.atten-title h2,
+.adsr-title h2 {
+  font-size: 0.84rem;
+  letter-spacing: 0.1em;
+}
+
+.expander-grid .module-header h2 {
+  font-size: 0.78rem;
+  color: #d6cabb;
+}
+
+.status-light {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #9ee27a, #4e7c40);
+  border: 1px solid #24361f;
+  box-shadow: 0 0 7px rgba(118, 178, 93, 0.3);
+  flex: 0 0 auto;
+}
+
+.expander-grid .status-light {
+  width: 8px;
+  height: 8px;
+  box-shadow: 0 0 5px rgba(118, 178, 93, 0.2);
+}
+
+.module-row {
+  display: grid;
+  gap: 8px;
+}
+
+.waveform-row {
+  grid-template-columns: 62px 1fr;
+  align-items: center;
+}
+
+.output-row { grid-template-columns: 1fr 1fr; }
+
+.wave-box {
+  height: 48px;
+  border: 1px solid #171310;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0.18), rgba(255,255,255,0.02)),
+    #1a1613;
+  display: grid;
+  place-items: center;
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.selector { line-height: 1.12; }
+.wide-selector { width: 100%; }
+
+.module-divider {
+  height: 1px;
+  margin: 12px 0;
+  background: linear-gradient(90deg, transparent, #8f8477, transparent);
+  opacity: 0.48;
+}
+
+.control-grid {
+  display: grid;
+  gap: 12px 8px;
+}
+
+.one-up { grid-template-columns: 1fr; }
+.two-up { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.three-up { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.four-up { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.five-up { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+
+.lowpass-control-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr) 0.55fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.vca-control-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr) 0.55fr;
+  gap: 13px;
+  align-items: start;
+}
+
+.expander-vca-grid {
+  display: grid;
+  grid-template-columns: 0.75fr 0.75fr 1.05fr;
+  grid-template-areas:
+    "out input amp"
+    "cv2 cv1 amp";
+  gap: 12px 14px;
+  align-items: center;
+}
+
+.vca-out { grid-area: out; }
+.vca-input { grid-area: input; }
+.vca-cv2 { grid-area: cv2; }
+.vca-cv1 { grid-area: cv1; }
+.vca-initial-amp { grid-area: amp; }
+
+.lfo-source-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    "rate shape"
+    "range outputs";
+  gap: 8px 10px;
+  align-items: start;
+}
+
+.lfo-rate { grid-area: rate; }
+.lfo-shape-bank { grid-area: shape; display: grid; gap: 7px; justify-items: stretch; }
+.lfo-range { grid-area: range; }
+.lfo-outputs { grid-area: outputs; }
+
+.adsr-knob-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  align-items: start;
+}
+
+.adsr-io-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 7px;
+  align-items: start;
+  margin-top: 10px;
+}
+
+.attenuator-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+.attenuator-channel {
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.attenuator-io {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+
+.control {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 6px;
+  min-width: 0;
+}
+
+.control-label {
+  min-height: 19px;
+  color: var(--text);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.035em;
+  text-align: center;
+  line-height: 1.08;
+}
+
+.vco-module .control-label {
+  font-size: 0.66rem;
+  letter-spacing: 0.03em;
+}
+
+.lowpass-strip .control-label,
+.vca-strip .control-label {
+  font-size: 0.69rem;
+  letter-spacing: 0.04em;
+  min-height: 18px;
+}
+
+.lfo-module .control-label,
+.attenuators-module .control-label,
+.adsr-module .control-label {
+  font-size: 0.61rem;
+  letter-spacing: 0.025em;
+  min-height: 15px;
+}
+
+.atten-number {
+  font-size: 0.72rem;
+  margin-bottom: 1px;
+}
+
+.vertical-control,
+.mixer-control,
+.ar-main-control {
+  margin-bottom: 23px;
+}
+
+.vertical-control .control-label,
+.mixer-control .control-label,
+.ar-main-control .control-label {
+  min-height: auto;
+  margin-bottom: 6px;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+}
+
+.mixer-control .control-label,
+.ar-main-control .control-label {
+  line-height: 1.08;
+}
+
+.ar-switch-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin: 0 0 18px;
+}
+
+.ar-switch-row .control-label {
+  min-height: 28px;
+  font-size: 0.62rem;
+  letter-spacing: 0.03em;
+}
+
+.ar-jack-control {
+  margin-bottom: 15px;
+}
+
+.ar-jack-control .control-label {
+  min-height: auto;
+  margin-bottom: 7px;
+  font-size: 0.66rem;
+  letter-spacing: 0.035em;
+}
+
+.vco-jack-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px 10px;
+  margin-top: 6px;
+}
+
+.vco-jack-grid .control-label {
+  min-height: auto;
+  font-size: 0.66rem;
+  letter-spacing: 0.03em;
+}
+
+.mixer-noise-outputs {
+  margin-top: 4px;
+}
+
+.mixer-noise-outputs .control-label {
+  min-height: auto;
+  margin-bottom: 8px;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+}
+
+.dual-jacks {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  justify-items: center;
+  gap: 14px;
+  width: 100%;
+}
+
+.adsr-out .dual-jacks {
+  gap: 8px;
+}
+
+.jack-stack {
+  display: grid;
+  gap: 16px;
+  justify-items: center;
+  margin-top: 2px;
+}
+
+.compact-source-module .control-label,
+.utility-module .control-label {
+  font-size: 0.61rem;
+  letter-spacing: 0.025em;
+}
+
+.knob {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 35%, rgba(255,255,255,0.18), transparent 18%),
+    radial-gradient(circle at 48% 48%, #45403a 0 42%, #171411 43% 67%, #5f554b 68% 100%);
+  border: 1px solid #16120f;
+  box-shadow:
+    inset -5px -6px 10px rgba(0,0,0,0.45),
+    inset 4px 4px 6px rgba(255,255,255,0.06),
+    0 2px 5px rgba(0,0,0,0.35);
+  position: relative;
+}
+
+.knob::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 7px;
+  width: 2px;
+  height: 12px;
+  transform: translateX(-50%) rotate(25deg);
+  transform-origin: center 18px;
+  background: var(--accent);
+  border-radius: 2px;
+}
+
+.knob-small {
+  width: 42px;
+  height: 42px;
+}
+
+.knob-large {
+  width: 60px;
+  height: 60px;
+}
+
+.vco-module .knob,
+.mixer-control .knob,
+.ar-main-control .knob {
+  width: 64px;
+  height: 64px;
+}
+
+.vco-module .knob-small {
+  width: 60px;
+  height: 60px;
+}
+
+.lowpass-strip .knob,
+.main-vca-module .knob {
+  width: 62px;
+  height: 62px;
+}
+
+.lfo-module .knob {
+  width: 58px;
+  height: 58px;
+}
+
+.attenuator-channel .knob {
+  width: 54px;
+  height: 54px;
+}
+
+.adsr-module .knob,
+.aux-vca-module .knob {
+  width: 47px;
+  height: 47px;
+}
+
+.utility-module .knob,
+.utility-module .knob-small {
+  width: 42px;
+  height: 42px;
+}
+
+.utility-module .knob-large {
+  width: 52px;
+  height: 52px;
+}
+
+.jack-socket {
+  width: 29px;
+  height: 29px;
+  border-radius: 50%;
+  border: 1px solid #171310;
+  background:
+    radial-gradient(circle, #0f0d0b 0 35%, #494038 36% 58%, #171310 59% 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.05),
+    0 2px 4px rgba(0,0,0,0.32);
+}
+
+.vco-module .jack-socket,
+.mixer-noise-outputs .jack-socket,
+.ar-jack-control .jack-socket,
+.utility-module .jack-socket {
+  width: 30px;
+  height: 30px;
+}
+
+.lowpass-ext-cv .jack-socket,
+.vca-ext-cv .jack-socket {
+  width: 31px;
+  height: 31px;
+}
+
+.lfo-module .jack-socket,
+.attenuator-channel .jack-socket,
+.adsr-module .jack-socket,
+.aux-vca-module .jack-socket {
+  width: 28px;
+  height: 28px;
+}
+
+.switch-control {
+  min-height: 38px;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-align: center;
+  line-height: 1.08;
+}
+
+.compact-switch {
+  min-height: 34px;
+}
+
+.adsr-module .compact-switch {
+  min-height: 30px;
+  font-size: 0.56rem;
+}
+
+.lfo-module .wave-box {
+  height: 36px;
+}
+
+.lfo-module .compact-switch {
+  min-height: 30px;
+  font-size: 0.58rem;
+}
+
+.led-light {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 35%, #ffd56a, #7a4a12 55%, #1b1207 100%);
+  border: 1px solid #120c04;
+  box-shadow:
+    0 0 12px rgba(209, 132, 57, 0.35),
+    inset 0 0 0 1px rgba(255,255,255,0.08);
+}
+
+.mini-label {
+  min-height: 28px;
+  font-size: 0.68rem;
+}
+
+.brand-mark {
+  margin-top: 12px;
+  padding: 10px 6px;
+  border-top: 1px solid rgba(232, 220, 205, 0.22);
+  color: #eee4d6;
+  font-weight: 800;
+  font-size: 1.2rem;
+  letter-spacing: 0.08em;
+  line-height: 1.02;
+  text-align: center;
+}
+
+.expander-grid .selector,
+.expander-grid .mini-display,
+.expander-grid .switch-control {
+  min-height: 34px;
+  padding: 0 8px;
+  color: #cbbca9;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0.3), rgba(255,255,255,0.015)),
+    #1a1714;
+}
+
+.expander-grid .wave-box {
+  height: 44px;
+  color: #bf7a36;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0.25), rgba(255,255,255,0.015)),
+    #1a1714;
+}
+
+.preset-display .display-box {
+  min-height: 54px;
+  font-size: 1rem;
+}
+
+
+/* =========================================================
+   Accepted layout cleanup from Issues #6, #7, and #8
+   Merged here by Issue #9. No visual changes intended.
+   ========================================================= */
+
+/* Main grid and Expander bay layout */
+.ultimate-grid {
+  grid-template-areas:
+    "vcos mixer filter  filter  filter  sh"
+    "vcos mixer ar      mainvca mainvca sh"
+    "vcos mixer ar      lfo1    lfo2    output"
+    "vcos mixer ar      atten   atten   atten"
+    "adsr auxvca auxvca repeat  repeat  repeat";
+}
+
+.expander-grid {
+  display: grid;
+  grid-template-columns: 1.45fr 1fr 1.1fr 1fr 1fr 1fr;
+  grid-template-areas:
+    "svcf mixer multiplier inverter distributor buffer"
+    "follower follower follower outputs outputs outputs";
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.state-variable-vcf-module { grid-area: svcf; }
+.expander-signal-mixer-module { grid-area: mixer; }
+.analog-multiplier-module { grid-area: multiplier; }
+.cv-inverter-module { grid-area: inverter; }
+.cv-distributor-module { grid-area: distributor; }
+.ext-signal-buffer-module { grid-area: buffer; }
+.envelope-follower-module { grid-area: follower; }
+.buffered-outputs-module { grid-area: outputs; }
+
+/* Visual quiet/loud hierarchy */
+/* Issue #8: visual quiet/loud hierarchy only.
+   No controls, routing, sound, colour redesign, or major layout changes. */
+
+.vco-bank,
+.mixer-module,
+.filter-lp-module,
+.main-vca-module,
+.output-module {
+  border-color: #6b5746;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.065), transparent 100%),
+    linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.13)),
+    var(--panel-2);
+  box-shadow:
+    inset 0 0 0 1px rgba(209, 132, 57, 0.11),
+    inset 0 -12px 24px rgba(0,0,0,0.18);
+}
+
+.vco-bank .module-header h2,
+.mixer-module .module-header h2,
+.filter-lp-module .module-header h2,
+.main-vca-module .module-header h2,
+.output-module .module-header h2 {
+  color: #f1e5d8;
+  letter-spacing: 0.13em;
+}
+
+.ar-module,
+.adsr-module,
+.sample-hold-module,
+.lfo-module,
+.repeat-module,
+.attenuators-module {
+  border-color: #4c4035;
+}
+
+.ar-module .module-header h2,
+.adsr-module .module-header h2,
+.sample-hold-module .module-header h2,
+.lfo-module .module-header h2,
+.repeat-module .module-header h2,
+.attenuators-module .module-header h2 {
+  color: #e2d4c2;
+}
+
+.aux-vca-module,
+.expander-grid .utility-module {
+  border-color: #38312b;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.018), transparent 100%),
+    linear-gradient(180deg, rgba(0,0,0,0.2), rgba(0,0,0,0.31)),
+    #221f1c;
+}
+
+.aux-vca-module .module-header h2,
+.expander-grid .utility-module .module-header h2 {
+  color: #cbbca9;
+  letter-spacing: 0.105em;
+}
