@@ -17,6 +17,7 @@
   const state = {
     incoming: 0,
     depth: 0,
+    connected: false,
     baseCutoff: null,
     appliedCutoff: null,
     lastStep: null,
@@ -56,7 +57,8 @@
     const base = clamp(Number(state.baseCutoff) || 900, CUTOFF_MIN, CUTOFF_MAX);
     const headroom = Math.min(base - CUTOFF_MIN, CUTOFF_MAX - base);
     const safeSpan = Math.max(0, Math.min(MAX_OFFSET_HZ, headroom));
-    const offset = clamp(state.incoming, -1, 1) * clamp(state.depth, 0, 1) * safeSpan;
+    const input = state.connected ? clamp(state.incoming, -1, 1) : 0;
+    const offset = input * clamp(state.depth, 0, 1) * safeSpan;
     return clamp(base + offset, CUTOFF_MIN, CUTOFF_MAX);
   }
 
@@ -195,7 +197,7 @@
         <div><span>Base cutoff</span><strong data-modcv-base>—</strong></div>
         <div><span>Applied cutoff</span><strong data-modcv-applied>—</strong></div>
       </div>
-      <div class="merrinlab-mod-cv1-actions"><button type="button" data-modcv-clear>Clear input</button></div>
+      <div class="merrinlab-mod-cv1-actions"><button type="button" data-modcv-connect>Connect input</button><button type="button" data-modcv-clear>Clear input</button></div>
     `;
 
     const controlRow = filterModule.querySelector(".lowpass-control-row");
@@ -204,6 +206,12 @@
 
     bridgeUi.querySelector("[data-modcv-depth]").addEventListener("input", (event) => {
       state.depth = clamp(Number(event.target.value) / 100, 0, 1);
+      applyCurrentModulation();
+    });
+
+    bridgeUi.querySelector("[data-modcv-connect]").addEventListener("click", () => {
+      state.connected = !state.connected;
+      state.lastEvent = state.connected ? "CONNECTED" : "DISCONNECTED";
       applyCurrentModulation();
     });
 
@@ -230,6 +238,11 @@
     bridgeUi.querySelector("[data-modcv-base]").textContent = state.baseCutoff === null ? "—" : formatHz(state.baseCutoff);
     bridgeUi.querySelector("[data-modcv-applied]").textContent = state.appliedCutoff === null ? "—" : formatHz(state.appliedCutoff);
     bridgeUi.querySelector("[data-modcv-status]").textContent = state.lastEvent;
+    const connectButton = bridgeUi.querySelector("[data-modcv-connect]");
+    if (connectButton) {
+      connectButton.textContent = state.connected ? "Disconnect input" : "Connect input";
+      connectButton.setAttribute("aria-pressed", state.connected ? "true" : "false");
+    }
   }
 
   function validMessage(message) {
@@ -262,7 +275,7 @@
     state.incoming = clamp(Number(payload.value), -1, 1);
     state.lastStep = Number.isInteger(Number(payload.step)) ? Number(payload.step) : null;
     state.lastBank = typeof payload.bank === "string" ? payload.bank : null;
-    state.lastEvent = "RECEIVED";
+    state.lastEvent = state.connected ? "RECEIVED" : "RECEIVED · DISCONNECTED";
     applyCurrentModulation();
   }
 
@@ -299,6 +312,16 @@
       lane: LANE,
       laneId: LANE_ID,
       sourceId: SOURCE_ID,
+    },
+    connect() {
+      state.connected = true;
+      state.lastEvent = "CONNECTED";
+      applyCurrentModulation();
+    },
+    disconnect() {
+      state.connected = false;
+      state.lastEvent = "DISCONNECTED";
+      applyCurrentModulation();
     },
     clear() {
       state.incoming = 0;
