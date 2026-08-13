@@ -117,10 +117,20 @@
     document.head.append(script);
   }
 
+  function loadModCvBridge() {
+    if (document.querySelector('script[src="merrinlab-mod-cv-bridge.js"]')) return;
+
+    const script = document.createElement("script");
+    script.src = "merrinlab-mod-cv-bridge.js";
+    script.defer = true;
+    document.head.append(script);
+  }
+
   function init() {
     addStyles();
     installToggle();
     loadDelayUpgradeLayer();
+    loadModCvBridge();
   }
 
   if (document.readyState === "loading") {
