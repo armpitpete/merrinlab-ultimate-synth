@@ -170,3 +170,8 @@
 .jack-stack {
   gap: 17px;
 }
+
+/* Issue #81 candidate-only layout room for the Mod CV bridge. */
+.ultimate-grid {
+  grid-template-rows: 350px 165px 270px 255px 215px;
+}
