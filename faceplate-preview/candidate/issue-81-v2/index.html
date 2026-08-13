@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MerrinLab Ultimate Synth — Dark Preview</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="readability.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="top-bar">
+      <div class="brand-block">
+        <div class="brand-title">MerrinLab Ultimate Synth</div>
+        <div class="brand-subtitle">First safe audible voice · VCO 1 only · most controls visual-only</div>
+      </div>
+
+      <div class="top-controls">
+        <div class="top-control preset-display"><span class="top-label">Preset</span><div class="display-box">INIT PATCH</div></div>
+        <div class="top-control small-control"><span class="top-label">Master</span><div class="knob knob-large"></div></div>
+        <div class="top-control small-control"><span class="top-label">Tune</span><div class="display-box small-display">440</div></div>
+        <div class="top-control small-control"><span class="top-label">Output</span><div class="knob knob-large"></div></div>
+        <div class="top-control small-control"><span class="top-label">Settings</span><div class="menu-button">☰</div></div>
+      </div>
+    </header>
+
+    <section class="ultimate-grid" aria-label="Ultimate panel source-layout row">
+      <section class="vco-bank" aria-label="VCO bank">
+        <article class="vco-strip vco-module">
+          <div class="module-header"><span class="status-light"></span><h2>VCO 1</h2></div>
+          <div class="control vertical-control"><div class="control-label">Coarse Freq</div><div class="knob"></div></div>
+          <div class="control vertical-control"><div class="control-label">Fine Freq</div><div class="knob"></div></div>
+          <div class="control vertical-control"><div class="control-label">Waveform</div><div class="switch-control compact-switch">Shape</div></div>
+          <div class="control vertical-control"><div class="control-label">Pulse Width %</div><div class="knob knob-small"></div></div>
+          <div class="vco-jack-grid">
+            <div class="control"><div class="control-label">PWM</div><div class="jack-socket"></div></div>
+            <div class="control"><div class="control-label">SYNC</div><div class="jack-socket"></div></div>
+            <div class="control"><div class="control-label">LOG-CV</div><div class="jack-socket"></div></div>
+            <div class="control"><div class="control-label">LIN-CV</div><div class="jack-socket"></div></div>
+          </div>
+        </article>
+
+        <article class="vco-strip vco-module">
+          <div class="module-header"><span class="status-light"></span><h2>VCO 2</h2></div>
+          <div class="control vertical-control"><div class="control-label">Coarse Freq</div><div class="knob"></div></div>
+          <div class="control vertical-control"><div class="control-label">Fine Freq</div><div class="knob"></div></div>
+          <div class="control vertical-control"><div class="control-label">Waveform</div><div class="switch-control compact-switch">Shape</div></div>
+          <div class="control vertical-control"><div class="control-label">Pulse Width %</div><div class="knob knob-small"></div></div>
+          <div class="vco-jack-grid">
+            <div class="control"><div class="control-label">PWM</div><div class="jack-socket"></div></div>
+            <div class="control"><div class="control-label">SYNC</div><div class="jack-socket"></div></div>
+            <div class="control"><div class="control-label">LOG-CV</div><div class="jack-socket"></div></div>
+            <div class="control"><div class="control-label">LIN-CV</div><div class="jack-socket"></div></div>
+          </div>
+        </article>
+
+        <article class="vco-strip vco-module">
+          <div class="module-header"><span class="status-light"></span><h2>VCO 3</h2></div>
+          <div class="control vertical-control"><div class="control-label">Coarse Freq</div><div class="knob"></div></div>
+          <div class="control vertical-control"><div class="control-label">Fine Freq</div><div class="knob"></div></div>
+          <div class="control vertical-control"><div class="control-label">Waveform</div><div class="switch-control compact-switch">Shape</div></div>
+          <div class="control vertical-control"><div class="control-label">Pulse Width %</div><div class="knob knob-small"></div></div>
+          <div class="vco-jack-grid">
+            <div class="control"><div class="control-label">PWM</div><div class="jack-socket"></div></div>
+            <div class="control"><div class="control-label">SYNC</div><div class="jack-socket"></div></div>
+            <div class="control"><div class="control-label">LOG-CV</div><div class="jack-socket"></div></div>
+            <div class="control"><div class="control-label">LIN-CV</div><div class="jack-socket"></div></div>
+          </div>
+        </article>
+      </section>
+
+      <article class="module mixer-module mixer-strip">
+        <div class="module-header"><span class="status-light"></span><h2>Mixer</h2></div>
+        <div class="control mixer-control"><div class="control-label">VCO 1 Level</div><div class="knob"></div></div>
+        <div class="control mixer-control"><div class="control-label">VCO 2 Level</div><div class="knob"></div></div>
+        <div class="control mixer-control"><div class="control-label">VCO 3 Level</div><div class="knob"></div></div>
+        <div class="control mixer-control"><div class="control-label">Ext. In Level</div><div class="knob"></div></div>
+        <div class="control mixer-control"><div class="control-label">White NS Level</div><div class="knob"></div></div>
+        <div class="mixer-noise-outputs"><div class="control"><div class="control-label">Noise Outputs</div><div class="dual-jacks"><div class="jack-socket"></div><div class="jack-socket"></div></div></div></div>
+      </article>
+
+      <article class="module filter-lp-module lowpass-strip">
+        <div class="module-header lowpass-title"><span class="status-light"></span><h2>Voltage Controlled Lowpass Filter <span>(12dB/Oct)</span></h2></div>
+        <div class="lowpass-control-row">
+          <div class="control"><div class="control-label">Initial Cutoff</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">AR Mod</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">LFO-1 Mod</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">Resonance</div><div class="knob"></div></div>
+          <div class="control lowpass-ext-cv"><div class="control-label">Ext CV</div><div class="jack-stack"><div class="jack-socket"></div><div class="jack-socket"></div></div></div>
+        </div>
+      </article>
+
+      <article class="module sample-hold-module">
+        <div class="module-header"><span class="status-light"></span><h2>Sample &amp; Hold</h2></div>
+        <div class="control-grid two-up">
+          <div class="control"><div class="control-label">Input</div><div class="jack-socket"></div></div>
+          <div class="control"><div class="control-label">Sample Rate</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">Filter Amount</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">CV-Out</div><div class="jack-socket"></div></div>
+          <div class="control"><div class="control-label">Glide</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">Trig</div><div class="jack-socket"></div></div>
+          <div class="control"><div class="control-label">LED</div><div class="led-light"></div></div>
+        </div>
+      </article>
+
+      <article class="module ar-module ar-strip compact-source-module">
+        <div class="module-header ar-title"><span class="status-light"></span><h2>AR Generator</h2></div>
+        <div class="control ar-main-control"><div class="control-label">Attack</div><div class="knob"></div></div>
+        <div class="control ar-main-control"><div class="control-label">Release</div><div class="knob"></div></div>
+        <div class="ar-switch-row"><div class="control"><div class="control-label">Mode<br>Trig</div><div class="switch-control compact-switch">Gate</div></div><div class="control"><div class="control-label">Range<br>Long</div><div class="switch-control compact-switch">Short</div></div></div>
+        <div class="control ar-jack-control"><div class="control-label">Manual Gate</div><div class="jack-socket"></div></div>
+        <div class="control ar-jack-control"><div class="control-label">Gate/Trig In</div><div class="jack-socket"></div></div>
+        <div class="control ar-jack-control"><div class="control-label">AR Outputs</div><div class="dual-jacks"><div class="jack-socket"></div><div class="jack-socket"></div></div></div>
+      </article>
+
+      <article class="module main-vca-module vca-strip compact-source-module">
+        <div class="module-header vca-title"><span class="status-light"></span><h2>Main VCA</h2></div>
+        <div class="vca-control-row">
+          <div class="control"><div class="control-label">Initial Level</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">AR Mod</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">LFO-2 Mod</div><div class="knob"></div></div>
+          <div class="control vca-ext-cv"><div class="control-label">Ext CV</div><div class="jack-stack"><div class="jack-socket"></div><div class="jack-socket"></div></div></div>
+        </div>
+      </article>
+
+      <article class="module aux-vca-module vca-strip compact-source-module">
+        <div class="module-header vca-title"><span class="status-light"></span><h2>AUX VCA</h2></div>
+        <div class="expander-vca-grid">
+          <div class="control vca-out"><div class="control-label">Out</div><div class="jack-socket"></div></div>
+          <div class="control vca-input"><div class="control-label">Input</div><div class="jack-socket"></div></div>
+          <div class="control vca-initial-amp"><div class="control-label">Initial Amp</div><div class="knob"></div></div>
+          <div class="control vca-cv2"><div class="control-label">CV2</div><div class="jack-socket"></div></div>
+          <div class="control vca-cv1"><div class="control-label">CV1</div><div class="jack-socket"></div></div>
+        </div>
+      </article>
+
+      <article class="module lfo-module lfo1-module compact-source-module">
+        <div class="module-header lfo-title"><span class="status-light"></span><h2>Low Frequency Osc - 1</h2></div>
+        <div class="lfo-source-grid"><div class="control lfo-rate"><div class="control-label">Rate</div><div class="knob"></div></div><div class="lfo-shape-bank"><div class="wave-box">LFO</div><div class="switch-control compact-switch">Shape</div></div><div class="control lfo-range"><div class="control-label">Range</div><div class="switch-control compact-switch">High / Low</div></div><div class="control lfo-outputs"><div class="control-label">LFO-1 Outputs</div><div class="dual-jacks"><div class="jack-socket"></div><div class="jack-socket"></div></div></div></div>
+      </article>
+
+      <article class="module lfo-module lfo2-module compact-source-module">
+        <div class="module-header lfo-title"><span class="status-light"></span><h2>Low Frequency Osc - 2</h2></div>
+        <div class="lfo-source-grid"><div class="control lfo-rate"><div class="control-label">Rate</div><div class="knob"></div></div><div class="lfo-shape-bank"><div class="wave-box">LFO</div><div class="switch-control compact-switch">Shape</div></div><div class="control lfo-range"><div class="control-label">Range</div><div class="switch-control compact-switch">High / Low</div></div><div class="control lfo-outputs"><div class="control-label">LFO-2 Outputs</div><div class="dual-jacks"><div class="jack-socket"></div><div class="jack-socket"></div></div></div></div>
+      </article>
+
+      <article class="module output-module compact-source-module">
+        <div class="module-header"><span class="status-light"></span><h2>Output Level</h2></div>
+        <div class="control-grid two-up"><div class="control"><div class="control-label">Output Level</div><div class="knob knob-large"></div></div><div class="control"><div class="control-label">Phones</div><div class="mini-display">Phones</div></div></div>
+        <div class="brand-mark">SOUND-LAB<br>ULTIMATE</div>
+      </article>
+
+      <article class="module adsr-module compact-source-module">
+        <div class="module-header adsr-title"><span class="status-light"></span><h2>ADSR Env. Gen.</h2></div>
+        <div class="adsr-knob-row">
+          <div class="control"><div class="control-label">Attack</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">Decay</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">Sustain</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">Release</div><div class="knob"></div></div>
+        </div>
+        <div class="adsr-io-row">
+          <div class="control"><div class="control-label">Man. Gate</div><div class="jack-socket"></div></div>
+          <div class="control"><div class="control-label">Gate</div><div class="jack-socket"></div></div>
+          <div class="control"><div class="control-label">ADSR Range</div><div class="switch-control compact-switch">Long / Short</div></div>
+          <div class="control"><div class="control-label">Trig</div><div class="jack-socket"></div></div>
+          <div class="control adsr-out"><div class="control-label">ADSR Out</div><div class="dual-jacks"><div class="jack-socket"></div><div class="jack-socket"></div></div></div>
+        </div>
+      </article>
+
+      <article class="module repeat-module compact-source-module">
+        <div class="module-header"><span class="status-light"></span><h2>Rpt. Gate Rate</h2></div>
+        <div class="control-grid three-up"><div class="control"><div class="control-label">Gate Rate</div><div class="knob knob-large"></div></div><div class="control"><div class="control-label">Gate LED</div><div class="led-light"></div></div><div class="control"><div class="control-label">Gate</div><div class="jack-socket"></div></div></div>
+      </article>
+
+      <article class="module attenuators-module compact-source-module">
+        <div class="module-header atten-title"><span class="status-light"></span><h2>Attenuators</h2></div>
+        <div class="attenuator-grid">
+          <div class="attenuator-channel"><div class="control-label atten-number">1</div><div class="knob"></div><div class="attenuator-io"><div class="control"><div class="control-label">In</div><div class="jack-socket"></div></div><div class="control"><div class="control-label">Out</div><div class="jack-socket"></div></div></div></div>
+          <div class="attenuator-channel"><div class="control-label atten-number">2</div><div class="knob"></div><div class="attenuator-io"><div class="control"><div class="control-label">In</div><div class="jack-socket"></div></div><div class="control"><div class="control-label">Out</div><div class="jack-socket"></div></div></div></div>
+          <div class="attenuator-channel"><div class="control-label atten-number">3</div><div class="knob"></div><div class="attenuator-io"><div class="control"><div class="control-label">In</div><div class="jack-socket"></div></div><div class="control"><div class="control-label">Out</div><div class="jack-socket"></div></div></div></div>
+          <div class="attenuator-channel"><div class="control-label atten-number">4</div><div class="knob"></div><div class="attenuator-io"><div class="control"><div class="control-label">In</div><div class="jack-socket"></div></div><div class="control"><div class="control-label">Out</div><div class="jack-socket"></div></div></div></div>
+          <div class="attenuator-channel"><div class="control-label atten-number">5</div><div class="knob"></div><div class="attenuator-io"><div class="control"><div class="control-label">In</div><div class="jack-socket"></div></div><div class="control"><div class="control-label">Out</div><div class="jack-socket"></div></div></div></div>
+          <div class="attenuator-channel"><div class="control-label atten-number">6</div><div class="knob"></div><div class="attenuator-io"><div class="control"><div class="control-label">In</div><div class="jack-socket"></div></div><div class="control"><div class="control-label">Out</div><div class="jack-socket"></div></div></div></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="expander-grid" aria-label="Expander and utility row">
+      <article class="module utility-module state-variable-vcf-module"><div class="module-header"><span class="status-light"></span><h2>State Variable VCF</h2></div><div class="module-row"><div class="selector wide-selector">HP · BP · LP filter outputs</div></div><div class="module-divider"></div><div class="control-grid three-up"><div class="control"><div class="control-label">Initial COF</div><div class="knob"></div></div><div class="control"><div class="control-label">Resonance</div><div class="knob"></div></div><div class="control"><div class="control-label">Res-CV</div><div class="jack-socket"></div></div></div><div class="module-divider"></div><div class="control-grid four-up"><div class="control"><div class="control-label">CV1</div><div class="jack-socket"></div></div><div class="control"><div class="control-label">CV2</div><div class="jack-socket"></div></div><div class="control"><div class="control-label">Input</div><div class="jack-socket"></div></div><div class="control"><div class="control-label">LP/BP/HP Out</div><div class="jack-socket"></div></div></div></article>
+      <article class="module utility-module expander-signal-mixer-module"><div class="module-header"><span class="status-light"></span><h2>Signal Mixer</h2></div><div class="control-grid two-up"><div class="control"><div class="control-label">Level 1</div><div class="knob"></div></div><div class="control"><div class="control-label">Level 2</div><div class="knob"></div></div><div class="control"><div class="control-label">Level 3</div><div class="knob"></div></div><div class="control"><div class="control-label">Level 4</div><div class="knob"></div></div></div><div class="module-divider"></div><div class="module-row output-row"><div class="mini-display">Inputs</div><div class="mini-display">Mix Out</div></div></article>
+      <article class="module utility-module analog-multiplier-module"><div class="module-header"><span class="status-light"></span><h2>Analog Multiplier</h2></div><div class="module-row"><div class="selector wide-selector">X · Y · XY</div></div><div class="module-divider"></div><div class="control-grid three-up"><div class="control"><div class="control-label">X In</div><div class="jack-socket"></div></div><div class="control"><div class="control-label">Y In</div><div class="jack-socket"></div></div><div class="control"><div class="control-label">XY Out</div><div class="jack-socket"></div></div></div></article>
+      <article class="module utility-module cv-inverter-module"><div class="module-header"><span class="status-light"></span><h2>CV Inverter</h2></div><div class="module-row"><div class="selector wide-selector">Positive · Invert</div></div><div class="module-divider"></div><div class="control-grid two-up"><div class="control"><div class="control-label">CV In</div><div class="jack-socket"></div></div><div class="control"><div class="control-label">CV Out</div><div class="jack-socket"></div></div></div></article>
+      <article class="module utility-module cv-distributor-module"><div class="module-header"><span class="status-light"></span><h2>CV Distributor</h2></div><div class="module-row"><div class="selector wide-selector">CV Distributor</div></div><div class="module-divider"></div><div class="control-grid three-up"><div class="control"><div class="control-label">CV In</div><div class="jack-socket"></div></div><div class="control"><div class="control-label">CV Out</div><div class="jack-socket"></div></div><div class="control"><div class="control-label">CV Out</div><div class="jack-socket"></div></div></div></article>
+      <article class="module utility-module ext-signal-buffer-module"><div class="module-header"><span class="status-light"></span><h2>Ext. Signal Buffer</h2></div><div class="module-row"><div class="wave-box">EXT</div></div><div class="module-divider"></div><div class="control-grid two-up"><div class="control"><div class="control-label">Signal Boost</div><div class="knob knob-large"></div></div><div class="control"><div class="control-label">Buffer Out</div><div class="jack-socket"></div></div></div></article>
+      <article class="module utility-module envelope-follower-module"><div class="module-header"><span class="status-light"></span><h2>Envelope Follower</h2></div><div class="control-grid two-up"><div class="control"><div class="control-label">Follower Lag</div><div class="knob knob-large"></div></div><div class="control"><div class="control-label">Input</div><div class="jack-socket"></div></div><div class="control"><div class="control-label">EF Out</div><div class="jack-socket"></div></div></div></article>
+      <article class="module utility-module buffered-outputs-module"><div class="module-header"><span class="status-light"></span><h2>Buffered Outputs</h2></div><div class="control-grid two-up"><div class="control"><div class="control-label">Mixer Out</div><div class="jack-socket"></div></div><div class="control"><div class="control-label">ADSR Out</div><div class="jack-socket"></div></div><div class="control"><div class="control-label">Line Out</div><div class="jack-socket"></div></div><div class="control"><div class="control-label">Headphones</div><div class="jack-socket"></div></div></div></article>
+    </section>
+  </main>
+  <script src="audio-engine.js" defer></script>
+  <script src="vco1-visible-controls.js" defer></script>
+  <script src="first-voice-panel-docking.js" defer></script>
+  <script src="cathedral-reverb-layer.js" defer></script>
+</body>
+</html>
