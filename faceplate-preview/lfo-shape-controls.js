@@ -140,5 +140,9 @@
   document.addEventListener("input", handleInput);
   document.addEventListener("change", handleInput);
   document.addEventListener("input", syncFromEngine, true);
-  document.addEventListener("DOMContentLoaded", init);
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
 })();

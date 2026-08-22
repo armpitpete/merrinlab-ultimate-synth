@@ -51,6 +51,7 @@ assert.match(sources.get("audio-engine.js"), /source\.connect\(routeNode\.gain\)
 assert.match(sources.get("audio-engine.js"), /if \(destination === "mainVca" && tremoloGain\)/, "attenuator VCA modulation must stay downstream of the release gate");
 assert.doesNotMatch(sources.get("lfo-shape-controls.js"), /prototype\.createOscillator/, "LFO shape controls must not monkey-patch oscillator creation");
 assert.match(sources.get("lfo-shape-controls.js"), /script\.src = "adsr-visible-controls\.js"/, "the LFO bridge must continue the ADSR interface load chain");
+assert.match(sources.get("lfo-shape-controls.js"), /if \(document\.readyState === "loading"\)[\s\S]+else \{\s+init\(\)/, "the dynamically loaded LFO bridge must initialize after DOMContentLoaded");
 assert.match(sources.get("audio-engine.js"), /applyLfoShape\("lfo1"\)/, "LFO-1 shape must be owned by the engine");
 assert.match(sources.get("audio-engine.js"), /applyLfoShape\("lfo2"\)/, "LFO-2 shape must be owned by the engine");
 assert.match(sources.get("audio-engine.js"), /function applyAuxVcaRouting\(\)/, "AUX VCA must own an explicit route");
