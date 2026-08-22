@@ -10,8 +10,6 @@
     internalUpdate: false,
   };
 
-  let previousConnect = null;
-  let analyserInput = null;
   let analyser = null;
   let analyserData = null;
   let animationId = null;
@@ -21,13 +19,6 @@
     const number = Number(value);
     if (!Number.isFinite(number)) return fallback;
     return Math.min(max, Math.max(min, number));
-  }
-
-  function isDestinationNode(node) {
-    return Boolean(node && (
-      (typeof AudioDestinationNode !== "undefined" && node instanceof AudioDestinationNode) ||
-      node.constructor?.name === "AudioDestinationNode"
-    ));
   }
 
   function readReverbMixControl() {
@@ -48,57 +39,12 @@
     state.internalUpdate = false;
   }
 
-  function ensureAnalyserBus(context) {
-    if (analyser && analyser.context === context && analyserInput) return true;
-    if (!previousConnect) return false;
-
-    analyserInput = context.createGain();
-    analyserInput.gain.value = 1;
-
-    analyser = context.createAnalyser();
-    analyser.fftSize = 512;
-    analyser.smoothingTimeConstant = 0.03;
-    analyserData = new Float32Array(analyser.fftSize);
-
-    previousConnect.call(analyserInput, analyser);
-    startEnvelopeLoop();
-    return true;
-  }
-
-  function tapOutputSource(context, source) {
-    if (!ensureAnalyserBus(context)) return;
-
-    try {
-      previousConnect.call(source, analyserInput);
-      connectedTapCount += 1;
-    } catch (_error) {
-      // If a node cannot be tapped, keep the main output path working.
-    }
-  }
-
-  function patchConnect() {
-    if (!window.AudioNode || window.AudioNode.prototype.__merrinlabEnvelopeFollowerPatched) return;
-
-    previousConnect = window.AudioNode.prototype.connect;
-
-    window.AudioNode.prototype.connect = function connectWithEnvelopeFollower(destination, ...rest) {
-      const result = previousConnect.call(this, destination, ...rest);
-
-      try {
-        if (isDestinationNode(destination)) {
-          tapOutputSource(this.context, this);
-        }
-      } catch (_error) {
-        // Envelope follower is optional. The main synth path must keep working.
-      }
-
-      return result;
-    };
-
-    window.AudioNode.prototype.__merrinlabEnvelopeFollowerPatched = true;
-  }
-
   function calculateRms() {
+    analyser = window.MerrinLabEffectsOutputGraph?.getAnalyser("envelopeFollower") || null;
+    connectedTapCount = analyser ? 1 : 0;
+    if (analyser && (!analyserData || analyserData.length !== analyser.fftSize)) {
+      analyserData = new Float32Array(analyser.fftSize);
+    }
     if (!analyser || !analyserData) return 0;
 
     analyser.getFloatTimeDomainData(analyserData);
@@ -337,7 +283,6 @@
   }
 
   function initEnvelopeFollower() {
-    patchConnect();
     addStyles();
     state.baseReverbMix = readReverbMixControl();
 
@@ -347,6 +292,7 @@
     }
 
     syncFollowerReadouts();
+    startEnvelopeLoop();
   }
 
   document.addEventListener("input", handleFollowerInput);

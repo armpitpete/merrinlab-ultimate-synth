@@ -11,8 +11,6 @@
     size: [0.1, 1],
   };
 
-  let originalConnect = null;
-  let activeReverb = null;
   let uiRetryCount = 0;
 
   function dockFirstVoicePanel() {
@@ -65,99 +63,11 @@
     return Math.min(max, Math.max(min, number));
   }
 
-  function isDestinationNode(node) {
-    return Boolean(node && (
-      (typeof AudioDestinationNode !== "undefined" && node instanceof AudioDestinationNode) ||
-      node.constructor?.name === "AudioDestinationNode"
-    ));
-  }
-
-  function safeParam(param, value, time, speed = 0.03) {
-    param.cancelScheduledValues(time);
-    param.setTargetAtTime(value, time, speed);
-  }
-
   function applyReverbParameters() {
-    if (!activeReverb) return;
-
-    const { context, wetGain, delayA, delayB, delayC } = activeReverb;
-    const now = context.currentTime;
-    const size = clamp(reverbState.size, "size");
-
-    safeParam(wetGain.gain, clamp(reverbState.mix, "mix") * 0.35, now, 0.04);
-    safeParam(delayA.delayTime, 0.035 + size * 0.055, now, 0.04);
-    safeParam(delayB.delayTime, 0.061 + size * 0.075, now, 0.04);
-    safeParam(delayC.delayTime, 0.097 + size * 0.11, now, 0.04);
-  }
-
-  function createSafeReverb(context, source, destination) {
-    if (activeReverb && activeReverb.context === context) return;
-    if (!originalConnect) return;
-
-    const input = context.createGain();
-    const delayA = context.createDelay(0.25);
-    const delayB = context.createDelay(0.25);
-    const delayC = context.createDelay(0.3);
-    const tone = context.createBiquadFilter();
-    const gainA = context.createGain();
-    const gainB = context.createGain();
-    const gainC = context.createGain();
-    const wetGain = context.createGain();
-
-    delayA.delayTime.value = 0.06;
-    delayB.delayTime.value = 0.09;
-    delayC.delayTime.value = 0.14;
-    tone.type = "lowpass";
-    tone.frequency.value = 3600;
-    gainA.gain.value = 0.5;
-    gainB.gain.value = 0.35;
-    gainC.gain.value = 0.25;
-    wetGain.gain.value = 0;
-
-    originalConnect.call(source, input);
-    originalConnect.call(input, delayA);
-    originalConnect.call(input, delayB);
-    originalConnect.call(input, delayC);
-    originalConnect.call(delayA, gainA);
-    originalConnect.call(delayB, gainB);
-    originalConnect.call(delayC, gainC);
-    originalConnect.call(gainA, tone);
-    originalConnect.call(gainB, tone);
-    originalConnect.call(gainC, tone);
-    originalConnect.call(tone, wetGain);
-    originalConnect.call(wetGain, destination);
-
-    activeReverb = {
-      context,
-      wetGain,
-      delayA,
-      delayB,
-      delayC,
-    };
-
-    applyReverbParameters();
-  }
-
-  function patchAudioConnectForReverb() {
-    if (!window.AudioNode || window.AudioNode.prototype.__merrinlabSafeReverbPatched) return;
-
-    originalConnect = window.AudioNode.prototype.connect;
-
-    window.AudioNode.prototype.connect = function merrinlabConnectWithSafeReverb(destination, ...rest) {
-      const result = originalConnect.call(this, destination, ...rest);
-
-      try {
-        if (isDestinationNode(destination)) {
-          createSafeReverb(this.context, this, destination);
-        }
-      } catch (_error) {
-        // Reverb is optional. The dry synth path must keep working if this fails.
-      }
-
-      return result;
-    };
-
-    window.AudioNode.prototype.__merrinlabSafeReverbPatched = true;
+    window.MerrinLabEffectsOutputGraph?.setParameters("reverb", {
+      mix: clamp(reverbState.mix, "mix"),
+      size: clamp(reverbState.size, "size"),
+    });
   }
 
   function formatReverbValue(key) {
@@ -292,7 +202,6 @@
     document.head.append(script);
   }
 
-  patchAudioConnectForReverb();
   document.addEventListener("input", handleReverbInput);
   document.addEventListener("change", handleReverbInput);
 

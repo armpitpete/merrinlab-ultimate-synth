@@ -1,16 +1,11 @@
 (() => {
   "use strict";
 
-  const MAX_WET_GAIN = 0.48;
-
   const state = {
     mix: 0,
     drive: 0.35,
     tone: 0.55,
   };
-
-  let previousConnect = null;
-  let activeDrive = null;
 
   function clamp(value, min, max, fallback = min) {
     const number = Number(value);
@@ -18,103 +13,8 @@
     return Math.min(max, Math.max(min, number));
   }
 
-  function isDestinationNode(node) {
-    return Boolean(node && (
-      (typeof AudioDestinationNode !== "undefined" && node instanceof AudioDestinationNode) ||
-      node.constructor?.name === "AudioDestinationNode"
-    ));
-  }
-
-  function safeParam(param, value, time, speed = 0.05) {
-    param.cancelScheduledValues(time);
-    param.setTargetAtTime(value, time, speed);
-  }
-
-  function makeSoftDriveCurve(amount) {
-    const samples = 2048;
-    const curve = new Float32Array(samples);
-    const drive = 1 + clamp(amount, 0, 1, 0.35) * 16;
-
-    for (let i = 0; i < samples; i += 1) {
-      const x = (i / (samples - 1)) * 2 - 1;
-      curve[i] = Math.tanh(x * drive) / Math.tanh(drive);
-    }
-
-    return curve;
-  }
-
   function applyDriveParameters() {
-    if (!activeDrive) return;
-
-    const { context, inputGain, shaper, toneFilter, wetGain } = activeDrive;
-    const now = context.currentTime;
-    const mix = clamp(state.mix, 0, 1, 0);
-    const drive = clamp(state.drive, 0, 1, 0.35);
-    const tone = clamp(state.tone, 0, 1, 0.55);
-
-    shaper.curve = makeSoftDriveCurve(drive);
-    shaper.oversample = "2x";
-
-    safeParam(inputGain.gain, 0.55 + drive * 0.95, now, 0.04);
-    safeParam(toneFilter.frequency, 900 + tone * 5200, now, 0.08);
-    safeParam(wetGain.gain, mix * MAX_WET_GAIN, now, 0.04);
-  }
-
-  function createDriveLayer(context, source, destination) {
-    if (activeDrive && activeDrive.context === context) return;
-    if (!previousConnect) return;
-
-    const input = context.createGain();
-    const inputGain = context.createGain();
-    const shaper = context.createWaveShaper();
-    const toneFilter = context.createBiquadFilter();
-    const wetGain = context.createGain();
-
-    inputGain.gain.value = 0.8;
-    shaper.curve = makeSoftDriveCurve(state.drive);
-    shaper.oversample = "2x";
-    toneFilter.type = "lowpass";
-    toneFilter.frequency.value = 3600;
-    wetGain.gain.value = 0;
-
-    previousConnect.call(source, input);
-    previousConnect.call(input, inputGain);
-    previousConnect.call(inputGain, shaper);
-    previousConnect.call(shaper, toneFilter);
-    previousConnect.call(toneFilter, wetGain);
-    previousConnect.call(wetGain, destination);
-
-    activeDrive = {
-      context,
-      inputGain,
-      shaper,
-      toneFilter,
-      wetGain,
-    };
-
-    applyDriveParameters();
-  }
-
-  function patchConnect() {
-    if (!window.AudioNode || window.AudioNode.prototype.__merrinlabDrivePatched) return;
-
-    previousConnect = window.AudioNode.prototype.connect;
-
-    window.AudioNode.prototype.connect = function connectWithDrive(destination, ...rest) {
-      const result = previousConnect.call(this, destination, ...rest);
-
-      try {
-        if (isDestinationNode(destination)) {
-          createDriveLayer(this.context, this, destination);
-        }
-      } catch (_error) {
-        // Drive is optional. The dry synth path must keep working.
-      }
-
-      return result;
-    };
-
-    window.AudioNode.prototype.__merrinlabDrivePatched = true;
+    window.MerrinLabEffectsOutputGraph?.setParameters("drive", state);
   }
 
   function formatReadout(key) {
@@ -249,7 +149,6 @@
   }
 
   function initDrive() {
-    patchConnect();
     addStyles();
 
     if (!createDriveModule()) {

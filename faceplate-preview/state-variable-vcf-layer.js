@@ -8,8 +8,6 @@
   const MONITOR_POSITION_KEY = "merrinlab-sv-vcf-monitor-position";
 
   const state = { mode: "bandpass", cutoff: 900, resonance: 0.7, bpWidth: 0.55, level: 0 };
-  let previousConnect = null;
-  let activeSvf = null;
   let monitorPanel = null;
   let monitorRaf = null;
   let dragState = null;
@@ -18,25 +16,6 @@
     const number = Number(value);
     if (!Number.isFinite(number)) return fallback;
     return Math.min(max, Math.max(min, number));
-  }
-
-  function isDestinationNode(node) {
-    return Boolean(node && (
-      (typeof AudioDestinationNode !== "undefined" && node instanceof AudioDestinationNode) ||
-      node.constructor?.name === "AudioDestinationNode"
-    ));
-  }
-
-  function isMainSynthOutputNode(node) {
-    return Boolean(node && (
-      (typeof DynamicsCompressorNode !== "undefined" && node instanceof DynamicsCompressorNode) ||
-      node.constructor?.name === "DynamicsCompressorNode"
-    ));
-  }
-
-  function safeParam(param, value, time, speed = 0.04) {
-    param.cancelScheduledValues(time);
-    param.setTargetAtTime(value, time, speed);
   }
 
   function cutoffMaxForMode() {
@@ -133,89 +112,13 @@
   }
 
   function applySvfParameters() {
-    if (!activeSvf) return;
-    const now = activeSvf.context.currentTime;
-    const isBp = state.mode === "bandpass";
-    const wetAmount = clamp(state.level, 0, 1, 0);
-    const edges = bpEdges();
-
-    activeSvf.modeFilter.type = filterTypeForMode(state.mode);
-    safeParam(activeSvf.modeFilter.frequency, cutoff(), now);
-    safeParam(activeSvf.modeFilter.Q, modeQ(), now);
-    safeParam(activeSvf.modeFilterGain.gain, isBp ? 0 : 1, now, 0.02);
-
-    safeParam(activeSvf.bpHighpass.frequency, edges.lowEdge, now);
-    safeParam(activeSvf.bpHighpass.Q, 0.72, now);
-    safeParam(activeSvf.bpLowpass.frequency, edges.highEdge, now);
-    safeParam(activeSvf.bpLowpass.Q, 0.72, now);
-    safeParam(activeSvf.bpPeak.frequency, edges.centre, now);
-    safeParam(activeSvf.bpPeak.Q, bpPeakQ(), now);
-    safeParam(activeSvf.bpPeak.gain, bpPeakGain(), now);
-    safeParam(activeSvf.bpGain.gain, isBp ? bpWindowGain() : 0, now, 0.025);
-
-    safeParam(activeSvf.dryGain.gain, 1 - wetAmount, now, 0.035);
-    safeParam(activeSvf.wetGain.gain, wetAmount * modeGain(), now, 0.035);
-  }
-
-  function createSvfLayer(context, source, destination) {
-    if (activeSvf && activeSvf.context === context) return;
-    if (!previousConnect || !isMainSynthOutputNode(source)) return;
-
-    const input = context.createGain();
-    const dryGain = context.createGain();
-    const modeFilter = context.createBiquadFilter();
-    const modeFilterGain = context.createGain();
-    const bpHighpass = context.createBiquadFilter();
-    const bpLowpass = context.createBiquadFilter();
-    const bpPeak = context.createBiquadFilter();
-    const bpGain = context.createGain();
-    const wetGain = context.createGain();
-    const analyser = context.createAnalyser();
-    const outputBus = context.createGain();
-
-    analyser.fftSize = 2048;
-    analyser.smoothingTimeConstant = 0.78;
-    analyser.minDecibels = -95;
-    analyser.maxDecibels = -12;
-    bpHighpass.type = "highpass";
-    bpLowpass.type = "lowpass";
-    bpPeak.type = "peaking";
-    dryGain.gain.value = 1;
-    wetGain.gain.value = 0;
-
-    previousConnect.call(source, input);
-    previousConnect.call(input, dryGain);
-    previousConnect.call(input, modeFilter);
-    previousConnect.call(modeFilter, modeFilterGain);
-    previousConnect.call(modeFilterGain, wetGain);
-    previousConnect.call(input, bpHighpass);
-    previousConnect.call(bpHighpass, bpLowpass);
-    previousConnect.call(bpLowpass, bpPeak);
-    previousConnect.call(bpPeak, bpGain);
-    previousConnect.call(bpGain, wetGain);
-    previousConnect.call(wetGain, analyser);
-    previousConnect.call(analyser, outputBus);
-    previousConnect.call(dryGain, outputBus);
-    previousConnect.call(outputBus, destination);
-
-    activeSvf = { context, dryGain, modeFilter, modeFilterGain, bpHighpass, bpLowpass, bpPeak, bpGain, wetGain, analyser, outputBus };
-    applySvfParameters();
-    startMonitorDrawing();
-  }
-
-  function patchConnect() {
-    if (!window.AudioNode || window.AudioNode.prototype.__merrinlabStateVariableVcfPatched) return;
-    previousConnect = window.AudioNode.prototype.connect;
-    window.AudioNode.prototype.connect = function connectWithStateVariableVcf(destination, ...rest) {
-      try {
-        if (isDestinationNode(destination) && isMainSynthOutputNode(this)) {
-          createSvfLayer(this.context, this, destination);
-          return destination;
-        }
-      } catch (_error) {}
-      return previousConnect.call(this, destination, ...rest);
-    };
-    window.AudioNode.prototype.__merrinlabStateVariableVcfPatched = true;
+    window.MerrinLabEffectsOutputGraph?.setParameters("svf", {
+      mode: state.mode,
+      cutoff: cutoff(),
+      resonance: state.resonance,
+      bpWidth: state.bpWidth,
+      level: state.level,
+    });
   }
 
   function findModule() {
@@ -425,11 +328,12 @@
   }
 
   function drawMonitorFrame() {
-    if (monitorPanel && activeSvf?.analyser) {
+    const analyser = window.MerrinLabEffectsOutputGraph?.getAnalyser("svf");
+    if (monitorPanel && analyser) {
       const waveform = monitorPanel.querySelector("[data-svf-monitor-waveform]");
       const spectrum = monitorPanel.querySelector("[data-svf-monitor-spectrum]");
-      if (waveform) drawWaveform(waveform, activeSvf.analyser);
-      if (spectrum) drawSpectrum(spectrum, activeSvf.analyser);
+      if (waveform) drawWaveform(waveform, analyser);
+      if (spectrum) drawSpectrum(spectrum, analyser);
       updateMonitorText();
     }
     monitorRaf = window.requestAnimationFrame(drawMonitorFrame);
@@ -481,11 +385,10 @@
   }
 
   function initStateVariableVcf() {
-    patchConnect();
     addStyles();
     installControls();
     labelGateOffButton();
-    createFloatingMonitor();
+    startMonitorDrawing();
   }
 
   document.addEventListener("input", handleInput);

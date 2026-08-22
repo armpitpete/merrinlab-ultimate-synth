@@ -3,16 +3,11 @@
 
   const MAX_DELAY_SECONDS = 3;
   const MAX_FEEDBACK = 0.85;
-  const MAX_WET_GAIN = 0.7;
-
   const state = {
     mix: 0,
     time: 0.25,
     feedback: 0.2,
   };
-
-  let previousConnect = null;
-  let activeDelay = null;
 
   function clamp(value, min, max, fallback = min) {
     const number = Number(value);
@@ -20,86 +15,8 @@
     return Math.min(max, Math.max(min, number));
   }
 
-  function isDestinationNode(node) {
-    return Boolean(node && (
-      (typeof AudioDestinationNode !== "undefined" && node instanceof AudioDestinationNode) ||
-      node.constructor?.name === "AudioDestinationNode"
-    ));
-  }
-
-  function safeParam(param, value, time, speed = 0.04) {
-    param.cancelScheduledValues(time);
-    param.setTargetAtTime(value, time, speed);
-  }
-
   function applyDelayParameters() {
-    if (!activeDelay) return;
-
-    const { context, delayNode, feedbackGain, wetGain, feedbackTone } = activeDelay;
-    const now = context.currentTime;
-    const feedback = clamp(state.feedback, 0, MAX_FEEDBACK, 0.2);
-
-    safeParam(delayNode.delayTime, clamp(state.time, 0.05, MAX_DELAY_SECONDS, 0.25), now, 0.05);
-    safeParam(feedbackGain.gain, feedback, now, 0.05);
-    safeParam(wetGain.gain, clamp(state.mix, 0, 1, 0) * MAX_WET_GAIN, now, 0.04);
-    safeParam(feedbackTone.frequency, 5200 - feedback * 2200, now, 0.12);
-  }
-
-  function createDelayLayer(context, source, destination) {
-    if (activeDelay && activeDelay.context === context) return;
-    if (!previousConnect) return;
-
-    const input = context.createGain();
-    const delayNode = context.createDelay(MAX_DELAY_SECONDS + 0.2);
-    const feedbackTone = context.createBiquadFilter();
-    const feedbackGain = context.createGain();
-    const wetGain = context.createGain();
-
-    delayNode.delayTime.value = state.time;
-    feedbackTone.type = "lowpass";
-    feedbackTone.frequency.value = 4600;
-    feedbackGain.gain.value = state.feedback;
-    wetGain.gain.value = 0;
-
-    previousConnect.call(source, input);
-    previousConnect.call(input, delayNode);
-    previousConnect.call(delayNode, feedbackTone);
-    previousConnect.call(feedbackTone, feedbackGain);
-    previousConnect.call(feedbackGain, delayNode);
-    previousConnect.call(delayNode, wetGain);
-    previousConnect.call(wetGain, destination);
-
-    activeDelay = {
-      context,
-      delayNode,
-      feedbackTone,
-      feedbackGain,
-      wetGain,
-    };
-
-    applyDelayParameters();
-  }
-
-  function patchConnect() {
-    if (!window.AudioNode || window.AudioNode.prototype.__merrinlabDelayUpgradePatched) return;
-
-    previousConnect = window.AudioNode.prototype.connect;
-
-    window.AudioNode.prototype.connect = function connectWithUpgradedDelay(destination, ...rest) {
-      const result = previousConnect.call(this, destination, ...rest);
-
-      try {
-        if (isDestinationNode(destination)) {
-          createDelayLayer(this.context, this, destination);
-        }
-      } catch (_error) {
-        // Delay is optional. The dry synth path must keep working.
-      }
-
-      return result;
-    };
-
-    window.AudioNode.prototype.__merrinlabDelayUpgradePatched = true;
+    window.MerrinLabEffectsOutputGraph?.setParameters("delay", state);
   }
 
   function visibleValueToState(key, value, isFaceplate) {
@@ -223,7 +140,6 @@
   }
 
   function initDelayUpgradeLayer() {
-    patchConnect();
     addStyles();
     syncDelayControls();
     loadChorusEffectLayer();

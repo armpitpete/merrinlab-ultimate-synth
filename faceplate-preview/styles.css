@@ -382,12 +382,11 @@ body {
 
 .expander-vca-grid {
   display: grid;
-  grid-template-columns: 0.75fr 0.75fr 1.05fr;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   grid-template-areas:
-    "out input amp"
-    "cv2 cv1 amp";
+    "input amp cv1 cv2 out";
   gap: 12px 14px;
-  align-items: center;
+  align-items: start;
 }
 
 .vca-out { grid-area: out; }
@@ -429,22 +428,99 @@ body {
 .attenuator-grid {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 14px;
-  align-items: start;
+  gap: 10px;
+  align-items: stretch;
 }
 
 .attenuator-channel {
   display: grid;
-  justify-items: center;
-  gap: 7px;
+  grid-template-rows: auto 1fr 1fr 1fr auto;
+  gap: 8px;
   min-width: 0;
+  padding: 8px;
+  border: 1px solid rgba(215, 184, 132, 0.18);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.025);
 }
 
-.attenuator-io {
+.attenuator-control {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  color: var(--text);
+  font-size: 0.58rem;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.attenuator-control input {
+  grid-column: 1 / -1;
+  min-width: 0;
   width: 100%;
+  accent-color: #d7b884;
+}
+
+.attenuator-control select {
+  grid-column: 1 / -1;
+  min-width: 0;
+  width: 100%;
+  border: 1px solid rgba(215, 184, 132, 0.38);
+  border-radius: 999px;
+  padding: 4px 5px;
+  background: #211913;
+  color: #f3e8da;
+  font: inherit;
+}
+
+.attenuator-control output,
+.attenuator-output output {
+  color: #d6c8b5;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.attenuator-output,
+.attenuator-route {
+  display: flex;
+  justify-content: space-between;
+  gap: 5px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(215, 184, 132, 0.14);
+  color: var(--text);
+  font-size: 0.58rem;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.attenuator-route {
+  display: block;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.panel-button {
+  border: 1px solid rgba(215, 184, 132, 0.45);
+  border-radius: 999px;
+  padding: 5px 8px;
+  background: #211913;
+  color: #f3e8da;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+}
+
+.attenuator-channel.is-attenuating {
+  border-color: rgba(215, 184, 132, 0.42);
+}
+
+.attenuators-module.is-processing .status-light {
+  background: #93d36c;
+  box-shadow: 0 0 10px rgba(147, 211, 108, 0.65);
 }
 
 .control {

@@ -94,10 +94,11 @@
         <div class="module-header"><span class="status-light"></span><h2>Sample &amp; Hold</h2></div>
         <div class="control-grid two-up">
           <div class="control"><div class="control-label">Input</div><div class="jack-socket"></div></div>
-          <div class="control"><div class="control-label">Sample Rate</div><div class="knob"></div></div>
-          <div class="control"><div class="control-label">Filter Amount</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">Mode</div><div class="switch-control compact-switch">Sample &amp; Hold</div></div>
+          <div class="control"><div class="control-label">Sample Rate</div></div>
+          <div class="control"><div class="control-label">Filter Amount</div></div>
           <div class="control"><div class="control-label">CV-Out</div><div class="jack-socket"></div></div>
-          <div class="control"><div class="control-label">Glide</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">Glide</div></div>
           <div class="control"><div class="control-label">Trig</div><div class="jack-socket"></div></div>
           <div class="control"><div class="control-label">LED</div><div class="led-light"></div></div>
         </div>
@@ -116,32 +117,32 @@
       <article class="module main-vca-module vca-strip compact-source-module">
         <div class="module-header vca-title"><span class="status-light"></span><h2>Main VCA</h2></div>
         <div class="vca-control-row">
-          <div class="control"><div class="control-label">Initial Level</div><div class="knob"></div></div>
-          <div class="control"><div class="control-label">AR Mod</div><div class="knob"></div></div>
-          <div class="control"><div class="control-label">LFO-2 Mod</div><div class="knob"></div></div>
-          <div class="control vca-ext-cv"><div class="control-label">Ext CV</div><div class="jack-stack"><div class="jack-socket"></div><div class="jack-socket"></div></div></div>
+          <div class="control"><div class="control-label">Initial Level</div></div>
+          <div class="control"><div class="control-label">AR Mod</div></div>
+          <div class="control"><div class="control-label">LFO-2 Mod</div></div>
+          <div class="control vca-ext-cv"><div class="control-label">Ext CV</div></div>
         </div>
       </article>
 
       <article class="module aux-vca-module vca-strip compact-source-module">
         <div class="module-header vca-title"><span class="status-light"></span><h2>AUX VCA</h2></div>
         <div class="expander-vca-grid">
-          <div class="control vca-out"><div class="control-label">Out</div><div class="jack-socket"></div></div>
-          <div class="control vca-input"><div class="control-label">Input</div><div class="jack-socket"></div></div>
-          <div class="control vca-initial-amp"><div class="control-label">Initial Amp</div><div class="knob"></div></div>
-          <div class="control vca-cv2"><div class="control-label">CV2</div><div class="jack-socket"></div></div>
-          <div class="control vca-cv1"><div class="control-label">CV1</div><div class="jack-socket"></div></div>
+          <div class="control vca-input"><div class="control-label">Input</div></div>
+          <div class="control vca-initial-amp"><div class="control-label">Initial Amp</div></div>
+          <div class="control vca-cv1"><div class="control-label">CV Source</div></div>
+          <div class="control vca-cv2"><div class="control-label">CV Amount</div></div>
+          <div class="control vca-out"><div class="control-label">Destination</div></div>
         </div>
       </article>
 
       <article class="module lfo-module lfo1-module compact-source-module">
         <div class="module-header lfo-title"><span class="status-light"></span><h2>Low Frequency Osc - 1</h2></div>
-        <div class="lfo-source-grid"><div class="control lfo-rate"><div class="control-label">Rate</div><div class="knob"></div></div><div class="lfo-shape-bank"><div class="wave-box">LFO</div><div class="switch-control compact-switch">Shape</div></div><div class="control lfo-range"><div class="control-label">Range</div><div class="switch-control compact-switch">High / Low</div></div><div class="control lfo-outputs"><div class="control-label">LFO-1 Outputs</div><div class="dual-jacks"><div class="jack-socket"></div><div class="jack-socket"></div></div></div></div>
+        <div class="lfo-source-grid"><div class="control lfo-rate"><div class="control-label">Rate</div></div><div class="lfo-shape-bank"><div class="control-label">Shape</div></div><div class="control lfo-range"><div class="control-label">Range</div></div><div class="control lfo-outputs"><div class="control-label">Routing</div><div class="mini-display">Use Attenuators</div></div></div>
       </article>
 
       <article class="module lfo-module lfo2-module compact-source-module">
         <div class="module-header lfo-title"><span class="status-light"></span><h2>Low Frequency Osc - 2</h2></div>
-        <div class="lfo-source-grid"><div class="control lfo-rate"><div class="control-label">Rate</div><div class="knob"></div></div><div class="lfo-shape-bank"><div class="wave-box">LFO</div><div class="switch-control compact-switch">Shape</div></div><div class="control lfo-range"><div class="control-label">Range</div><div class="switch-control compact-switch">High / Low</div></div><div class="control lfo-outputs"><div class="control-label">LFO-2 Outputs</div><div class="dual-jacks"><div class="jack-socket"></div><div class="jack-socket"></div></div></div></div>
+        <div class="lfo-source-grid"><div class="control lfo-rate"><div class="control-label">Rate</div></div><div class="lfo-shape-bank"><div class="control-label">Shape</div></div><div class="control lfo-range"><div class="control-label">Range</div></div><div class="control lfo-outputs"><div class="control-label">Routing</div><div class="mini-display">Use Attenuators</div></div></div>
       </article>
 
       <article class="module output-module compact-source-module">
@@ -153,34 +154,34 @@
       <article class="module adsr-module compact-source-module">
         <div class="module-header adsr-title"><span class="status-light"></span><h2>ADSR Env. Gen.</h2></div>
         <div class="adsr-knob-row">
-          <div class="control"><div class="control-label">Attack</div><div class="knob"></div></div>
-          <div class="control"><div class="control-label">Decay</div><div class="knob"></div></div>
-          <div class="control"><div class="control-label">Sustain</div><div class="knob"></div></div>
-          <div class="control"><div class="control-label">Release</div><div class="knob"></div></div>
+          <div class="control"><div class="control-label">Attack</div></div>
+          <div class="control"><div class="control-label">Decay</div></div>
+          <div class="control"><div class="control-label">Sustain</div></div>
+          <div class="control"><div class="control-label">Release</div></div>
         </div>
         <div class="adsr-io-row">
-          <div class="control"><div class="control-label">Man. Gate</div><div class="jack-socket"></div></div>
-          <div class="control"><div class="control-label">Gate</div><div class="jack-socket"></div></div>
-          <div class="control"><div class="control-label">ADSR Range</div><div class="switch-control compact-switch">Long / Short</div></div>
-          <div class="control"><div class="control-label">Trig</div><div class="jack-socket"></div></div>
-          <div class="control adsr-out"><div class="control-label">ADSR Out</div><div class="dual-jacks"><div class="jack-socket"></div><div class="jack-socket"></div></div></div>
+          <div class="control"><div class="control-label">Man. Gate</div><button type="button" class="panel-button" data-adsr-manual-gate>Gate On</button></div>
+          <div class="control"><div class="control-label">Gate</div><div class="mini-display">Keyboard / MIDI</div></div>
+          <div class="control"><div class="control-label">ADSR Range</div></div>
+          <div class="control"><div class="control-label">Trig</div><button type="button" class="panel-button" data-adsr-trigger>Trigger</button></div>
+          <div class="control adsr-out"><div class="control-label">ADSR Out</div><output class="mini-display" data-adsr-output>0.00 CV</output></div>
         </div>
       </article>
 
       <article class="module repeat-module compact-source-module">
         <div class="module-header"><span class="status-light"></span><h2>Rpt. Gate Rate</h2></div>
-        <div class="control-grid three-up"><div class="control"><div class="control-label">Gate Rate</div><div class="knob knob-large"></div></div><div class="control"><div class="control-label">Gate LED</div><div class="led-light"></div></div><div class="control"><div class="control-label">Gate</div><div class="jack-socket"></div></div></div>
+        <div class="control-grid four-up"><div class="control"><div class="control-label">Gate Rate</div></div><div class="control"><div class="control-label">Gate LED</div><div class="led-light"></div></div><div class="control"><div class="control-label">Gate</div></div><div class="control"><div class="control-label">Target</div></div></div>
       </article>
 
       <article class="module attenuators-module compact-source-module">
         <div class="module-header atten-title"><span class="status-light"></span><h2>Attenuators</h2></div>
         <div class="attenuator-grid">
-          <div class="attenuator-channel"><div class="control-label atten-number">1</div><div class="knob"></div><div class="attenuator-io"><div class="control"><div class="control-label">In</div><div class="jack-socket"></div></div><div class="control"><div class="control-label">Out</div><div class="jack-socket"></div></div></div></div>
-          <div class="attenuator-channel"><div class="control-label atten-number">2</div><div class="knob"></div><div class="attenuator-io"><div class="control"><div class="control-label">In</div><div class="jack-socket"></div></div><div class="control"><div class="control-label">Out</div><div class="jack-socket"></div></div></div></div>
-          <div class="attenuator-channel"><div class="control-label atten-number">3</div><div class="knob"></div><div class="attenuator-io"><div class="control"><div class="control-label">In</div><div class="jack-socket"></div></div><div class="control"><div class="control-label">Out</div><div class="jack-socket"></div></div></div></div>
-          <div class="attenuator-channel"><div class="control-label atten-number">4</div><div class="knob"></div><div class="attenuator-io"><div class="control"><div class="control-label">In</div><div class="jack-socket"></div></div><div class="control"><div class="control-label">Out</div><div class="jack-socket"></div></div></div></div>
-          <div class="attenuator-channel"><div class="control-label atten-number">5</div><div class="knob"></div><div class="attenuator-io"><div class="control"><div class="control-label">In</div><div class="jack-socket"></div></div><div class="control"><div class="control-label">Out</div><div class="jack-socket"></div></div></div></div>
-          <div class="attenuator-channel"><div class="control-label atten-number">6</div><div class="knob"></div><div class="attenuator-io"><div class="control"><div class="control-label">In</div><div class="jack-socket"></div></div><div class="control"><div class="control-label">Out</div><div class="jack-socket"></div></div></div></div>
+          <div class="attenuator-channel" data-attenuator-channel="1"><div class="control-label atten-number">1</div><label class="attenuator-control"><span>Source</span><select data-attenuator-source="1"></select></label><label class="attenuator-control"><span>Amount</span><output data-attenuator-amount-readout="1">100%</output><input type="range" min="0" max="100" step="1" value="100" data-attenuator-amount="1"></label><label class="attenuator-control"><span>Destination</span><select data-attenuator-destination="1"></select></label><output class="attenuator-route" data-attenuator-route="1">Route off</output></div>
+          <div class="attenuator-channel" data-attenuator-channel="2"><div class="control-label atten-number">2</div><label class="attenuator-control"><span>Source</span><select data-attenuator-source="2"></select></label><label class="attenuator-control"><span>Amount</span><output data-attenuator-amount-readout="2">100%</output><input type="range" min="0" max="100" step="1" value="100" data-attenuator-amount="2"></label><label class="attenuator-control"><span>Destination</span><select data-attenuator-destination="2"></select></label><output class="attenuator-route" data-attenuator-route="2">Route off</output></div>
+          <div class="attenuator-channel" data-attenuator-channel="3"><div class="control-label atten-number">3</div><label class="attenuator-control"><span>Source</span><select data-attenuator-source="3"></select></label><label class="attenuator-control"><span>Amount</span><output data-attenuator-amount-readout="3">100%</output><input type="range" min="0" max="100" step="1" value="100" data-attenuator-amount="3"></label><label class="attenuator-control"><span>Destination</span><select data-attenuator-destination="3"></select></label><output class="attenuator-route" data-attenuator-route="3">Route off</output></div>
+          <div class="attenuator-channel" data-attenuator-channel="4"><div class="control-label atten-number">4</div><label class="attenuator-control"><span>Source</span><select data-attenuator-source="4"></select></label><label class="attenuator-control"><span>Amount</span><output data-attenuator-amount-readout="4">100%</output><input type="range" min="0" max="100" step="1" value="100" data-attenuator-amount="4"></label><label class="attenuator-control"><span>Destination</span><select data-attenuator-destination="4"></select></label><output class="attenuator-route" data-attenuator-route="4">Route off</output></div>
+          <div class="attenuator-channel" data-attenuator-channel="5"><div class="control-label atten-number">5</div><label class="attenuator-control"><span>Source</span><select data-attenuator-source="5"></select></label><label class="attenuator-control"><span>Amount</span><output data-attenuator-amount-readout="5">100%</output><input type="range" min="0" max="100" step="1" value="100" data-attenuator-amount="5"></label><label class="attenuator-control"><span>Destination</span><select data-attenuator-destination="5"></select></label><output class="attenuator-route" data-attenuator-route="5">Route off</output></div>
+          <div class="attenuator-channel" data-attenuator-channel="6"><div class="control-label atten-number">6</div><label class="attenuator-control"><span>Source</span><select data-attenuator-source="6"></select></label><label class="attenuator-control"><span>Amount</span><output data-attenuator-amount-readout="6">100%</output><input type="range" min="0" max="100" step="1" value="100" data-attenuator-amount="6"></label><label class="attenuator-control"><span>Destination</span><select data-attenuator-destination="6"></select></label><output class="attenuator-route" data-attenuator-route="6">Route off</output></div>
         </div>
       </article>
     </section>
@@ -196,9 +197,13 @@
       <article class="module utility-module buffered-outputs-module"><div class="module-header"><span class="status-light"></span><h2>Buffered Outputs</h2></div><div class="control-grid two-up"><div class="control"><div class="control-label">Mixer Out</div><div class="jack-socket"></div></div><div class="control"><div class="control-label">ADSR Out</div><div class="jack-socket"></div></div><div class="control"><div class="control-label">Line Out</div><div class="jack-socket"></div></div><div class="control"><div class="control-label">Headphones</div><div class="jack-socket"></div></div></div></article>
     </section>
   </main>
+  <script src="effects-output-graph.js" defer></script>
   <script src="audio-engine.js" defer></script>
+  <script src="attenuator-bank.js" defer></script>
   <script src="midi-runtime-loader.js" defer></script>
   <script src="vco1-visible-controls.js" defer></script>
+  <script src="attenuator-visible-controls.js" defer></script>
+  <script src="envelope-io-controls.js" defer></script>
   <script src="first-voice-panel-docking.js" defer></script>
   <script src="cathedral-reverb-layer.js" defer></script>
 </body>

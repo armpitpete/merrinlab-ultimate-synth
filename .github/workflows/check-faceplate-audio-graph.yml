@@ -1,0 +1,24 @@
+name: Check faceplate audio graph
+
+on:
+  pull_request:
+    paths:
+      - "faceplate-preview/**"
+      - "scripts/check-audio-graph.mjs"
+      - ".github/workflows/check-faceplate-audio-graph.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  audio-graph:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check JavaScript syntax
+        run: find faceplate-preview -maxdepth 1 -name '*.js' -print0 | xargs -0 -n1 node --check
+      - name: Check graph ownership
+        run: node scripts/check-audio-graph.mjs
