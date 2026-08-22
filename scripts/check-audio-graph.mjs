@@ -23,6 +23,9 @@ assert.equal(destinationConnections.length, 1, "the active graph must own exactl
 assert.match(sources.get("effects-output-graph.js"), /limiter\.connect\(context\.destination\)/, "the limiter must own the destination connection");
 assert.match(sources.get("audio-engine.js"), /tremoloGain\.connect\(effectsOutputGraph\.input\)/, "the voice must enter the explicit effects graph");
 assert.match(sources.get("audio-engine.js"), /filter\.Q\.value = state\.resonance/, "main resonance must use the base Biquad Q");
+assert.match(sources.get("audio-engine.js"), /linearRampToValueAtTime\(0, now \+ release\)/, "release must end at digital silence");
+assert.doesNotMatch(sources.get("audio-engine.js"), /linearRampToValueAtTime\(0\.0001, now \+ release\)/, "release must not leave a fixed-pitch oscillator leak");
+assert.match(sources.get("audio-engine.js"), /if \(!audioContext \|\| !isSampleHoldActive\(\)\) return;/, "inactive Sample & Hold must not automate the A oscillator");
 
 const index = await readFile(join(previewDirectory.pathname, "index.html"), "utf8");
 assert.ok(index.indexOf('src="effects-output-graph.js"') < index.indexOf('src="audio-engine.js"'), "the graph must load before the engine");
