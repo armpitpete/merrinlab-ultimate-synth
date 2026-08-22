@@ -23,7 +23,12 @@ assert.doesNotMatch(combinedSource, /AudioContextClass\.prototype\.(createGain|c
 const destinationConnections = [...combinedSource.matchAll(/\.connect\(context\.destination\)/g)];
 assert.equal(destinationConnections.length, 1, "the active graph must own exactly one destination connection");
 assert.match(sources.get("effects-output-graph.js"), /limiter\.connect\(context\.destination\)/, "the limiter must own the destination connection");
-assert.match(sources.get("audio-engine.js"), /tremoloGain\.connect\(effectsOutputGraph\.input\)/, "the voice must enter the explicit effects graph");
+assert.match(sources.get("audio-engine.js"), /tremoloGain\.connect\(lineOutVcaGain\);\s+lineOutVcaGain\.connect\(effectsOutputGraph\.input\)/, "the accepted VCA route must enter the explicit effects graph through the line-out selector");
+assert.match(sources.get("audio-engine.js"), /signalMixerBus\.connect\(signalMixerAnalyser\);\s+signalMixerAnalyser\.connect\(lineOutMixGain\);\s+lineOutMixGain\.connect\(effectsOutputGraph\.input\)/, "the Expander Signal Mixer must feed the same explicit effects/output graph");
+assert.doesNotMatch(sources.get("audio-engine.js"), /tremoloGain\.connect\(effectsOutputGraph\.input\)/, "the VCA must not bypass the line-out selector");
+assert.match(sources.get("audio-engine.js"), /const useMix = state\.signalMixerLineOut === "mix"/, "the line-out selector must switch explicitly between VCA and MIX");
+assert.match(sources.get("audio-engine.js"), /safeRamp\(routeNode\.gain\.gain, level \* 0\.35/, "Signal Mixer channels must retain safe per-channel headroom");
+assert.match(sources.get("audio-engine.js"), /merrinlab:signal-mixer-meter/, "the Signal Mixer interface must receive live mix-output level data");
 assert.match(sources.get("effects-output-graph.js"), /reverb\.output\.connect\(svf\.input\)/, "the State Variable VCF must remain inside the explicit effects/output graph");
 assert.match(sources.get("effects-output-graph.js"), /modeFilter\.Q, isBandpass \? 0\.707 : resonance/, "LP and HP resonance must use the Biquad Q directly");
 assert.match(sources.get("effects-output-graph.js"), /bpGain\.gain, isBandpass \? 1 : 0/, "band-pass level must not use cutoff-dependent gain compensation");
@@ -135,7 +140,7 @@ while (pendingScripts.length) {
     }
   }
 }
-for (const requiredScript of ["lfo-shape-controls.js", "adsr-visible-controls.js", "envelope-mode-visible-controls.js", "envelope-io-controls.js"]) {
+for (const requiredScript of ["lfo-shape-controls.js", "adsr-visible-controls.js", "envelope-mode-visible-controls.js", "envelope-io-controls.js", "signal-mixer-layer.js"]) {
   assert.ok(reachableScripts.has(requiredScript), `${requiredScript} must remain reachable from index.html`);
 }
 const sampleHoldMarkup = index.match(/<article class="module sample-hold-module">([\s\S]*?)<\/article>/)?.[1] || "";
@@ -172,12 +177,25 @@ assert.match(stateVariableVcfMarkup, /Main bus[\s\S]*data-svf-path-mode[\s\S]*Ma
 assert.match(stateVariableVcfMarkup, /data-svf-meter/, "the State Variable VCF must expose a real wet-output meter");
 assert.doesNotMatch(sources.get("state-variable-vcf-layer.js"), /svf-floating-monitor|localStorage|AudioNode\.prototype/, "the State Variable VCF interface must not create a floating monitor or patch the audio graph");
 assert.match(sources.get("state-variable-vcf-layer.js"), /widthInput\.disabled = !isBandpass/, "BP Width must be disabled outside band-pass mode");
+const signalMixerMarkup = index.match(/<article class="module utility-module expander-signal-mixer-module"[^>]*>([\s\S]*?)<\/article>/)?.[1] || "";
+assert.ok(signalMixerMarkup, "the Expander Signal Mixer must remain present");
+assert.doesNotMatch(signalMixerMarkup, /class="(?:knob|jack)/, "the Expander Signal Mixer must not render decorative dials or jacks");
+assert.equal((signalMixerMarkup.match(/data-signal-mixer-channel=/g) || []).length, 4, "the Expander Signal Mixer must expose four live input channels");
+assert.equal((signalMixerMarkup.match(/data-signal-mixer-source=/g) || []).length, 4, "each Signal Mixer channel must expose a real source selector");
+assert.equal((signalMixerMarkup.match(/data-signal-mixer-level=/g) || []).length, 4, "each Signal Mixer channel must expose a real level control");
+assert.match(signalMixerMarkup, /data-signal-mixer-line-out/, "the Signal Mixer must expose the documented line-out selector");
+assert.match(signalMixerMarkup, /<option value="vca" selected>VCA<\/option>[\s\S]*<option value="mix">MIX<\/option>/, "VCA must remain the default line-out route and MIX must be explicitly selectable");
+assert.match(signalMixerMarkup, /data-signal-mixer-meter/, "the Signal Mixer must expose a live Mix Out meter");
+assert.match(sources.get("signal-mixer-layer.js"), /getSignalMixerOptions/, "the Signal Mixer interface must populate its sources from the engine");
+assert.match(sources.get("signal-mixer-layer.js"), /signalMixerSource/, "Signal Mixer source changes must reach engine parameters");
+assert.match(sources.get("signal-mixer-layer.js"), /signalMixerLevel/, "Signal Mixer level changes must reach engine parameters");
 const lfoMarkup = index.match(/<article class="module lfo-module lfo1-module[^>]*>([\s\S]*?)<\/article>/)?.[1] || "";
 assert.doesNotMatch(lfoMarkup, /class="(?:knob|jack)/, "LFO modules must use live controls rather than decorative dials or jacks");
 const adsrMarkup = index.match(/<article class="module adsr-module[^>]*>([\s\S]*?)<\/article>/)?.[1] || "";
 assert.doesNotMatch(adsrMarkup, /class="(?:knob|jack)/, "the ADSR module must use live sliders and buttons rather than decorative dials or jacks");
 assert.ok(index.indexOf('src="attenuator-bank.js"') < index.indexOf('src="attenuator-visible-controls.js"'), "the attenuator engine must load before its interface");
 assert.ok(index.indexOf('src="effects-output-graph.js"') < index.indexOf('src="audio-engine.js"'), "the graph must load before the engine");
+assert.ok(index.indexOf('src="audio-engine.js"') < index.indexOf('src="signal-mixer-layer.js"'), "the Signal Mixer engine must load before its interface");
 assert.doesNotMatch(index, /filter-self-resonance-layer\.js/, "the synthetic resonance layer must stay unloaded");
 assert.doesNotMatch(index, /state-variable-vcf-bp-balance-runtime\.js/, "the prototype calibration runtime must stay unloaded");
 
