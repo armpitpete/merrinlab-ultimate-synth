@@ -1,18 +1,11 @@
 (() => {
   "use strict";
 
-  const MAX_CHORUS_WET_GAIN = 0.45;
-  const MAX_DEPTH_SECONDS = 0.014;
-  const BASE_DELAY_SECONDS = 0.018;
-
   const state = {
     mix: 0,
     rate: 0.8,
     depth: 0.35,
   };
-
-  let previousConnect = null;
-  let activeChorus = null;
 
   function clamp(value, min, max, fallback = min) {
     const number = Number(value);
@@ -20,114 +13,8 @@
     return Math.min(max, Math.max(min, number));
   }
 
-  function isDestinationNode(node) {
-    return Boolean(node && (
-      (typeof AudioDestinationNode !== "undefined" && node instanceof AudioDestinationNode) ||
-      node.constructor?.name === "AudioDestinationNode"
-    ));
-  }
-
-  function safeParam(param, value, time, speed = 0.06) {
-    param.cancelScheduledValues(time);
-    param.setTargetAtTime(value, time, speed);
-  }
-
   function applyChorusParameters() {
-    if (!activeChorus) return;
-
-    const {
-      context,
-      lfo,
-      leftDepth,
-      rightDepth,
-      wetGain,
-      leftDelay,
-      rightDelay,
-    } = activeChorus;
-
-    const now = context.currentTime;
-    const mix = clamp(state.mix, 0, 1, 0);
-    const rate = clamp(state.rate, 0.1, 5, 0.8);
-    const depthAmount = clamp(state.depth, 0, 1, 0.35);
-    const depthSeconds = depthAmount * MAX_DEPTH_SECONDS;
-
-    safeParam(lfo.frequency, rate, now, 0.08);
-    safeParam(leftDepth.gain, depthSeconds, now, 0.08);
-    safeParam(rightDepth.gain, -depthSeconds, now, 0.08);
-    safeParam(wetGain.gain, mix * MAX_CHORUS_WET_GAIN, now, 0.05);
-    safeParam(leftDelay.delayTime, BASE_DELAY_SECONDS, now, 0.1);
-    safeParam(rightDelay.delayTime, BASE_DELAY_SECONDS + 0.004, now, 0.1);
-  }
-
-  function createChorusLayer(context, source, destination) {
-    if (activeChorus && activeChorus.context === context) return;
-    if (!previousConnect) return;
-
-    const input = context.createGain();
-    const leftDelay = context.createDelay(0.06);
-    const rightDelay = context.createDelay(0.06);
-    const lfo = context.createOscillator();
-    const leftDepth = context.createGain();
-    const rightDepth = context.createGain();
-    const merger = context.createChannelMerger(2);
-    const wetGain = context.createGain();
-
-    leftDelay.delayTime.value = BASE_DELAY_SECONDS;
-    rightDelay.delayTime.value = BASE_DELAY_SECONDS + 0.004;
-    lfo.type = "sine";
-    lfo.frequency.value = state.rate;
-    leftDepth.gain.value = state.depth * MAX_DEPTH_SECONDS;
-    rightDepth.gain.value = -state.depth * MAX_DEPTH_SECONDS;
-    wetGain.gain.value = 0;
-
-    previousConnect.call(source, input);
-    previousConnect.call(input, leftDelay);
-    previousConnect.call(input, rightDelay);
-    previousConnect.call(lfo, leftDepth);
-    previousConnect.call(lfo, rightDepth);
-    previousConnect.call(leftDepth, leftDelay.delayTime);
-    previousConnect.call(rightDepth, rightDelay.delayTime);
-    leftDelay.connect(merger, 0, 0);
-    rightDelay.connect(merger, 0, 1);
-    previousConnect.call(merger, wetGain);
-    previousConnect.call(wetGain, destination);
-
-    lfo.start();
-
-    activeChorus = {
-      context,
-      lfo,
-      leftDelay,
-      rightDelay,
-      leftDepth,
-      rightDepth,
-      wetGain,
-      merger,
-    };
-
-    applyChorusParameters();
-  }
-
-  function patchConnect() {
-    if (!window.AudioNode || window.AudioNode.prototype.__merrinlabChorusPatched) return;
-
-    previousConnect = window.AudioNode.prototype.connect;
-
-    window.AudioNode.prototype.connect = function connectWithChorus(destination, ...rest) {
-      const result = previousConnect.call(this, destination, ...rest);
-
-      try {
-        if (isDestinationNode(destination)) {
-          createChorusLayer(this.context, this, destination);
-        }
-      } catch (_error) {
-        // Chorus is optional. The dry synth path must keep working.
-      }
-
-      return result;
-    };
-
-    window.AudioNode.prototype.__merrinlabChorusPatched = true;
+    window.MerrinLabEffectsOutputGraph?.setParameters("chorus", state);
   }
 
   function formatReadout(key) {
@@ -262,7 +149,6 @@
   }
 
   function initChorus() {
-    patchConnect();
     addStyles();
 
     if (!createChorusModule()) {
