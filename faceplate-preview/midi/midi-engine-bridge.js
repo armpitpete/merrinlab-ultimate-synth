@@ -2,10 +2,6 @@
 (() => {
   "use strict";
 
-  const heldNotes = [];
-  let currentNote = null;
-  let pitchBend = 0;
-
   const ccMap = {
     21: ["vcoLevel", 0, 0.7],
     22: ["vco2Level", 0, 0.45],
@@ -17,109 +13,58 @@
     28: ["delayMix", 0, 1]
   };
 
-  function midiNoteToFrequency(note, bend = 0) {
-    const semitones = bend * 2;
-    return 440 * Math.pow(2, ((note - 69) + semitones) / 12);
-  }
+  let warnedMissingAudioApi = false;
 
-  function getAudioControl(key) {
-    return document.querySelector(`[data-audio-control="${key}"]`);
-  }
-
-  function setAudioControl(key, value) {
-    const control = getAudioControl(key);
-    if (!control) return false;
-
-    control.value = String(value);
-    control.dispatchEvent(new Event("input", { bubbles: true }));
-    return true;
-  }
-
-  function clickAudioAction(action) {
-    const button = document.querySelector(`[data-audio-action="${action}"]`);
-    if (!button) return false;
-    button.click();
-    return true;
-  }
-
-  function applyCurrentPitch() {
-    if (currentNote === null) return false;
-    const frequency = midiNoteToFrequency(currentNote, pitchBend);
-    return setAudioControl("coarseFreq", Math.min(880, Math.max(55, frequency)));
-  }
-
-  function removeHeldNote(note) {
-    for (let i = heldNotes.length - 1; i >= 0; i -= 1) {
-      if (heldNotes[i] === note) heldNotes.splice(i, 1);
+  function getAudioApi() {
+    const audio = window.MerrinLabAudio;
+    if (!audio && !warnedMissingAudioApi) {
+      warnedMissingAudioApi = true;
+      console.error("MerrinLab MIDI: audio engine API unavailable");
     }
+    return audio;
   }
 
-  window.MerrinLabAudio = {
-    start() {
-      return clickAudioAction("start");
-    },
+  function mapCcValue(cc, value) {
+    const mapping = ccMap[cc];
+    if (!mapping) return null;
 
-    noteOn(note, velocity, channel) {
-      removeHeldNote(note);
-      heldNotes.push(note);
-      currentNote = note;
-      applyCurrentPitch();
-      clickAudioAction("gate-on");
-      window.dispatchEvent(new CustomEvent("merrinlab-midi-note", {
-        detail: { type: "noteon", note, velocity, channel }
-      }));
-    },
-
-    noteOff(note, channel) {
-      removeHeldNote(note);
-
-      if (currentNote !== note) return;
-
-      if (heldNotes.length) {
-        currentNote = heldNotes[heldNotes.length - 1];
-        applyCurrentPitch();
-      } else {
-        currentNote = null;
-        clickAudioAction("gate-off");
-      }
-
-      window.dispatchEvent(new CustomEvent("merrinlab-midi-note", {
-        detail: { type: "noteoff", note, channel }
-      }));
-    },
-
-    pitchBend(rawValue) {
-      pitchBend = Math.max(-1, Math.min(1, rawValue / 8192));
-      applyCurrentPitch();
-    },
-
-    controlChange(cc, value) {
-      const mapping = ccMap[cc];
-      if (!mapping) return false;
-      const [key, min, max] = mapping;
-      const normalized = Math.max(0, Math.min(127, value)) / 127;
-      return setAudioControl(key, min + normalized * (max - min));
-    },
-
-    setParameter(key, value) {
-      return setAudioControl(key, value);
-    }
-  };
+    const [key, min, max] = mapping;
+    const normalized = Math.max(0, Math.min(127, value)) / 127;
+    return [key, min + normalized * (max - min)];
+  }
 
   window.addEventListener("merrinlab-midi", event => {
     const [status, data1, data2] = event.detail;
     const command = status & 0xf0;
     const channel = (status & 0x0f) + 1;
+    const audio = getAudioApi();
+    if (!audio) return;
 
     if (command === 0x90 && data2 > 0) {
-      window.MerrinLabAudio.noteOn(data1, data2, channel);
-    } else if (command === 0x80 || (command === 0x90 && data2 === 0)) {
-      window.MerrinLabAudio.noteOff(data1, channel);
-    } else if (command === 0xb0) {
-      window.MerrinLabAudio.controlChange(data1, data2, channel);
-    } else if (command === 0xe0) {
-      const value = ((data2 << 7) | data1) - 8192;
-      window.MerrinLabAudio.pitchBend(value);
+      audio.noteOn(data1, data2, channel);
+      window.dispatchEvent(new CustomEvent("merrinlab-midi-note", {
+        detail: { type: "noteon", note: data1, velocity: data2, channel }
+      }));
+      return;
+    }
+
+    if (command === 0x80 || (command === 0x90 && data2 === 0)) {
+      audio.noteOff(data1, channel);
+      window.dispatchEvent(new CustomEvent("merrinlab-midi-note", {
+        detail: { type: "noteoff", note: data1, channel }
+      }));
+      return;
+    }
+
+    if (command === 0xb0) {
+      const mapped = mapCcValue(data1, data2);
+      if (mapped) audio.setParameter(mapped[0], mapped[1]);
+      return;
+    }
+
+    if (command === 0xe0) {
+      const rawValue = ((data2 << 7) | data1) - 8192;
+      audio.pitchBend(rawValue, channel);
     }
   });
 })();
