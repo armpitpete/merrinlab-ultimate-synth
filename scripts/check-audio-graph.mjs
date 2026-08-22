@@ -39,10 +39,18 @@ assert.match(sources.get("vco1-visible-controls.js"), /key: "sampleHoldInput"/, 
 assert.match(sources.get("vco1-visible-controls.js"), /key: "sampleHoldMode"/, "the Sample/Track mode selector must be visible");
 assert.match(sources.get("vco1-visible-controls.js"), /key: "sampleHoldGlide"/, "the Sample & Hold glide slider must be visible");
 assert.match(sources.get("vco1-visible-controls.js"), /dataset\.sampleHoldTrigger/, "the manual capture button must be installed");
+assert.match(sources.get("audio-engine.js"), /vcaEnvelopeMod: 1,/, "the Main VCA envelope must remain audible by default");
+assert.match(sources.get("audio-engine.js"), /function getVcaTarget\(envelopeLevel = 1\)/, "the Main VCA controls must share one gain calculation");
+assert.match(sources.get("audio-engine.js"), /const extCvScale = 1 \+ clamp\(state\.vcaExtCv, "vcaExtCv"\)/, "the Main VCA Ext CV must scale the gated signal");
+assert.match(sources.get("vco1-visible-controls.js"), /key: "vcaInitialLevel"/, "the Main VCA Initial Level slider must be visible");
+assert.match(sources.get("vco1-visible-controls.js"), /key: "vcaEnvelopeMod"/, "the Main VCA AR Mod slider must be visible");
+assert.match(sources.get("vco1-visible-controls.js"), /key: "vcaExtCv"/, "the Main VCA Ext CV slider must be visible");
 
 const index = await readFile(join(previewDirectory.pathname, "index.html"), "utf8");
 const sampleHoldMarkup = index.match(/<article class="module sample-hold-module">([\s\S]*?)<\/article>/)?.[1] || "";
 assert.doesNotMatch(sampleHoldMarkup, /class="knob/, "the Sample & Hold module must not render decorative dials");
+const mainVcaMarkup = index.match(/<article class="module main-vca-module[^"]*">([\s\S]*?)<\/article>/)?.[1] || "";
+assert.doesNotMatch(mainVcaMarkup, /class="(?:knob|jack)/, "the Main VCA module must not render decorative dials or jacks");
 assert.ok(index.indexOf('src="effects-output-graph.js"') < index.indexOf('src="audio-engine.js"'), "the graph must load before the engine");
 assert.doesNotMatch(index, /filter-self-resonance-layer\.js/, "the synthetic resonance layer must stay unloaded");
 assert.doesNotMatch(index, /state-variable-vcf-bp-balance-runtime\.js/, "the prototype calibration runtime must stay unloaded");
