@@ -239,11 +239,11 @@
     document.head.append(style);
   }
 
-  function loadSelfResonanceLayer() {
-    if (document.querySelector('script[src="filter-self-resonance-layer.js"]')) return;
+  function loadEnvelopeFollowerLayer() {
+    if (document.querySelector('script[src="envelope-follower-dynamic-modulation-layer.js"]')) return;
 
     const script = document.createElement("script");
-    script.src = "filter-self-resonance-layer.js";
+    script.src = "envelope-follower-dynamic-modulation-layer.js";
     script.defer = true;
     document.head.append(script);
   }
@@ -258,7 +258,7 @@
     }
 
     syncDriveControls();
-    loadSelfResonanceLayer();
+    loadEnvelopeFollowerLayer();
   }
 
   document.addEventListener("input", handleDriveInput);

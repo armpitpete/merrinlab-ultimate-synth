@@ -192,7 +192,7 @@
       moduleSelector: ".filter-lp-module",
       label: "Resonance",
       type: "range",
-      min: 0.1,
+      min: 0,
       max: 12,
       step: 0.1,
       unit: "Q",
