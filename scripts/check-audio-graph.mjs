@@ -71,6 +71,13 @@ assert.match(sources.get("audio-engine.js"), /linearFmGain\.connect\(oscillatorN
 assert.match(sources.get("audio-engine.js"), /pwmGain\.connect\(pulseShaper\)/, "VCO PWM must reach the pulse comparator");
 assert.match(sources.get("audio-engine.js"), /pulseShaper\.oversample = "4x"/, "pulse generation must use oversampled shaping");
 assert.match(sources.get("audio-engine.js"), /applyAllVcoModulationRoutes\(\)/, "all VCO modulation routes must be installed together");
+assert.match(sources.get("audio-engine.js"), /vcoGain\.connect\(mixerBus\)/, "VCO 1 must enter the explicit mixer bus");
+assert.match(sources.get("audio-engine.js"), /vco2Gain\.connect\(mixerBus\)/, "VCO 2 must enter the explicit mixer bus");
+assert.match(sources.get("audio-engine.js"), /vco3Gain\.connect\(mixerBus\)/, "VCO 3 must enter the explicit mixer bus");
+assert.match(sources.get("audio-engine.js"), /noiseGain\.connect\(mixerBus\)/, "noise must enter the explicit mixer bus");
+assert.match(sources.get("audio-engine.js"), /mixerBus\.connect\(mixerAnalyser\);\s+mixerAnalyser\.connect\(filter\)/, "the mixer bus and meter must remain in the main filter path");
+assert.match(sources.get("audio-engine.js"), /state\[muteKey\] === "on" \? 0 : clamp/, "Mixer mute must set the channel gain to digital silence");
+assert.match(sources.get("audio-engine.js"), /merrinlab:mixer-meter/, "the Mixer interface must receive live pre-filter level data");
 
 const midiListeners = new Map();
 const midiDocumentListeners = new Map();
@@ -139,6 +146,13 @@ assert.equal((vcoBankMarkup.match(/Pitch Mod Source/g) || []).length, 3, "each V
 assert.equal((vcoBankMarkup.match(/Linear FM Source/g) || []).length, 3, "each VCO must expose a live linear FM source");
 assert.equal((vcoBankMarkup.match(/PWM Source/g) || []).length, 3, "each VCO must expose a live PWM source");
 assert.doesNotMatch(vcoBankMarkup, />SYNC</, "unsupported hard-sync must not be presented as a functional control");
+const mixerMarkup = index.match(/<article class="module mixer-module[^>]*>([\s\S]*?)<\/article>/)?.[1] || "";
+assert.doesNotMatch(mixerMarkup, /class="(?:knob|jack)/, "the Mixer must not render decorative dials or sockets");
+assert.equal((mixerMarkup.match(/data-mixer-mute=/g) || []).length, 4, "the Mixer must expose four real channel mute buttons");
+assert.match(mixerMarkup, /data-mixer-meter-fill/, "the Mixer must expose its live pre-filter meter");
+assert.doesNotMatch(mixerMarkup, /Ext\. In|Noise Outputs/, "unsupported external input and fake noise outputs must be removed");
+assert.match(sources.get("vco1-visible-controls.js"), /key: "noiseType"/, "noise colour selection must be visible in the Mixer");
+assert.match(sources.get("vco1-visible-controls.js"), /function installMixerRuntimeUi\(\)/, "Mixer mute buttons must be wired to engine controls");
 const mainVcaMarkup = index.match(/<article class="module main-vca-module[^"]*">([\s\S]*?)<\/article>/)?.[1] || "";
 assert.doesNotMatch(mainVcaMarkup, /class="(?:knob|jack)/, "the Main VCA module must not render decorative dials or jacks");
 const attenuatorMarkup = index.match(/<article class="module attenuators-module[^"]*">([\s\S]*?)<\/article>/)?.[1] || "";

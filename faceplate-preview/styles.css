@@ -644,15 +644,92 @@ body {
   min-height: auto;
 }
 
-.mixer-noise-outputs {
-  margin-top: 4px;
+.mixer-channel-list {
+  display: grid;
+  gap: 14px;
 }
 
-.mixer-noise-outputs .control-label {
-  min-height: auto;
-  margin-bottom: 8px;
-  font-size: 0.72rem;
-  letter-spacing: 0.04em;
+.mixer-channel {
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(215, 184, 132, 0.2);
+}
+
+.mixer-channel .mixer-control {
+  margin-bottom: 0;
+}
+
+.mixer-noise-type {
+  margin-top: 12px;
+}
+
+.mixer-channel-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 9px;
+  color: #a99b88;
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mixer-mute-button {
+  min-width: 58px;
+  border: 1px solid rgba(215, 184, 132, 0.4);
+  border-radius: 999px;
+  padding: 5px 9px;
+  background: #211913;
+  color: #f3e8da;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.mixer-mute-button.is-muted {
+  border-color: rgba(255, 134, 99, 0.72);
+  background: #3a211b;
+  color: #ffb29b;
+}
+
+.mixer-meter {
+  margin-top: 16px;
+  padding: 12px 8px 10px;
+  border: 1px solid rgba(215, 184, 132, 0.28);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.mixer-meter-track {
+  height: 9px;
+  margin: 8px 0 6px;
+  overflow: hidden;
+  border: 1px solid rgba(215, 184, 132, 0.28);
+  border-radius: 999px;
+  background: #17130f;
+}
+
+.mixer-meter-track span {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #6fbf73 0 72%, #e8bd56 88%, #e17a5d 100%);
+  transition: width 50ms linear;
+}
+
+.mixer-meter output {
+  color: #d6c8b5;
+  font-size: 0.62rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.mixer-meter.is-clipping {
+  border-color: rgba(255, 110, 84, 0.8);
+  box-shadow: 0 0 10px rgba(255, 110, 84, 0.24);
 }
 
 .dual-jacks {

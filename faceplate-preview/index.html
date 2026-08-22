@@ -92,12 +92,30 @@
 
       <article class="module mixer-module mixer-strip">
         <div class="module-header"><span class="status-light"></span><h2>Mixer</h2></div>
-        <div class="control mixer-control"><div class="control-label">VCO 1 Level</div><div class="knob"></div></div>
-        <div class="control mixer-control"><div class="control-label">VCO 2 Level</div><div class="knob"></div></div>
-        <div class="control mixer-control"><div class="control-label">VCO 3 Level</div><div class="knob"></div></div>
-        <div class="control mixer-control"><div class="control-label">Ext. In Level</div><div class="knob"></div></div>
-        <div class="control mixer-control"><div class="control-label">White NS Level</div><div class="knob"></div></div>
-        <div class="mixer-noise-outputs"><div class="control"><div class="control-label">Noise Outputs</div><div class="dual-jacks"><div class="jack-socket"></div><div class="jack-socket"></div></div></div></div>
+        <div class="mixer-channel-list">
+          <section class="mixer-channel" aria-label="VCO 1 mixer channel">
+            <div class="control mixer-control"><div class="control-label">VCO 1 Level</div></div>
+            <div class="mixer-channel-footer"><output data-mixer-channel-status>Active</output><button type="button" class="mixer-mute-button" data-mixer-mute="vco1Mute" aria-pressed="false">Mute</button></div>
+          </section>
+          <section class="mixer-channel" aria-label="VCO 2 mixer channel">
+            <div class="control mixer-control"><div class="control-label">VCO 2 Level</div></div>
+            <div class="mixer-channel-footer"><output data-mixer-channel-status>Active</output><button type="button" class="mixer-mute-button" data-mixer-mute="vco2Mute" aria-pressed="false">Mute</button></div>
+          </section>
+          <section class="mixer-channel" aria-label="VCO 3 mixer channel">
+            <div class="control mixer-control"><div class="control-label">VCO 3 Level</div></div>
+            <div class="mixer-channel-footer"><output data-mixer-channel-status>Active</output><button type="button" class="mixer-mute-button" data-mixer-mute="vco3Mute" aria-pressed="false">Mute</button></div>
+          </section>
+          <section class="mixer-channel mixer-noise-channel" aria-label="Noise mixer channel">
+            <div class="control mixer-control"><div class="control-label">Noise Level</div></div>
+            <div class="control mixer-noise-type"><div class="control-label">Noise Type</div></div>
+            <div class="mixer-channel-footer"><output data-mixer-channel-status>Active</output><button type="button" class="mixer-mute-button" data-mixer-mute="noiseMute" aria-pressed="false">Mute</button></div>
+          </section>
+        </div>
+        <section class="mixer-meter" aria-label="Pre-filter mix level">
+          <div class="control-label">Pre-filter Level</div>
+          <div class="mixer-meter-track"><span data-mixer-meter-fill></span></div>
+          <output data-mixer-meter-readout>Silent</output>
+        </section>
       </article>
 
       <article class="module filter-lp-module lowpass-strip">
