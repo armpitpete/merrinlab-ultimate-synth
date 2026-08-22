@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
+import vm from "node:vm";
 
 const previewDirectory = new URL("../faceplate-preview/", import.meta.url);
 const entries = await readdir(previewDirectory, { withFileTypes: true });
@@ -46,11 +47,30 @@ assert.match(sources.get("vco1-visible-controls.js"), /key: "vcaInitialLevel"/, 
 assert.match(sources.get("vco1-visible-controls.js"), /key: "vcaEnvelopeMod"/, "the Main VCA AR Mod slider must be visible");
 assert.match(sources.get("vco1-visible-controls.js"), /key: "vcaExtCv"/, "the Main VCA Ext CV slider must be visible");
 
+const attenuatorWindow = {};
+vm.runInNewContext(sources.get("attenuator-bank.js"), { window: attenuatorWindow });
+const attenuators = attenuatorWindow.MerrinLabAttenuators;
+assert.equal(attenuators.getState().length, 6, "the attenuator bank must expose six channels");
+attenuators.setInput(1, -1);
+attenuators.setAmount(1, 0.5);
+assert.equal(attenuators.getChannel(1).output, -0.5, "an attenuator must preserve polarity while reducing magnitude");
+attenuators.setInput(6, 1);
+attenuators.setAmount(6, 0);
+assert.equal(attenuators.getChannel(6).output, 0, "zero attenuation amount must silence the utility output");
+attenuators.setAmount(6, 1);
+assert.equal(attenuators.getChannel(6).output, 1, "full attenuation amount must pass the utility input unchanged");
+
 const index = await readFile(join(previewDirectory.pathname, "index.html"), "utf8");
 const sampleHoldMarkup = index.match(/<article class="module sample-hold-module">([\s\S]*?)<\/article>/)?.[1] || "";
 assert.doesNotMatch(sampleHoldMarkup, /class="knob/, "the Sample & Hold module must not render decorative dials");
 const mainVcaMarkup = index.match(/<article class="module main-vca-module[^"]*">([\s\S]*?)<\/article>/)?.[1] || "";
 assert.doesNotMatch(mainVcaMarkup, /class="(?:knob|jack)/, "the Main VCA module must not render decorative dials or jacks");
+const attenuatorMarkup = index.match(/<article class="module attenuators-module[^"]*">([\s\S]*?)<\/article>/)?.[1] || "";
+assert.doesNotMatch(attenuatorMarkup, /class="(?:knob|jack)/, "the attenuator bank must not render decorative dials or jacks");
+assert.equal((attenuatorMarkup.match(/data-attenuator-input=/g) || []).length, 6, "the attenuator bank must expose six bipolar input sliders");
+assert.equal((attenuatorMarkup.match(/data-attenuator-amount=/g) || []).length, 6, "the attenuator bank must expose six amount sliders");
+assert.equal((attenuatorMarkup.match(/data-attenuator-output=/g) || []).length, 6, "the attenuator bank must expose six output readouts");
+assert.ok(index.indexOf('src="attenuator-bank.js"') < index.indexOf('src="attenuator-visible-controls.js"'), "the attenuator engine must load before its interface");
 assert.ok(index.indexOf('src="effects-output-graph.js"') < index.indexOf('src="audio-engine.js"'), "the graph must load before the engine");
 assert.doesNotMatch(index, /filter-self-resonance-layer\.js/, "the synthetic resonance layer must stay unloaded");
 assert.doesNotMatch(index, /state-variable-vcf-bp-balance-runtime\.js/, "the prototype calibration runtime must stay unloaded");
