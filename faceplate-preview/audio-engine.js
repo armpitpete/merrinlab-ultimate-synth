@@ -8,16 +8,34 @@
     fineCents: 0,
     waveform: "sawtooth",
     pulseWidth: 50,
+    vco1PitchModSource: "off",
+    vco1PitchModDepth: 0,
+    vco1LinearFmSource: "off",
+    vco1LinearFmDepth: 0,
+    vco1PwmSource: "off",
+    vco1PwmDepth: 0,
     vcoLevel: 0.35,
     vco2CoarseFreq: 220,
     vco2FineCents: 0,
     vco2Waveform: "sawtooth",
     vco2PulseWidth: 50,
+    vco2PitchModSource: "off",
+    vco2PitchModDepth: 0,
+    vco2LinearFmSource: "off",
+    vco2LinearFmDepth: 0,
+    vco2PwmSource: "off",
+    vco2PwmDepth: 0,
     vco2Level: 0,
     vco3CoarseFreq: 220,
     vco3FineCents: 0,
     vco3Waveform: "sawtooth",
     vco3PulseWidth: 50,
+    vco3PitchModSource: "off",
+    vco3PitchModDepth: 0,
+    vco3LinearFmSource: "off",
+    vco3LinearFmDepth: 0,
+    vco3PwmSource: "off",
+    vco3PwmDepth: 0,
     vco3Level: 0,
     noiseType: "white",
     whiteNoiseLevel: 0,
@@ -71,6 +89,7 @@
   let vco2Gain = null;
   let oscillator3 = null;
   let vco3Gain = null;
+  let vcoProcessors = [];
   let noiseSource = null;
   let noiseGain = null;
   let lfo1Oscillator = null;
@@ -109,14 +128,23 @@
     coarseFreq: [55, 880],
     fineCents: [-100, 100],
     pulseWidth: [10, 90],
+    vco1PitchModDepth: [0, 24],
+    vco1LinearFmDepth: [0, 500],
+    vco1PwmDepth: [0, 40],
     vcoLevel: [0, 0.7],
     vco2CoarseFreq: [55, 880],
     vco2FineCents: [-100, 100],
     vco2PulseWidth: [10, 90],
+    vco2PitchModDepth: [0, 24],
+    vco2LinearFmDepth: [0, 500],
+    vco2PwmDepth: [0, 40],
     vco2Level: [0, 0.45],
     vco3CoarseFreq: [55, 880],
     vco3FineCents: [-100, 100],
     vco3PulseWidth: [10, 90],
+    vco3PitchModDepth: [0, 24],
+    vco3LinearFmDepth: [0, 500],
+    vco3PwmDepth: [0, 40],
     vco3Level: [0, 0.4],
     whiteNoiseLevel: [0, 0.35],
     cutoff: [120, 6500],
@@ -154,16 +182,34 @@
     fineCents: "VCO 1 Fine Freq",
     waveform: "VCO 1 Waveform",
     pulseWidth: "VCO 1 Pulse Width %",
+    vco1PitchModSource: "VCO 1 Pitch Mod Source",
+    vco1PitchModDepth: "VCO 1 Pitch Depth",
+    vco1LinearFmSource: "VCO 1 Linear FM Source",
+    vco1LinearFmDepth: "VCO 1 FM Depth",
+    vco1PwmSource: "VCO 1 PWM Source",
+    vco1PwmDepth: "VCO 1 PWM Depth",
     vcoLevel: "VCO 1 Level",
     vco2CoarseFreq: "VCO 2 Coarse Freq",
     vco2FineCents: "VCO 2 Fine Freq",
     vco2Waveform: "VCO 2 Waveform",
     vco2PulseWidth: "VCO 2 Pulse Width %",
+    vco2PitchModSource: "VCO 2 Pitch Mod Source",
+    vco2PitchModDepth: "VCO 2 Pitch Depth",
+    vco2LinearFmSource: "VCO 2 Linear FM Source",
+    vco2LinearFmDepth: "VCO 2 FM Depth",
+    vco2PwmSource: "VCO 2 PWM Source",
+    vco2PwmDepth: "VCO 2 PWM Depth",
     vco2Level: "VCO 2 Level",
     vco3CoarseFreq: "VCO 3 Coarse Freq",
     vco3FineCents: "VCO 3 Fine Freq",
     vco3Waveform: "VCO 3 Waveform",
     vco3PulseWidth: "VCO 3 Pulse Width %",
+    vco3PitchModSource: "VCO 3 Pitch Mod Source",
+    vco3PitchModDepth: "VCO 3 Pitch Depth",
+    vco3LinearFmSource: "VCO 3 Linear FM Source",
+    vco3LinearFmDepth: "VCO 3 FM Depth",
+    vco3PwmSource: "VCO 3 PWM Source",
+    vco3PwmDepth: "VCO 3 PWM Depth",
     vco3Level: "VCO 3 Level",
     noiseType: "Noise Type",
     whiteNoiseLevel: "White NS Level",
@@ -214,14 +260,23 @@
     coarseFreq: "Hz",
     fineCents: "cent",
     pulseWidth: "%",
+    vco1PitchModDepth: "st",
+    vco1LinearFmDepth: "Hz",
+    vco1PwmDepth: "%",
     vcoLevel: "",
     vco2CoarseFreq: "Hz",
     vco2FineCents: "cent",
     vco2PulseWidth: "%",
+    vco2PitchModDepth: "st",
+    vco2LinearFmDepth: "Hz",
+    vco2PwmDepth: "%",
     vco2Level: "",
     vco3CoarseFreq: "Hz",
     vco3FineCents: "cent",
     vco3PulseWidth: "%",
+    vco3PitchModDepth: "st",
+    vco3LinearFmDepth: "Hz",
+    vco3PwmDepth: "%",
     vco3Level: "",
     whiteNoiseLevel: "",
     cutoff: "Hz",
@@ -865,23 +920,113 @@
     safeRamp(lfo2Offset.offset, 1 - depth / 2, now, 0.04);
   }
 
-  function createPulseWave(dutyPercent, pulseWidthKey = "pulseWidth") {
-    const duty = clamp(dutyPercent, pulseWidthKey) / 100;
-    const harmonics = 64;
-    const real = new Float32Array(harmonics + 1);
-    const imag = new Float32Array(harmonics + 1);
+  function createPulseShaperCurve() {
+    const curve = new Float32Array(4096);
+    for (let index = 0; index < curve.length; index += 1) {
+      const input = (index / (curve.length - 1)) * 2 - 1;
+      curve[index] = Math.tanh(input * 80);
+    }
+    return curve;
+  }
 
-    real[0] = 0;
-    imag[0] = 0;
+  function createVcoProcessor(oscillatorNode, outputGain, config) {
+    const pulseShaper = audioContext.createWaveShaper();
+    pulseShaper.curve = createPulseShaperCurve();
+    pulseShaper.oversample = "4x";
 
-    for (let n = 1; n <= harmonics; n += 1) {
-      real[n] = (2 / (n * Math.PI)) * Math.sin(n * Math.PI * duty);
-      imag[n] = 0;
+    const pulseOffset = audioContext.createConstantSource();
+    const pwmGain = audioContext.createGain();
+    const pitchGain = audioContext.createGain();
+    const linearFmGain = audioContext.createGain();
+
+    pulseOffset.connect(pulseShaper);
+    pwmGain.connect(pulseShaper);
+    pitchGain.connect(oscillatorNode.detune);
+    linearFmGain.connect(oscillatorNode.frequency);
+
+    return {
+      ...config,
+      oscillator: oscillatorNode,
+      outputGain,
+      pulseShaper,
+      pulseOffset,
+      pwmGain,
+      pitchGain,
+      linearFmGain,
+      connectedPitchSource: null,
+      connectedLinearFmSource: null,
+      connectedPwmSource: null,
+    };
+  }
+
+  function disconnectVcoSignalPath(processor) {
+    if (!processor) return;
+    try { processor.oscillator.disconnect(processor.outputGain); } catch (_error) {}
+    try { processor.oscillator.disconnect(processor.pulseShaper); } catch (_error) {}
+    try { processor.pulseShaper.disconnect(processor.outputGain); } catch (_error) {}
+  }
+
+  function applyVcoSignalPath(processor) {
+    if (!audioContext || !processor) return;
+
+    const waveform = state[processor.waveformKey];
+    const pulseWidth = clamp(state[processor.pulseWidthKey], processor.pulseWidthKey);
+    const now = audioContext.currentTime;
+    disconnectVcoSignalPath(processor);
+
+    if (waveform === "pulse") {
+      processor.oscillator.type = "sawtooth";
+      safeRamp(processor.pulseOffset.offset, (pulseWidth - 50) / 50, now, 0.01);
+      processor.oscillator.connect(processor.pulseShaper);
+      processor.pulseShaper.connect(processor.outputGain);
+      return;
     }
 
-    return audioContext.createPeriodicWave(real, imag, {
-      disableNormalization: false,
-    });
+    processor.oscillator.type = waveform;
+    processor.oscillator.connect(processor.outputGain);
+  }
+
+  function disconnectVcoModulationSource(processor, route) {
+    const sourceKey = `connected${route}`;
+    const gainKey = route === "PitchSource" ? "pitchGain" : route === "LinearFmSource" ? "linearFmGain" : "pwmGain";
+    const source = processor?.[sourceKey];
+    if (!source) return;
+    try { source.disconnect(processor[gainKey]); } catch (_error) {}
+    processor[sourceKey] = null;
+  }
+
+  function applyVcoModulationRoutes(processor) {
+    if (!audioContext || !processor) return;
+
+    disconnectVcoModulationSource(processor, "PitchSource");
+    disconnectVcoModulationSource(processor, "LinearFmSource");
+    disconnectVcoModulationSource(processor, "PwmSource");
+
+    const pitchSource = getModulationSourceNode(state[processor.pitchSourceKey]);
+    const linearFmSource = getModulationSourceNode(state[processor.linearFmSourceKey]);
+    const pwmSource = getModulationSourceNode(state[processor.pwmSourceKey]);
+    const now = audioContext.currentTime;
+
+    safeRamp(processor.pitchGain.gain, clamp(state[processor.pitchDepthKey], processor.pitchDepthKey) * 100, now, 0.02);
+    safeRamp(processor.linearFmGain.gain, clamp(state[processor.linearFmDepthKey], processor.linearFmDepthKey), now, 0.02);
+    safeRamp(processor.pwmGain.gain, clamp(state[processor.pwmDepthKey], processor.pwmDepthKey) / 50, now, 0.02);
+
+    if (pitchSource) {
+      pitchSource.connect(processor.pitchGain);
+      processor.connectedPitchSource = pitchSource;
+    }
+    if (linearFmSource) {
+      linearFmSource.connect(processor.linearFmGain);
+      processor.connectedLinearFmSource = linearFmSource;
+    }
+    if (pwmSource) {
+      pwmSource.connect(processor.pwmGain);
+      processor.connectedPwmSource = pwmSource;
+    }
+  }
+
+  function applyAllVcoModulationRoutes() {
+    vcoProcessors.forEach(applyVcoModulationRoutes);
   }
 
   function fillWhiteNoise(channel) {
@@ -961,29 +1106,19 @@
     noiseSource.connect(noiseGain);
     noiseSource.start();
     applyAllAttenuatorRoutes();
-  }
-
-  function applyOscillatorWaveform(targetOscillator, waveform, pulseWidth, pulseWidthKey) {
-    if (!audioContext || !targetOscillator) return;
-
-    if (waveform === "pulse") {
-      targetOscillator.setPeriodicWave(createPulseWave(pulseWidth, pulseWidthKey));
-      return;
-    }
-
-    targetOscillator.type = waveform;
+    applyAllVcoModulationRoutes();
   }
 
   function applyWaveform() {
-    applyOscillatorWaveform(oscillator, state.waveform, state.pulseWidth, "pulseWidth");
+    applyVcoSignalPath(vcoProcessors[0]);
   }
 
   function applyVco2Waveform() {
-    applyOscillatorWaveform(oscillator2, state.vco2Waveform, state.vco2PulseWidth, "vco2PulseWidth");
+    applyVcoSignalPath(vcoProcessors[1]);
   }
 
   function applyVco3Waveform() {
-    applyOscillatorWaveform(oscillator3, state.vco3Waveform, state.vco3PulseWidth, "vco3PulseWidth");
+    applyVcoSignalPath(vcoProcessors[2]);
   }
 
   function createAudioGraph() {
@@ -1000,24 +1135,57 @@
 
     oscillator = audioContext.createOscillator();
     oscillator.frequency.value = getVcoFrequency();
-    applyWaveform();
 
     vcoGain = audioContext.createGain();
     vcoGain.gain.value = state.vcoLevel;
 
     oscillator2 = audioContext.createOscillator();
     oscillator2.frequency.value = getVco2Frequency();
-    applyVco2Waveform();
 
     vco2Gain = audioContext.createGain();
     vco2Gain.gain.value = state.vco2Level;
 
     oscillator3 = audioContext.createOscillator();
     oscillator3.frequency.value = getVco3Frequency();
-    applyVco3Waveform();
 
     vco3Gain = audioContext.createGain();
     vco3Gain.gain.value = state.vco3Level;
+
+    vcoProcessors = [
+      createVcoProcessor(oscillator, vcoGain, {
+        waveformKey: "waveform",
+        pulseWidthKey: "pulseWidth",
+        pitchSourceKey: "vco1PitchModSource",
+        pitchDepthKey: "vco1PitchModDepth",
+        linearFmSourceKey: "vco1LinearFmSource",
+        linearFmDepthKey: "vco1LinearFmDepth",
+        pwmSourceKey: "vco1PwmSource",
+        pwmDepthKey: "vco1PwmDepth",
+      }),
+      createVcoProcessor(oscillator2, vco2Gain, {
+        waveformKey: "vco2Waveform",
+        pulseWidthKey: "vco2PulseWidth",
+        pitchSourceKey: "vco2PitchModSource",
+        pitchDepthKey: "vco2PitchModDepth",
+        linearFmSourceKey: "vco2LinearFmSource",
+        linearFmDepthKey: "vco2LinearFmDepth",
+        pwmSourceKey: "vco2PwmSource",
+        pwmDepthKey: "vco2PwmDepth",
+      }),
+      createVcoProcessor(oscillator3, vco3Gain, {
+        waveformKey: "vco3Waveform",
+        pulseWidthKey: "vco3PulseWidth",
+        pitchSourceKey: "vco3PitchModSource",
+        pitchDepthKey: "vco3PitchModDepth",
+        linearFmSourceKey: "vco3LinearFmSource",
+        linearFmDepthKey: "vco3LinearFmDepth",
+        pwmSourceKey: "vco3PwmSource",
+        pwmDepthKey: "vco3PwmDepth",
+      }),
+    ];
+    applyWaveform();
+    applyVco2Waveform();
+    applyVco3Waveform();
 
     noiseSource = createNoiseSource();
     noiseGain = audioContext.createGain();
@@ -1081,13 +1249,10 @@
       return false;
     }
 
-    oscillator.connect(vcoGain);
     vcoGain.connect(filter);
 
-    oscillator2.connect(vco2Gain);
     vco2Gain.connect(filter);
 
-    oscillator3.connect(vco3Gain);
     vco3Gain.connect(filter);
 
     noiseSource.connect(noiseGain);
@@ -1107,6 +1272,7 @@
 
     applyAuxVcaRouting();
     applyAllAttenuatorRoutes();
+    applyAllVcoModulationRoutes();
 
     oscillator.start();
     oscillator2.start();
@@ -1120,6 +1286,7 @@
     startSampleHoldTimer();
     lfo2Oscillator.start();
     lfo2Offset.start();
+    vcoProcessors.forEach((processor) => processor.pulseOffset.start());
     return true;
   }
 
@@ -1324,6 +1491,16 @@
     });
 
     attenuatorRouteNodes.forEach((_routeNode, index) => disconnectAttenuatorRoute(index));
+    vcoProcessors.forEach((processor) => {
+      disconnectVcoModulationSource(processor, "PitchSource");
+      disconnectVcoModulationSource(processor, "LinearFmSource");
+      disconnectVcoModulationSource(processor, "PwmSource");
+      [processor.pitchGain, processor.linearFmGain, processor.pwmGain].forEach((gainNode) => {
+        gainNode.gain.cancelScheduledValues(audioContext.currentTime);
+        gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+      });
+      try { processor.pulseOffset.stop(); } catch (_error) {}
+    });
     disconnectAuxVcaRouting();
 
     window.MerrinLabEffectsOutputGraph?.mute();
@@ -1352,6 +1529,7 @@
     vco2Gain = null;
     oscillator3 = null;
     vco3Gain = null;
+    vcoProcessors = [];
     noiseSource = null;
     noiseGain = null;
     lfo1Oscillator = null;
@@ -1385,16 +1563,34 @@
       "fineCents",
       "waveform",
       "pulseWidth",
+      "vco1PitchModSource",
+      "vco1PitchModDepth",
+      "vco1LinearFmSource",
+      "vco1LinearFmDepth",
+      "vco1PwmSource",
+      "vco1PwmDepth",
       "vcoLevel",
       "vco2CoarseFreq",
       "vco2FineCents",
       "vco2Waveform",
       "vco2PulseWidth",
+      "vco2PitchModSource",
+      "vco2PitchModDepth",
+      "vco2LinearFmSource",
+      "vco2LinearFmDepth",
+      "vco2PwmSource",
+      "vco2PwmDepth",
       "vco2Level",
       "vco3CoarseFreq",
       "vco3FineCents",
       "vco3Waveform",
       "vco3PulseWidth",
+      "vco3PitchModSource",
+      "vco3PitchModDepth",
+      "vco3LinearFmSource",
+      "vco3LinearFmDepth",
+      "vco3PwmSource",
+      "vco3PwmDepth",
       "vco3Level",
       "noiseType",
       "whiteNoiseLevel",
@@ -1455,6 +1651,13 @@
     if (key === "waveform" || key === "pulseWidth") applyWaveform();
     if (key === "vco2Waveform" || key === "vco2PulseWidth") applyVco2Waveform();
     if (key === "vco3Waveform" || key === "vco3PulseWidth") applyVco3Waveform();
+
+    const vcoModulationIndex = [
+      ["vco1PitchModSource", "vco1PitchModDepth", "vco1LinearFmSource", "vco1LinearFmDepth", "vco1PwmSource", "vco1PwmDepth"],
+      ["vco2PitchModSource", "vco2PitchModDepth", "vco2LinearFmSource", "vco2LinearFmDepth", "vco2PwmSource", "vco2PwmDepth"],
+      ["vco3PitchModSource", "vco3PitchModDepth", "vco3LinearFmSource", "vco3LinearFmDepth", "vco3PwmSource", "vco3PwmDepth"],
+    ].findIndex((keys) => keys.includes(key));
+    if (vcoModulationIndex >= 0) applyVcoModulationRoutes(vcoProcessors[vcoModulationIndex]);
 
     if (key === "noiseType") {
       replaceNoiseSource();
@@ -1565,6 +1768,9 @@
     if (key === "coarseFreq" || key === "vco2CoarseFreq" || key === "vco3CoarseFreq" || key === "cutoff") return `${Math.round(value)} ${units[key]}`;
     if (key === "fineCents" || key === "vco2FineCents" || key === "vco3FineCents") return `${Number(value).toFixed(0)} ${units[key]}`;
     if (key === "pulseWidth" || key === "vco2PulseWidth" || key === "vco3PulseWidth") return `${Number(value).toFixed(0)} ${units[key]}`;
+    if (key === "vco1PitchModDepth" || key === "vco2PitchModDepth" || key === "vco3PitchModDepth") return `${Number(value).toFixed(1)} ${units[key]}`;
+    if (key === "vco1LinearFmDepth" || key === "vco2LinearFmDepth" || key === "vco3LinearFmDepth") return `${Number(value).toFixed(0)} ${units[key]}`;
+    if (key === "vco1PwmDepth" || key === "vco2PwmDepth" || key === "vco3PwmDepth") return `${Number(value).toFixed(0)} ${units[key]}`;
     if (key === "lfo1Rate" || key === "lfo2Rate" || key === "sampleHoldRate" || key === "repeatGateRate") return `${Number(value).toFixed(2)} ${units[key]}`;
     if (key === "delayTime") return `${Number(value).toFixed(2)} ${units[key]}`;
     if (key === "lfo1Mod" || key === "lfo2Mod" || key === "sampleHoldMod" || key === "sampleHoldPitchMod" || key === "sampleHoldGlide" || key === "vcaInitialLevel" || key === "vcaEnvelopeMod" || key === "filterEnvelopeMod" || key === "adsrSustain" || key === "auxVcaInitialAmp" || key === "auxVcaCvAmount" || key === "delayMix" || key === "delayFeedback") return `${Math.round(Number(value) * 100)} ${units[key]}`;
@@ -1800,6 +2006,12 @@
         createSlider("fineCents", -100, 100, 1),
         createSelect("waveform", waveforms),
         createSlider("pulseWidth", 10, 90, 1),
+        createSelect("vco1PitchModSource", modulationSources),
+        createSlider("vco1PitchModDepth", 0, 24, 0.1),
+        createSelect("vco1LinearFmSource", modulationSources),
+        createSlider("vco1LinearFmDepth", 0, 500, 1),
+        createSelect("vco1PwmSource", modulationSources),
+        createSlider("vco1PwmDepth", 0, 40, 1),
         createSlider("vcoLevel", 0, 0.7, 0.01),
       ),
       createGroup(
@@ -1808,6 +2020,12 @@
         createSlider("vco2FineCents", -100, 100, 1),
         createSelect("vco2Waveform", waveforms),
         createSlider("vco2PulseWidth", 10, 90, 1),
+        createSelect("vco2PitchModSource", modulationSources),
+        createSlider("vco2PitchModDepth", 0, 24, 0.1),
+        createSelect("vco2LinearFmSource", modulationSources),
+        createSlider("vco2LinearFmDepth", 0, 500, 1),
+        createSelect("vco2PwmSource", modulationSources),
+        createSlider("vco2PwmDepth", 0, 40, 1),
         createSlider("vco2Level", 0, 0.45, 0.01),
       ),
       createGroup(
@@ -1816,6 +2034,12 @@
         createSlider("vco3FineCents", -100, 100, 1),
         createSelect("vco3Waveform", waveforms),
         createSlider("vco3PulseWidth", 10, 90, 1),
+        createSelect("vco3PitchModSource", modulationSources),
+        createSlider("vco3PitchModDepth", 0, 24, 0.1),
+        createSelect("vco3LinearFmSource", modulationSources),
+        createSlider("vco3LinearFmDepth", 0, 500, 1),
+        createSelect("vco3PwmSource", modulationSources),
+        createSlider("vco3PwmDepth", 0, 40, 1),
         createSlider("vco3Level", 0, 0.4, 0.01),
       ),
       createGroup(

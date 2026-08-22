@@ -12,7 +12,7 @@
     <header class="top-bar">
       <div class="brand-block">
         <div class="brand-title">MerrinLab Ultimate Synth</div>
-        <div class="brand-subtitle">First safe audible voice · VCO 1 only · most controls visual-only</div>
+        <div class="brand-subtitle">Three-oscillator voice · explicit modulation and effects graph · safe output</div>
       </div>
 
       <div class="top-controls">
@@ -28,43 +28,64 @@
       <section class="vco-bank" aria-label="VCO bank">
         <article class="vco-strip vco-module">
           <div class="module-header"><span class="status-light"></span><h2>VCO 1</h2></div>
-          <div class="control vertical-control"><div class="control-label">Coarse Freq</div><div class="knob"></div></div>
-          <div class="control vertical-control"><div class="control-label">Fine Freq</div><div class="knob"></div></div>
-          <div class="control vertical-control"><div class="control-label">Waveform</div><div class="switch-control compact-switch">Shape</div></div>
-          <div class="control vertical-control"><div class="control-label">Pulse Width %</div><div class="knob knob-small"></div></div>
-          <div class="vco-jack-grid">
-            <div class="control"><div class="control-label">PWM</div><div class="jack-socket"></div></div>
-            <div class="control"><div class="control-label">SYNC</div><div class="jack-socket"></div></div>
-            <div class="control"><div class="control-label">LOG-CV</div><div class="jack-socket"></div></div>
-            <div class="control"><div class="control-label">LIN-CV</div><div class="jack-socket"></div></div>
+          <div class="vco-core-controls">
+            <div class="control vertical-control"><div class="control-label">Coarse Freq</div></div>
+            <div class="control vertical-control"><div class="control-label">Fine Freq</div></div>
+            <div class="control vertical-control"><div class="control-label">Waveform</div></div>
+            <div class="control vertical-control"><div class="control-label">Pulse Width %</div></div>
+          </div>
+          <div class="vco-mod-section">
+            <div class="vco-subtitle">Modulation</div>
+            <div class="vco-mod-grid">
+              <div class="control"><div class="control-label">Pitch Mod Source</div></div>
+              <div class="control"><div class="control-label">Pitch Depth</div></div>
+              <div class="control"><div class="control-label">Linear FM Source</div></div>
+              <div class="control"><div class="control-label">FM Depth</div></div>
+              <div class="control"><div class="control-label">PWM Source</div></div>
+              <div class="control"><div class="control-label">PWM Depth</div></div>
+            </div>
           </div>
         </article>
 
         <article class="vco-strip vco-module">
           <div class="module-header"><span class="status-light"></span><h2>VCO 2</h2></div>
-          <div class="control vertical-control"><div class="control-label">Coarse Freq</div><div class="knob"></div></div>
-          <div class="control vertical-control"><div class="control-label">Fine Freq</div><div class="knob"></div></div>
-          <div class="control vertical-control"><div class="control-label">Waveform</div><div class="switch-control compact-switch">Shape</div></div>
-          <div class="control vertical-control"><div class="control-label">Pulse Width %</div><div class="knob knob-small"></div></div>
-          <div class="vco-jack-grid">
-            <div class="control"><div class="control-label">PWM</div><div class="jack-socket"></div></div>
-            <div class="control"><div class="control-label">SYNC</div><div class="jack-socket"></div></div>
-            <div class="control"><div class="control-label">LOG-CV</div><div class="jack-socket"></div></div>
-            <div class="control"><div class="control-label">LIN-CV</div><div class="jack-socket"></div></div>
+          <div class="vco-core-controls">
+            <div class="control vertical-control"><div class="control-label">Coarse Freq</div></div>
+            <div class="control vertical-control"><div class="control-label">Fine Freq</div></div>
+            <div class="control vertical-control"><div class="control-label">Waveform</div></div>
+            <div class="control vertical-control"><div class="control-label">Pulse Width %</div></div>
+          </div>
+          <div class="vco-mod-section">
+            <div class="vco-subtitle">Modulation</div>
+            <div class="vco-mod-grid">
+              <div class="control"><div class="control-label">Pitch Mod Source</div></div>
+              <div class="control"><div class="control-label">Pitch Depth</div></div>
+              <div class="control"><div class="control-label">Linear FM Source</div></div>
+              <div class="control"><div class="control-label">FM Depth</div></div>
+              <div class="control"><div class="control-label">PWM Source</div></div>
+              <div class="control"><div class="control-label">PWM Depth</div></div>
+            </div>
           </div>
         </article>
 
         <article class="vco-strip vco-module">
           <div class="module-header"><span class="status-light"></span><h2>VCO 3</h2></div>
-          <div class="control vertical-control"><div class="control-label">Coarse Freq</div><div class="knob"></div></div>
-          <div class="control vertical-control"><div class="control-label">Fine Freq</div><div class="knob"></div></div>
-          <div class="control vertical-control"><div class="control-label">Waveform</div><div class="switch-control compact-switch">Shape</div></div>
-          <div class="control vertical-control"><div class="control-label">Pulse Width %</div><div class="knob knob-small"></div></div>
-          <div class="vco-jack-grid">
-            <div class="control"><div class="control-label">PWM</div><div class="jack-socket"></div></div>
-            <div class="control"><div class="control-label">SYNC</div><div class="jack-socket"></div></div>
-            <div class="control"><div class="control-label">LOG-CV</div><div class="jack-socket"></div></div>
-            <div class="control"><div class="control-label">LIN-CV</div><div class="jack-socket"></div></div>
+          <div class="vco-core-controls">
+            <div class="control vertical-control"><div class="control-label">Coarse Freq</div></div>
+            <div class="control vertical-control"><div class="control-label">Fine Freq</div></div>
+            <div class="control vertical-control"><div class="control-label">Waveform</div></div>
+            <div class="control vertical-control"><div class="control-label">Pulse Width %</div></div>
+          </div>
+          <div class="vco-mod-section">
+            <div class="vco-subtitle">Modulation</div>
+            <div class="vco-mod-grid">
+              <div class="control"><div class="control-label">Pitch Mod Source</div></div>
+              <div class="control"><div class="control-label">Pitch Depth</div></div>
+              <div class="control"><div class="control-label">Linear FM Source</div></div>
+              <div class="control"><div class="control-label">FM Depth</div></div>
+              <div class="control"><div class="control-label">PWM Source</div></div>
+              <div class="control"><div class="control-label">PWM Depth</div></div>
+            </div>
           </div>
         </article>
       </section>

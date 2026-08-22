@@ -60,6 +60,12 @@ assert.match(sources.get("audio-engine.js"), /const cvOffset = usesBipolarCv \? 
 assert.match(sources.get("vco1-visible-controls.js"), /key: "repeatGateTarget"/, "Repeat Gate target selection must be visible");
 assert.match(sources.get("audio-engine.js"), /state\.repeatGateTarget === "sampleHold"/, "Repeat Gate must be able to trigger Sample & Hold");
 assert.match(sources.get("audio-engine.js"), /merrinlab:gate-state/, "the envelope interface must receive gate state");
+assert.match(sources.get("audio-engine.js"), /function createVcoProcessor\(oscillatorNode, outputGain, config\)/, "all VCOs must use the explicit processor path");
+assert.match(sources.get("audio-engine.js"), /pitchGain\.connect\(oscillatorNode\.detune\)/, "VCO pitch modulation must reach oscillator detune");
+assert.match(sources.get("audio-engine.js"), /linearFmGain\.connect\(oscillatorNode\.frequency\)/, "VCO linear FM must reach oscillator frequency");
+assert.match(sources.get("audio-engine.js"), /pwmGain\.connect\(pulseShaper\)/, "VCO PWM must reach the pulse comparator");
+assert.match(sources.get("audio-engine.js"), /pulseShaper\.oversample = "4x"/, "pulse generation must use oversampled shaping");
+assert.match(sources.get("audio-engine.js"), /applyAllVcoModulationRoutes\(\)/, "all VCO modulation routes must be installed together");
 
 const routed = [];
 const attenuatorWindow = { MerrinLabAudio: { setAttenuatorRoute: (...args) => routed.push(args) } };
@@ -94,6 +100,12 @@ for (const requiredScript of ["lfo-shape-controls.js", "adsr-visible-controls.js
 }
 const sampleHoldMarkup = index.match(/<article class="module sample-hold-module">([\s\S]*?)<\/article>/)?.[1] || "";
 assert.doesNotMatch(sampleHoldMarkup, /class="knob/, "the Sample & Hold module must not render decorative dials");
+const vcoBankMarkup = index.match(/<section class="vco-bank"[^>]*>([\s\S]*?)<\/section>/)?.[1] || "";
+assert.doesNotMatch(vcoBankMarkup, /class="(?:knob|jack|switch-control)/, "the VCO bank must not render decorative dials, sockets or switches");
+assert.equal((vcoBankMarkup.match(/Pitch Mod Source/g) || []).length, 3, "each VCO must expose a live pitch modulation source");
+assert.equal((vcoBankMarkup.match(/Linear FM Source/g) || []).length, 3, "each VCO must expose a live linear FM source");
+assert.equal((vcoBankMarkup.match(/PWM Source/g) || []).length, 3, "each VCO must expose a live PWM source");
+assert.doesNotMatch(vcoBankMarkup, />SYNC</, "unsupported hard-sync must not be presented as a functional control");
 const mainVcaMarkup = index.match(/<article class="module main-vca-module[^"]*">([\s\S]*?)<\/article>/)?.[1] || "";
 assert.doesNotMatch(mainVcaMarkup, /class="(?:knob|jack)/, "the Main VCA module must not render decorative dials or jacks");
 const attenuatorMarkup = index.match(/<article class="module attenuators-module[^"]*">([\s\S]*?)<\/article>/)?.[1] || "";
