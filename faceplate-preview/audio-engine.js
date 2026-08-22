@@ -33,6 +33,9 @@
     sampleHoldInput: "noise",
     sampleHoldMode: "sample",
     sampleHoldGlide: 0,
+    vcaInitialLevel: 0,
+    vcaEnvelopeMod: 1,
+    vcaExtCv: 0,
     lfo2Rate: 1.2,
     lfo2Mod: 0,
     envelopeMode: "ar",
@@ -106,6 +109,9 @@
     sampleHoldMod: [0, 1],
     sampleHoldPitchMod: [0, 1],
     sampleHoldGlide: [0, 1],
+    vcaInitialLevel: [0, 1],
+    vcaEnvelopeMod: [0, 1],
+    vcaExtCv: [-1, 1],
     lfo2Rate: [0.05, 12],
     lfo2Mod: [0, 1],
     repeatGateRate: [0.1, 12],
@@ -151,6 +157,9 @@
     sampleHoldInput: "S&H Input",
     sampleHoldMode: "S&H Mode",
     sampleHoldGlide: "S&H Glide",
+    vcaInitialLevel: "VCA Initial Level",
+    vcaEnvelopeMod: "VCA Envelope Mod",
+    vcaExtCv: "VCA Ext CV",
     lfo2Rate: "LFO 2 Rate",
     lfo2Mod: "LFO-2 Mod",
     envelopeMode: "Envelope Mode",
@@ -192,6 +201,9 @@
     sampleHoldMod: "%",
     sampleHoldPitchMod: "%",
     sampleHoldGlide: "%",
+    vcaInitialLevel: "%",
+    vcaEnvelopeMod: "%",
+    vcaExtCv: "%",
     lfo2Rate: "Hz",
     lfo2Mod: "%",
     repeatGateRate: "Hz",
@@ -334,6 +346,23 @@
 
   function getSafeTremoloDepth() {
     return clamp(state.lfo2Mod, "lfo2Mod");
+  }
+
+  function getVcaTarget(envelopeLevel = 1) {
+    const initialLevel = clamp(state.vcaInitialLevel, "vcaInitialLevel");
+    const envelopeAmount = clamp(state.vcaEnvelopeMod, "vcaEnvelopeMod");
+    const velocity = Math.max(0.08, Math.min(1, midiGateVelocity));
+    const envelopeContribution = (1 - initialLevel) * envelopeAmount * velocity * Math.max(0, Math.min(1, envelopeLevel));
+    const extCvScale = 1 + clamp(state.vcaExtCv, "vcaExtCv");
+    return Math.min(0.9, 0.55 * (initialLevel + envelopeContribution) * extCvScale);
+  }
+
+  function applyVcaControlParameters() {
+    if (!audioContext || !mainVca) return;
+    const target = document.body.classList.contains("is-audio-gated")
+      ? getVcaTarget(state.envelopeMode === "adsr" ? clamp(state.adsrSustain, "adsrSustain") : 1)
+      : 0;
+    safeRamp(mainVca.gain, target, audioContext.currentTime, 0.02);
   }
 
   function getRepeatGateIntervalMs() {
@@ -795,7 +824,7 @@
     if (!audioContext || !mainVca) return;
 
     const now = audioContext.currentTime;
-    const target = 0.55 * Math.max(0.08, Math.min(1, midiGateVelocity));
+    const target = getVcaTarget(1);
 
     document.body.classList.add("is-audio-gated");
     mainVca.gain.cancelScheduledValues(now);
@@ -806,7 +835,7 @@
     if (state.envelopeMode === "adsr") {
       const attack = clamp(state.adsrAttack, "adsrAttack");
       const decay = clamp(state.adsrDecay, "adsrDecay");
-      const sustain = clamp(state.adsrSustain, "adsrSustain") * target;
+      const sustain = getVcaTarget(clamp(state.adsrSustain, "adsrSustain"));
       mainVca.gain.linearRampToValueAtTime(target, now + attack);
       mainVca.gain.linearRampToValueAtTime(sustain, now + attack + decay);
       setStatus(statusMessage || "Gate open · ADSR envelope active");
@@ -1016,6 +1045,9 @@
       "sampleHoldInput",
       "sampleHoldMode",
       "sampleHoldGlide",
+      "vcaInitialLevel",
+      "vcaEnvelopeMod",
+      "vcaExtCv",
       "lfo2Rate",
       "lfo2Mod",
       "envelopeMode",
@@ -1098,7 +1130,12 @@
       applyLfo2Tremolo();
     }
 
+    if (key === "vcaInitialLevel" || key === "vcaEnvelopeMod" || key === "vcaExtCv" || key === "adsrSustain") {
+      applyVcaControlParameters();
+    }
+
     if (key === "envelopeMode") {
+      applyVcaControlParameters();
       setStatus(`Envelope mode changed · ${state.envelopeMode.toUpperCase()}`);
     }
 
@@ -1137,8 +1174,8 @@
     if (key === "pulseWidth" || key === "vco2PulseWidth" || key === "vco3PulseWidth") return `${Number(value).toFixed(0)} ${units[key]}`;
     if (key === "lfo1Rate" || key === "lfo2Rate" || key === "sampleHoldRate" || key === "repeatGateRate") return `${Number(value).toFixed(2)} ${units[key]}`;
     if (key === "delayTime") return `${Number(value).toFixed(2)} ${units[key]}`;
-    if (key === "lfo1Mod" || key === "lfo2Mod" || key === "sampleHoldMod" || key === "sampleHoldPitchMod" || key === "sampleHoldGlide" || key === "filterEnvelopeMod" || key === "adsrSustain" || key === "delayMix" || key === "delayFeedback") return `${Math.round(Number(value) * 100)} ${units[key]}`;
-    if (key === "filterExtCv") return `${Number(value) >= 0 ? "+" : ""}${Math.round(Number(value) * 100)} ${units[key]}`;
+    if (key === "lfo1Mod" || key === "lfo2Mod" || key === "sampleHoldMod" || key === "sampleHoldPitchMod" || key === "sampleHoldGlide" || key === "vcaInitialLevel" || key === "vcaEnvelopeMod" || key === "filterEnvelopeMod" || key === "adsrSustain" || key === "delayMix" || key === "delayFeedback") return `${Math.round(Number(value) * 100)} ${units[key]}`;
+    if (key === "filterExtCv" || key === "vcaExtCv") return `${Number(value) >= 0 ? "+" : ""}${Math.round(Number(value) * 100)} ${units[key]}`;
     if (key === "attack" || key === "release" || key === "adsrAttack" || key === "adsrDecay" || key === "adsrRelease") return `${Number(value).toFixed(2)} ${units[key]}`;
     if (key === "resonance") return `${Number(value).toFixed(1)} ${units[key]}`;
     return Number(value).toFixed(2);
@@ -1418,6 +1455,9 @@
         "Amplitude / Envelope",
         createSlider("lfo2Rate", 0.05, 12, 0.01),
         createSlider("lfo2Mod", 0, 1, 0.01),
+        createSlider("vcaInitialLevel", 0, 1, 0.01),
+        createSlider("vcaEnvelopeMod", 0, 1, 0.01),
+        createSlider("vcaExtCv", -1, 1, 0.01),
         createSelect("envelopeMode", envelopeModes),
         createSlider("attack", 0.005, 1.5, 0.005),
         createSlider("release", 0.02, 2.5, 0.01),
