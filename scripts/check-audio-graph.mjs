@@ -23,6 +23,10 @@ const destinationConnections = [...combinedSource.matchAll(/\.connect\(context\.
 assert.equal(destinationConnections.length, 1, "the active graph must own exactly one destination connection");
 assert.match(sources.get("effects-output-graph.js"), /limiter\.connect\(context\.destination\)/, "the limiter must own the destination connection");
 assert.match(sources.get("audio-engine.js"), /tremoloGain\.connect\(effectsOutputGraph\.input\)/, "the voice must enter the explicit effects graph");
+assert.match(sources.get("effects-output-graph.js"), /reverb\.output\.connect\(svf\.input\)/, "the State Variable VCF must remain inside the explicit effects/output graph");
+assert.match(sources.get("effects-output-graph.js"), /modeFilter\.Q, isBandpass \? 0\.707 : resonance/, "LP and HP resonance must use the Biquad Q directly");
+assert.match(sources.get("effects-output-graph.js"), /bpGain\.gain, isBandpass \? 1 : 0/, "band-pass level must not use cutoff-dependent gain compensation");
+assert.match(sources.get("effects-output-graph.js"), /svf: \{ \.\.\.state\.svf \}/, "debug state must expose the applied State Variable VCF parameters");
 assert.match(sources.get("audio-engine.js"), /filter\.Q\.value = state\.resonance/, "main resonance must use the base Biquad Q");
 assert.match(sources.get("audio-engine.js"), /linearRampToValueAtTime\(0, now \+ release\)/, "release must end at digital silence");
 assert.doesNotMatch(sources.get("audio-engine.js"), /linearRampToValueAtTime\(0\.0001, now \+ release\)/, "release must not leave a fixed-pitch oscillator leak");
@@ -116,6 +120,15 @@ assert.equal((attenuatorMarkup.match(/data-attenuator-destination=/g) || []).len
 assert.doesNotMatch(attenuatorMarkup, /data-attenuator-input=/, "the attenuator bank must not expose a fake manual input calculator");
 const auxVcaMarkup = index.match(/<article class="module aux-vca-module[^>]*>([\s\S]*?)<\/article>/)?.[1] || "";
 assert.doesNotMatch(auxVcaMarkup, /class="(?:knob|jack)/, "the AUX VCA must not render decorative dials or jacks");
+const stateVariableVcfMarkup = index.match(/<article class="module utility-module state-variable-vcf-module"[^>]*>([\s\S]*?)<\/article>/)?.[1] || "";
+assert.ok(stateVariableVcfMarkup, "the State Variable VCF module must remain present");
+assert.doesNotMatch(stateVariableVcfMarkup, /class="(?:knob|jack)/, "the State Variable VCF must not render decorative dials or jacks");
+assert.equal((stateVariableVcfMarkup.match(/data-svf-control=/g) || []).length, 5, "the State Variable VCF must expose exactly five live controls");
+assert.match(stateVariableVcfMarkup, /max="12"[^>]*data-svf-control="resonance"/, "State Variable VCF resonance must use the visible 0–12 range");
+assert.match(stateVariableVcfMarkup, /Main bus[\s\S]*data-svf-path-mode[\s\S]*Master/, "the fixed State Variable VCF signal path must be visible");
+assert.match(stateVariableVcfMarkup, /data-svf-meter/, "the State Variable VCF must expose a real wet-output meter");
+assert.doesNotMatch(sources.get("state-variable-vcf-layer.js"), /svf-floating-monitor|localStorage|AudioNode\.prototype/, "the State Variable VCF interface must not create a floating monitor or patch the audio graph");
+assert.match(sources.get("state-variable-vcf-layer.js"), /widthInput\.disabled = !isBandpass/, "BP Width must be disabled outside band-pass mode");
 const lfoMarkup = index.match(/<article class="module lfo-module lfo1-module[^>]*>([\s\S]*?)<\/article>/)?.[1] || "";
 assert.doesNotMatch(lfoMarkup, /class="(?:knob|jack)/, "LFO modules must use live controls rather than decorative dials or jacks");
 const adsrMarkup = index.match(/<article class="module adsr-module[^>]*>([\s\S]*?)<\/article>/)?.[1] || "";
