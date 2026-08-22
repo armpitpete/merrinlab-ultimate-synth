@@ -34,7 +34,18 @@
     return [key, min + scaled * (max - min)];
   }
 
+  function isForegroundMidiTarget() {
+    return !document.hidden;
+  }
+
+  function silenceHiddenTab() {
+    if (!document.hidden) return;
+    getAudioApi()?.panic?.();
+  }
+
   window.addEventListener("merrinlab-midi", event => {
+    if (!isForegroundMidiTarget()) return;
+
     const [status, data1, data2] = event.detail;
     const command = status & 0xf0;
     const channel = (status & 0x0f) + 1;
@@ -68,4 +79,7 @@
       audio.pitchBend(rawValue, channel);
     }
   });
+
+  document.addEventListener("visibilitychange", silenceHiddenTab);
+  window.addEventListener("pagehide", () => getAudioApi()?.panic?.());
 })();

@@ -14,6 +14,7 @@ const sources = new Map();
 for (const filename of activeScripts) {
   sources.set(filename, await readFile(join(previewDirectory.pathname, filename), "utf8"));
 }
+const midiEngineBridgeSource = await readFile(join(previewDirectory.pathname, "midi/midi-engine-bridge.js"), "utf8");
 
 const combinedSource = [...sources.values()].join("\n");
 assert.doesNotMatch(combinedSource, /AudioNode\.prototype\.connect\s*=/, "active scripts must not patch AudioNode.connect");
@@ -70,6 +71,34 @@ assert.match(sources.get("audio-engine.js"), /linearFmGain\.connect\(oscillatorN
 assert.match(sources.get("audio-engine.js"), /pwmGain\.connect\(pulseShaper\)/, "VCO PWM must reach the pulse comparator");
 assert.match(sources.get("audio-engine.js"), /pulseShaper\.oversample = "4x"/, "pulse generation must use oversampled shaping");
 assert.match(sources.get("audio-engine.js"), /applyAllVcoModulationRoutes\(\)/, "all VCO modulation routes must be installed together");
+
+const midiListeners = new Map();
+const midiDocumentListeners = new Map();
+const midiCalls = { noteOn: [], noteOff: [], panic: 0 };
+const midiDocument = {
+  hidden: true,
+  addEventListener: (name, listener) => midiDocumentListeners.set(name, listener),
+};
+const midiWindow = {
+  MerrinLabAudio: {
+    noteOn: (...args) => midiCalls.noteOn.push(args),
+    noteOff: (...args) => midiCalls.noteOff.push(args),
+    panic: () => { midiCalls.panic += 1; },
+    setParameter: () => {},
+    pitchBend: () => {},
+  },
+  addEventListener: (name, listener) => midiListeners.set(name, listener),
+  dispatchEvent: () => {},
+};
+vm.runInNewContext(midiEngineBridgeSource, { window: midiWindow, document: midiDocument, CustomEvent: class {} });
+const midiMessage = midiListeners.get("merrinlab-midi");
+midiMessage({ detail: [0x90, 60, 100] });
+assert.equal(midiCalls.noteOn.length, 0, "a hidden synth tab must ignore MIDI note-on messages");
+midiDocumentListeners.get("visibilitychange")();
+assert.equal(midiCalls.panic, 1, "a synth tab must panic-silence itself when it becomes hidden");
+midiDocument.hidden = false;
+midiMessage({ detail: [0x90, 60, 100] });
+assert.equal(midiCalls.noteOn.length, 1, "the visible synth tab must continue receiving MIDI notes");
 
 const routed = [];
 const attenuatorWindow = { MerrinLabAudio: { setAttenuatorRoute: (...args) => routed.push(args) } };
