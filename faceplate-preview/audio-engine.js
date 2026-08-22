@@ -15,6 +15,7 @@
     vco1PwmSource: "off",
     vco1PwmDepth: 0,
     vcoLevel: 0.35,
+    vco1Mute: "off",
     vco2CoarseFreq: 220,
     vco2FineCents: 0,
     vco2Waveform: "sawtooth",
@@ -26,6 +27,7 @@
     vco2PwmSource: "off",
     vco2PwmDepth: 0,
     vco2Level: 0,
+    vco2Mute: "off",
     vco3CoarseFreq: 220,
     vco3FineCents: 0,
     vco3Waveform: "sawtooth",
@@ -37,8 +39,10 @@
     vco3PwmSource: "off",
     vco3PwmDepth: 0,
     vco3Level: 0,
+    vco3Mute: "off",
     noiseType: "white",
     whiteNoiseLevel: 0,
+    noiseMute: "off",
     cutoff: 900,
     resonance: 0,
     filterEnvelopeMod: 0,
@@ -92,6 +96,10 @@
   let vcoProcessors = [];
   let noiseSource = null;
   let noiseGain = null;
+  let mixerBus = null;
+  let mixerAnalyser = null;
+  let mixerMeterTimerId = null;
+  let mixerMeterData = null;
   let lfo1Oscillator = null;
   let lfo1Gain = null;
   let sampleHoldFilterSource = null;
@@ -189,6 +197,7 @@
     vco1PwmSource: "VCO 1 PWM Source",
     vco1PwmDepth: "VCO 1 PWM Depth",
     vcoLevel: "VCO 1 Level",
+    vco1Mute: "VCO 1 Mute",
     vco2CoarseFreq: "VCO 2 Coarse Freq",
     vco2FineCents: "VCO 2 Fine Freq",
     vco2Waveform: "VCO 2 Waveform",
@@ -200,6 +209,7 @@
     vco2PwmSource: "VCO 2 PWM Source",
     vco2PwmDepth: "VCO 2 PWM Depth",
     vco2Level: "VCO 2 Level",
+    vco2Mute: "VCO 2 Mute",
     vco3CoarseFreq: "VCO 3 Coarse Freq",
     vco3FineCents: "VCO 3 Fine Freq",
     vco3Waveform: "VCO 3 Waveform",
@@ -211,8 +221,10 @@
     vco3PwmSource: "VCO 3 PWM Source",
     vco3PwmDepth: "VCO 3 PWM Depth",
     vco3Level: "VCO 3 Level",
+    vco3Mute: "VCO 3 Mute",
     noiseType: "Noise Type",
-    whiteNoiseLevel: "White NS Level",
+    whiteNoiseLevel: "Noise Level",
+    noiseMute: "Noise Mute",
     cutoff: "Filter Cutoff",
     resonance: "Resonance",
     filterEnvelopeMod: "Filter Envelope Mod",
@@ -323,6 +335,11 @@
     ["brown", "Brown"],
   ];
 
+  const muteModes = [
+    ["off", "Active"],
+    ["on", "Muted"],
+  ];
+
   const envelopeModes = [
     ["ar", "AR"],
     ["adsr", "ADSR"],
@@ -414,6 +431,47 @@
   function safeRamp(param, value, time, rampTime = 0.02) {
     param.cancelScheduledValues(time);
     param.setTargetAtTime(value, time, rampTime);
+  }
+
+  function getMixerChannelLevel(levelKey, muteKey) {
+    return state[muteKey] === "on" ? 0 : clamp(state[levelKey], levelKey);
+  }
+
+  function stopMixerMeter() {
+    if (mixerMeterTimerId !== null) {
+      window.clearInterval(mixerMeterTimerId);
+      mixerMeterTimerId = null;
+    }
+    mixerMeterData = null;
+    document.dispatchEvent(new CustomEvent("merrinlab:mixer-meter", {
+      detail: { peak: 0, rms: 0, clipping: false },
+    }));
+  }
+
+  function updateMixerMeter() {
+    if (!mixerAnalyser || !mixerMeterData) return;
+    mixerAnalyser.getFloatTimeDomainData(mixerMeterData);
+
+    let peak = 0;
+    let sumSquares = 0;
+    for (let index = 0; index < mixerMeterData.length; index += 1) {
+      const sample = mixerMeterData[index];
+      peak = Math.max(peak, Math.abs(sample));
+      sumSquares += sample * sample;
+    }
+
+    const rms = Math.sqrt(sumSquares / mixerMeterData.length);
+    document.dispatchEvent(new CustomEvent("merrinlab:mixer-meter", {
+      detail: { peak, rms, clipping: peak >= 0.98 },
+    }));
+  }
+
+  function startMixerMeter() {
+    stopMixerMeter();
+    if (!mixerAnalyser) return;
+    mixerMeterData = new Float32Array(mixerAnalyser.fftSize);
+    updateMixerMeter();
+    mixerMeterTimerId = window.setInterval(updateMixerMeter, 50);
   }
 
   function getEffectiveLfoRate(which) {
@@ -1137,19 +1195,19 @@
     oscillator.frequency.value = getVcoFrequency();
 
     vcoGain = audioContext.createGain();
-    vcoGain.gain.value = state.vcoLevel;
+    vcoGain.gain.value = getMixerChannelLevel("vcoLevel", "vco1Mute");
 
     oscillator2 = audioContext.createOscillator();
     oscillator2.frequency.value = getVco2Frequency();
 
     vco2Gain = audioContext.createGain();
-    vco2Gain.gain.value = state.vco2Level;
+    vco2Gain.gain.value = getMixerChannelLevel("vco2Level", "vco2Mute");
 
     oscillator3 = audioContext.createOscillator();
     oscillator3.frequency.value = getVco3Frequency();
 
     vco3Gain = audioContext.createGain();
-    vco3Gain.gain.value = state.vco3Level;
+    vco3Gain.gain.value = getMixerChannelLevel("vco3Level", "vco3Mute");
 
     vcoProcessors = [
       createVcoProcessor(oscillator, vcoGain, {
@@ -1189,7 +1247,14 @@
 
     noiseSource = createNoiseSource();
     noiseGain = audioContext.createGain();
-    noiseGain.gain.value = state.whiteNoiseLevel;
+    noiseGain.gain.value = getMixerChannelLevel("whiteNoiseLevel", "noiseMute");
+
+    mixerBus = audioContext.createGain();
+    mixerBus.gain.value = 1;
+
+    mixerAnalyser = audioContext.createAnalyser();
+    mixerAnalyser.fftSize = 256;
+    mixerAnalyser.smoothingTimeConstant = 0.72;
 
     filter = audioContext.createBiquadFilter();
     filter.type = "lowpass";
@@ -1249,14 +1314,17 @@
       return false;
     }
 
-    vcoGain.connect(filter);
+    vcoGain.connect(mixerBus);
 
-    vco2Gain.connect(filter);
+    vco2Gain.connect(mixerBus);
 
-    vco3Gain.connect(filter);
+    vco3Gain.connect(mixerBus);
 
     noiseSource.connect(noiseGain);
-    noiseGain.connect(filter);
+    noiseGain.connect(mixerBus);
+
+    mixerBus.connect(mixerAnalyser);
+    mixerAnalyser.connect(filter);
 
     lfo1Oscillator.connect(lfo1Gain);
     lfo1Gain.connect(filter.frequency);
@@ -1287,6 +1355,7 @@
     lfo2Oscillator.start();
     lfo2Offset.start();
     vcoProcessors.forEach((processor) => processor.pulseOffset.start());
+    startMixerMeter();
     return true;
   }
 
@@ -1441,6 +1510,7 @@
     midiPitchBend = 0;
     midiGateVelocity = 1;
     stopSampleHoldTimer();
+    stopMixerMeter();
     stopRepeatGateTimer(false);
     sampleHoldValue = 0;
 
@@ -1532,6 +1602,8 @@
     vcoProcessors = [];
     noiseSource = null;
     noiseGain = null;
+    mixerBus = null;
+    mixerAnalyser = null;
     lfo1Oscillator = null;
     lfo1Gain = null;
     sampleHoldFilterSource = null;
@@ -1570,6 +1642,7 @@
       "vco1PwmSource",
       "vco1PwmDepth",
       "vcoLevel",
+      "vco1Mute",
       "vco2CoarseFreq",
       "vco2FineCents",
       "vco2Waveform",
@@ -1581,6 +1654,7 @@
       "vco2PwmSource",
       "vco2PwmDepth",
       "vco2Level",
+      "vco2Mute",
       "vco3CoarseFreq",
       "vco3FineCents",
       "vco3Waveform",
@@ -1592,8 +1666,10 @@
       "vco3PwmSource",
       "vco3PwmDepth",
       "vco3Level",
+      "vco3Mute",
       "noiseType",
       "whiteNoiseLevel",
+      "noiseMute",
       "cutoff",
       "resonance",
       "filterEnvelopeMod",
@@ -1664,20 +1740,20 @@
       setStatus(`Noise type changed · ${state.noiseType} noise`);
     }
 
-    if (key === "vcoLevel" && vcoGain) {
-      safeRamp(vcoGain.gain, clamp(state.vcoLevel, "vcoLevel"), now, 0.02);
+    if ((key === "vcoLevel" || key === "vco1Mute") && vcoGain) {
+      safeRamp(vcoGain.gain, getMixerChannelLevel("vcoLevel", "vco1Mute"), now, 0.02);
     }
 
-    if (key === "vco2Level" && vco2Gain) {
-      safeRamp(vco2Gain.gain, clamp(state.vco2Level, "vco2Level"), now, 0.02);
+    if ((key === "vco2Level" || key === "vco2Mute") && vco2Gain) {
+      safeRamp(vco2Gain.gain, getMixerChannelLevel("vco2Level", "vco2Mute"), now, 0.02);
     }
 
-    if (key === "vco3Level" && vco3Gain) {
-      safeRamp(vco3Gain.gain, clamp(state.vco3Level, "vco3Level"), now, 0.02);
+    if ((key === "vco3Level" || key === "vco3Mute") && vco3Gain) {
+      safeRamp(vco3Gain.gain, getMixerChannelLevel("vco3Level", "vco3Mute"), now, 0.02);
     }
 
-    if (key === "whiteNoiseLevel" && noiseGain) {
-      safeRamp(noiseGain.gain, clamp(state.whiteNoiseLevel, "whiteNoiseLevel"), now, 0.02);
+    if ((key === "whiteNoiseLevel" || key === "noiseMute") && noiseGain) {
+      safeRamp(noiseGain.gain, getMixerChannelLevel("whiteNoiseLevel", "noiseMute"), now, 0.02);
     }
 
     if (key === "cutoff" || key === "filterEnvelopeMod" || key === "filterExtCv" || key === "lfo1Mod" || key === "sampleHoldMod") {
@@ -2013,6 +2089,7 @@
         createSelect("vco1PwmSource", modulationSources),
         createSlider("vco1PwmDepth", 0, 40, 1),
         createSlider("vcoLevel", 0, 0.7, 0.01),
+        createSelect("vco1Mute", muteModes),
       ),
       createGroup(
         "VCO 2",
@@ -2027,6 +2104,7 @@
         createSelect("vco2PwmSource", modulationSources),
         createSlider("vco2PwmDepth", 0, 40, 1),
         createSlider("vco2Level", 0, 0.45, 0.01),
+        createSelect("vco2Mute", muteModes),
       ),
       createGroup(
         "VCO 3",
@@ -2041,11 +2119,13 @@
         createSelect("vco3PwmSource", modulationSources),
         createSlider("vco3PwmDepth", 0, 40, 1),
         createSlider("vco3Level", 0, 0.4, 0.01),
+        createSelect("vco3Mute", muteModes),
       ),
       createGroup(
         "Noise",
         createSelect("noiseType", noiseTypes),
         createSlider("whiteNoiseLevel", 0, 0.35, 0.005),
+        createSelect("noiseMute", muteModes),
       ),
       createGroup(
         "Filter",

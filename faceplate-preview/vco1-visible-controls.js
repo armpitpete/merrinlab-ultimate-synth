@@ -9,6 +9,12 @@
     ["pulse", "Pulse"],
   ];
 
+  const noiseTypeOptions = [
+    ["white", "White"],
+    ["pink", "Pink"],
+    ["brown", "Brown"],
+  ];
+
   const repeatGateOptions = [
     ["off", "Off"],
     ["on", "On"],
@@ -373,7 +379,7 @@
     {
       key: "whiteNoiseLevel",
       moduleSelector: ".mixer-module",
-      label: "White NS Level",
+      label: "Noise Level",
       type: "range",
       min: 0,
       max: 100,
@@ -381,6 +387,14 @@
       unit: "%",
       fromSourceValue: (value) => (Number(value) / 0.35) * 100,
       toSourceValue: (value) => (Number(value) / 100) * 0.35,
+    },
+    {
+      key: "noiseType",
+      moduleSelector: ".mixer-module",
+      label: "Noise Type",
+      type: "select",
+      options: noiseTypeOptions,
+      hideReadout: true,
     },
     {
       key: "cutoff",
@@ -844,6 +858,50 @@
     return true;
   }
 
+  function syncMixerMuteButtons() {
+    document.querySelectorAll("[data-mixer-mute]").forEach((button) => {
+      const key = button.dataset.mixerMute;
+      const sourceControl = findSourceControl(key);
+      const muted = sourceControl?.value === "on";
+      button.classList.toggle("is-muted", muted);
+      button.setAttribute("aria-pressed", String(muted));
+      button.textContent = muted ? "Muted" : "Mute";
+
+      const status = button.closest(".mixer-channel")?.querySelector("[data-mixer-channel-status]");
+      if (status) status.textContent = muted ? "Muted" : "Active";
+    });
+  }
+
+  function installMixerRuntimeUi() {
+    const buttons = document.querySelectorAll("[data-mixer-mute]");
+    if (!buttons.length) return false;
+
+    buttons.forEach((button) => {
+      if (button.dataset.mixerMuteBound === "true") return;
+      button.dataset.mixerMuteBound = "true";
+      button.addEventListener("click", () => {
+        const sourceControl = findSourceControl(button.dataset.mixerMute);
+        if (!sourceControl) return;
+        sourceControl.value = sourceControl.value === "on" ? "off" : "on";
+        sourceControl.dispatchEvent(new Event("input", { bubbles: true }));
+        syncMixerMuteButtons();
+      });
+    });
+
+    syncMixerMuteButtons();
+    return true;
+  }
+
+  function updateMixerMeter(detail = {}) {
+    const peak = Math.max(0, Math.min(1, Number(detail.peak) || 0));
+    const fill = document.querySelector("[data-mixer-meter-fill]");
+    const readout = document.querySelector("[data-mixer-meter-readout]");
+    const meter = document.querySelector(".mixer-meter");
+    if (fill) fill.style.width = `${Math.round(peak * 100)}%`;
+    if (readout) readout.textContent = peak > 0.0001 ? `${(20 * Math.log10(peak)).toFixed(1)} dBFS` : "Silent";
+    meter?.classList.toggle("is-clipping", Boolean(detail.clipping));
+  }
+
   function updateVisibleControl(config, sourceValue) {
     const visibleControl = document.querySelector(`[data-visible-audio-control="${config.key}"]`);
     if (!visibleControl) return;
@@ -1090,11 +1148,17 @@
     ensureDelayFaceplateModule();
     visibleControlConfigs.forEach(addVisibleControl);
     installSampleHoldRuntimeUi();
+    installMixerRuntimeUi();
     updatePulseControlAvailability();
 
     sourcePanel.addEventListener("input", (event) => {
       const sourceControl = event.target.closest("[data-audio-control]");
       if (!sourceControl) return;
+
+      if (["vco1Mute", "vco2Mute", "vco3Mute", "noiseMute"].includes(sourceControl.dataset.audioControl)) {
+        syncMixerMuteButtons();
+        return;
+      }
 
       const config = visibleControlConfigs.find((item) => item.key === sourceControl.dataset.audioControl);
       if (!config) return;
@@ -1106,6 +1170,10 @@
 
   document.addEventListener("merrinlab:sample-hold-value", (event) => {
     updateSampleHoldRuntimeUi(event.detail);
+  });
+
+  document.addEventListener("merrinlab:mixer-meter", (event) => {
+    updateMixerMeter(event.detail);
   });
 
   document.addEventListener("DOMContentLoaded", initVisibleOscillatorControls);
