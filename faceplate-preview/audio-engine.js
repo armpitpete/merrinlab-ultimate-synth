@@ -337,13 +337,31 @@
   }
 
   function updateSampleHoldValue() {
-    if (!audioContext) return;
+    if (!audioContext || !isSampleHoldActive()) return;
 
     sampleHoldValue = Math.random() * 2 - 1;
     const now = audioContext.currentTime;
 
-    if (sampleHoldFilterSource) {
+    if (sampleHoldFilterSource && clamp(state.sampleHoldMod, "sampleHoldMod") > 0) {
       safeRamp(sampleHoldFilterSource.offset, sampleHoldValue * getSafeSampleHoldDepth(), now, 0.01);
+    }
+
+    if (clamp(state.sampleHoldPitchMod, "sampleHoldPitchMod") > 0) {
+      applyVco1Frequency();
+    }
+  }
+
+  function isSampleHoldActive() {
+    return clamp(state.sampleHoldMod, "sampleHoldMod") > 0 ||
+      clamp(state.sampleHoldPitchMod, "sampleHoldPitchMod") > 0;
+  }
+
+  function resetSampleHoldModulation() {
+    sampleHoldValue = 0;
+    if (!audioContext) return;
+
+    if (sampleHoldFilterSource) {
+      safeRamp(sampleHoldFilterSource.offset, 0, audioContext.currentTime, 0.01);
     }
 
     applyVco1Frequency();
@@ -358,6 +376,11 @@
 
   function startSampleHoldTimer() {
     stopSampleHoldTimer();
+
+    if (!isSampleHoldActive()) {
+      resetSampleHoldModulation();
+      return;
+    }
 
     const rate = clamp(state.sampleHoldRate, "sampleHoldRate");
     const intervalMs = Math.max(40, 1000 / rate);
@@ -670,7 +693,7 @@
 
     document.body.classList.add("is-audio-gated");
     mainVca.gain.cancelScheduledValues(now);
-    mainVca.gain.setValueAtTime(Math.max(0.0001, mainVca.gain.value), now);
+    mainVca.gain.setValueAtTime(Math.max(0, mainVca.gain.value), now);
 
     if (state.envelopeMode === "adsr") {
       const attack = clamp(state.adsrAttack, "adsrAttack");
@@ -703,8 +726,8 @@
 
     document.body.classList.remove("is-audio-gated");
     mainVca.gain.cancelScheduledValues(now);
-    mainVca.gain.setValueAtTime(Math.max(0.0001, mainVca.gain.value), now);
-    mainVca.gain.linearRampToValueAtTime(0.0001, now + release);
+    mainVca.gain.setValueAtTime(Math.max(0, mainVca.gain.value), now);
+    mainVca.gain.linearRampToValueAtTime(0, now + release);
     setStatus(statusMessage || (state.envelopeMode === "adsr" ? "Gate released · ADSR release" : "Gate released · AR release"));
   }
 
@@ -940,7 +963,7 @@
       safeRamp(lfo1Oscillator.frequency, clamp(state.lfo1Rate, "lfo1Rate"), now, 0.04);
     }
 
-    if (key === "sampleHoldRate") {
+    if (key === "sampleHoldRate" || key === "sampleHoldMod" || key === "sampleHoldPitchMod") {
       startSampleHoldTimer();
     }
 
