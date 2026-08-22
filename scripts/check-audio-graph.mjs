@@ -26,6 +26,11 @@ assert.match(sources.get("audio-engine.js"), /filter\.Q\.value = state\.resonanc
 assert.match(sources.get("audio-engine.js"), /linearRampToValueAtTime\(0, now \+ release\)/, "release must end at digital silence");
 assert.doesNotMatch(sources.get("audio-engine.js"), /linearRampToValueAtTime\(0\.0001, now \+ release\)/, "release must not leave a fixed-pitch oscillator leak");
 assert.match(sources.get("audio-engine.js"), /if \(!audioContext \|\| !isSampleHoldActive\(\)\) return;/, "inactive Sample & Hold must not automate the A oscillator");
+assert.match(sources.get("audio-engine.js"), /triggerFilterEnvelopeOn\(now\)/, "filter envelope modulation must follow note-on");
+assert.match(sources.get("audio-engine.js"), /triggerFilterEnvelopeOff\(now, release\)/, "filter envelope modulation must follow release");
+assert.match(sources.get("vco1-visible-controls.js"), /key: "filterEnvelopeMod"/, "the filter AR modulation slider must be visible");
+assert.match(sources.get("vco1-visible-controls.js"), /key: "filterExtCv"/, "the filter Ext CV slider must be visible");
+assert.match(sources.get("vco1-visible-controls.js"), /\.control\.is-audio-linked > \.knob/, "slider-backed controls must hide decorative knobs");
 
 const index = await readFile(join(previewDirectory.pathname, "index.html"), "utf8");
 assert.ok(index.indexOf('src="effects-output-graph.js"') < index.indexOf('src="audio-engine.js"'), "the graph must load before the engine");
