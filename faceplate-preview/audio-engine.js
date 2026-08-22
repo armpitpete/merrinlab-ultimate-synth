@@ -65,12 +65,7 @@
   let filter = null;
   let mainVca = null;
   let tremoloGain = null;
-  let delayNode = null;
-  let delayFeedbackGain = null;
-  let delayDryGain = null;
-  let delayWetGain = null;
-  let masterGain = null;
-  let limiter = null;
+  let effectsOutputGraph = null;
   let repeatGateTimerId = null;
   let repeatGateReleaseTimerId = null;
   let isRepeatGateHoldingGate = false;
@@ -334,12 +329,11 @@
   }
 
   function applyDelayParameters() {
-    if (!audioContext || !delayNode || !delayFeedbackGain || !delayWetGain) return;
-
-    const now = audioContext.currentTime;
-    safeRamp(delayNode.delayTime, clamp(state.delayTime, "delayTime"), now, 0.03);
-    safeRamp(delayFeedbackGain.gain, clamp(state.delayFeedback, "delayFeedback"), now, 0.03);
-    safeRamp(delayWetGain.gain, clamp(state.delayMix, "delayMix"), now, 0.03);
+    window.MerrinLabEffectsOutputGraph?.setParameters("delay", {
+      mix: clamp(state.delayMix, "delayMix"),
+      time: clamp(state.delayTime, "delayTime"),
+      feedback: clamp(state.delayFeedback, "delayFeedback"),
+    });
   }
 
   function updateSampleHoldValue() {
@@ -614,27 +608,11 @@
     lfo2Offset = audioContext.createConstantSource();
     lfo2Offset.offset.value = 1 - getSafeTremoloDepth() / 2;
 
-    delayNode = audioContext.createDelay(1.0);
-    delayNode.delayTime.value = clamp(state.delayTime, "delayTime");
-
-    delayFeedbackGain = audioContext.createGain();
-    delayFeedbackGain.gain.value = clamp(state.delayFeedback, "delayFeedback");
-
-    delayDryGain = audioContext.createGain();
-    delayDryGain.gain.value = 1;
-
-    delayWetGain = audioContext.createGain();
-    delayWetGain.gain.value = clamp(state.delayMix, "delayMix");
-
-    masterGain = audioContext.createGain();
-    masterGain.gain.value = state.output;
-
-    limiter = audioContext.createDynamicsCompressor();
-    limiter.threshold.value = -24;
-    limiter.knee.value = 12;
-    limiter.ratio.value = 12;
-    limiter.attack.value = 0.003;
-    limiter.release.value = 0.12;
+    effectsOutputGraph = window.MerrinLabEffectsOutputGraph?.create(audioContext) || null;
+    if (!effectsOutputGraph) {
+      setStatus("Effects/output graph unavailable");
+      return false;
+    }
 
     oscillator.connect(vcoGain);
     vcoGain.connect(filter);
@@ -658,15 +636,7 @@
 
     filter.connect(mainVca);
     mainVca.connect(tremoloGain);
-    tremoloGain.connect(delayDryGain);
-    tremoloGain.connect(delayNode);
-    delayNode.connect(delayFeedbackGain);
-    delayFeedbackGain.connect(delayNode);
-    delayNode.connect(delayWetGain);
-    delayDryGain.connect(masterGain);
-    delayWetGain.connect(masterGain);
-    masterGain.connect(limiter);
-    limiter.connect(audioContext.destination);
+    tremoloGain.connect(effectsOutputGraph.input);
 
     oscillator.start();
     oscillator2.start();
@@ -836,20 +806,7 @@
       tremoloGain.gain.setValueAtTime(0, audioContext.currentTime);
     }
 
-    if (delayWetGain && audioContext) {
-      delayWetGain.gain.cancelScheduledValues(audioContext.currentTime);
-      delayWetGain.gain.setValueAtTime(0, audioContext.currentTime);
-    }
-
-    if (delayFeedbackGain && audioContext) {
-      delayFeedbackGain.gain.cancelScheduledValues(audioContext.currentTime);
-      delayFeedbackGain.gain.setValueAtTime(0, audioContext.currentTime);
-    }
-
-    if (masterGain && audioContext) {
-      masterGain.gain.cancelScheduledValues(audioContext.currentTime);
-      masterGain.gain.setValueAtTime(0, audioContext.currentTime);
-    }
+    window.MerrinLabEffectsOutputGraph?.mute();
 
     [oscillator, oscillator2, oscillator3, noiseSource, lfo1Oscillator, sampleHoldFilterSource, lfo2Oscillator, lfo2Offset].forEach((source) => {
       try {
@@ -867,6 +824,7 @@
       // Closing is best-effort; graph references are still cleared below.
     }
 
+    window.MerrinLabEffectsOutputGraph?.dispose();
     audioContext = null;
     oscillator = null;
     vcoGain = null;
@@ -885,12 +843,7 @@
     filter = null;
     mainVca = null;
     tremoloGain = null;
-    delayNode = null;
-    delayFeedbackGain = null;
-    delayDryGain = null;
-    delayWetGain = null;
-    masterGain = null;
-    limiter = null;
+    effectsOutputGraph = null;
 
     setStatus("Panic stopped · silent");
   }
@@ -1022,8 +975,8 @@
       applyDelayParameters();
     }
 
-    if (key === "output" && masterGain) {
-      safeRamp(masterGain.gain, clamp(state.output, "output"), now, 0.02);
+    if (key === "output") {
+      window.MerrinLabEffectsOutputGraph?.setParameter("output", "level", clamp(state.output, "output"));
     }
   }
 
@@ -1394,7 +1347,8 @@
         midiNote: midiCurrentNote,
         pitchBend: midiPitchBend,
         heldNotes: midiHeldNotes.map(entry => entry.note),
-        audioState: audioContext?.state || "stopped"
+        audioState: audioContext?.state || "stopped",
+        effectsGraph: window.MerrinLabEffectsOutputGraph?.getDebugState() || null,
       };
     }
   };
