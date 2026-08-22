@@ -75,6 +75,13 @@
   let repeatGateReleaseTimerId = null;
   let isRepeatGateHoldingGate = false;
 
+  const midiHeldNotes = [];
+  let midiCurrentNote = null;
+  let midiPitchBend = 0;
+  let midiGateVelocity = 1;
+  const MIDI_PITCH_BEND_SEMITONES = 2;
+  const MIDI_REFERENCE_FREQUENCY = 220;
+
   const limits = {
     coarseFreq: [55, 880],
     fineCents: [-100, 100],
@@ -230,6 +237,20 @@
     return Math.min(1200, Math.max(40, frequency));
   }
 
+  function midiNoteToFrequency(note) {
+    const semitoneOffset = (Number(note) - 69) + (midiPitchBend * MIDI_PITCH_BEND_SEMITONES);
+    return 440 * Math.pow(2, semitoneOffset / 12);
+  }
+
+  function getTrackedOscillatorFrequency(coarseKey, fineKey) {
+    if (midiCurrentNote === null) return getOscillatorFrequency(coarseKey, fineKey);
+
+    const coarseRatio = clamp(state[coarseKey], coarseKey) / MIDI_REFERENCE_FREQUENCY;
+    const fine = clamp(state[fineKey], fineKey);
+    const frequency = midiNoteToFrequency(midiCurrentNote) * coarseRatio * Math.pow(2, fine / 1200);
+    return Math.min(16000, Math.max(8, frequency));
+  }
+
   function getSampleHoldPitchCents() {
     const amount = clamp(state.sampleHoldPitchMod, "sampleHoldPitchMod");
     const maxDepthCents = 700;
@@ -237,17 +258,17 @@
   }
 
   function getVcoFrequency() {
-    const baseFrequency = getOscillatorFrequency("coarseFreq", "fineCents");
+    const baseFrequency = getTrackedOscillatorFrequency("coarseFreq", "fineCents");
     const shiftedFrequency = baseFrequency * Math.pow(2, getSampleHoldPitchCents() / 1200);
-    return Math.min(1600, Math.max(30, shiftedFrequency));
+    return Math.min(16000, Math.max(8, shiftedFrequency));
   }
 
   function getVco2Frequency() {
-    return getOscillatorFrequency("vco2CoarseFreq", "vco2FineCents");
+    return getTrackedOscillatorFrequency("vco2CoarseFreq", "vco2FineCents");
   }
 
   function getVco3Frequency() {
-    return getOscillatorFrequency("vco3CoarseFreq", "vco3FineCents");
+    return getTrackedOscillatorFrequency("vco3CoarseFreq", "vco3FineCents");
   }
 
   function getFilterHeadroom() {
@@ -287,6 +308,14 @@
   function applyVco1Frequency() {
     if (!audioContext || !oscillator) return;
     safeRamp(oscillator.frequency, getVcoFrequency(), audioContext.currentTime, 0.015);
+  }
+
+  function applyAllVcoFrequencies() {
+    if (!audioContext) return;
+    const now = audioContext.currentTime;
+    if (oscillator) safeRamp(oscillator.frequency, getVcoFrequency(), now, 0.015);
+    if (oscillator2) safeRamp(oscillator2.frequency, getVco2Frequency(), now, 0.015);
+    if (oscillator3) safeRamp(oscillator3.frequency, getVco3Frequency(), now, 0.015);
   }
 
   function applyFilterCutoffAndModulators() {
@@ -667,7 +696,7 @@
     if (!audioContext || !mainVca) return;
 
     const now = audioContext.currentTime;
-    const target = 0.55;
+    const target = 0.55 * Math.max(0.08, Math.min(1, midiGateVelocity));
 
     document.body.classList.add("is-audio-gated");
     mainVca.gain.cancelScheduledValues(now);
@@ -689,6 +718,7 @@
   }
 
   async function gateOn() {
+    midiGateVelocity = 1;
     await startAudio();
     triggerGateOn();
   }
@@ -713,9 +743,60 @@
     isRepeatGateHoldingGate = false;
   }
 
+  function removeMidiHeldNote(note) {
+    for (let index = midiHeldNotes.length - 1; index >= 0; index -= 1) {
+      if (midiHeldNotes[index].note === note) midiHeldNotes.splice(index, 1);
+    }
+  }
+
+  async function midiNoteOn(note, velocity = 127) {
+    const normalizedNote = Math.max(0, Math.min(127, Number(note)));
+    const normalizedVelocity = Math.max(1, Math.min(127, Number(velocity)));
+
+    removeMidiHeldNote(normalizedNote);
+    midiHeldNotes.push({ note: normalizedNote, velocity: normalizedVelocity });
+    midiCurrentNote = normalizedNote;
+    midiGateVelocity = normalizedVelocity / 127;
+
+    await startAudio();
+    applyAllVcoFrequencies();
+    triggerGateOn(`MIDI note ${normalizedNote} · velocity ${normalizedVelocity}`);
+  }
+
+  function midiNoteOff(note) {
+    const normalizedNote = Math.max(0, Math.min(127, Number(note)));
+    removeMidiHeldNote(normalizedNote);
+
+    if (midiCurrentNote !== normalizedNote) return;
+
+    if (midiHeldNotes.length) {
+      const fallback = midiHeldNotes[midiHeldNotes.length - 1];
+      midiCurrentNote = fallback.note;
+      midiGateVelocity = fallback.velocity / 127;
+      applyAllVcoFrequencies();
+      setStatus(`MIDI legato · note ${fallback.note}`);
+      return;
+    }
+
+    midiCurrentNote = null;
+    midiGateVelocity = 1;
+    triggerGateOff("MIDI release");
+  }
+
+  function setMidiPitchBend(value) {
+    const numeric = Number(value);
+    const normalized = Math.abs(numeric) > 1 ? numeric / 8192 : numeric;
+    midiPitchBend = Math.max(-1, Math.min(1, normalized));
+    applyAllVcoFrequencies();
+  }
+
   async function panicStop() {
     document.body.classList.remove("is-audio-started", "is-audio-gated");
     isRepeatGateHoldingGate = false;
+    midiHeldNotes.length = 0;
+    midiCurrentNote = null;
+    midiPitchBend = 0;
+    midiGateVelocity = 1;
     stopSampleHoldTimer();
     stopRepeatGateTimer(false);
     sampleHoldValue = 0;
@@ -961,6 +1042,30 @@
     if (key === "attack" || key === "release" || key === "adsrAttack" || key === "adsrDecay" || key === "adsrRelease") return `${Number(value).toFixed(2)} ${units[key]}`;
     if (key === "resonance") return `${Number(value).toFixed(1)} ${units[key]}`;
     return Number(value).toFixed(2);
+  }
+
+  function syncParameterUi(key) {
+    const control = document.querySelector(`[data-audio-control="${key}"]`);
+    if (control) control.value = String(state[key]);
+
+    const readout = document.querySelector(`[data-audio-readout="${key}"]`);
+    if (readout) {
+      readout.textContent = control?.tagName === "SELECT" ? state[key] : formatValue(key, state[key]);
+    }
+  }
+
+  function setEngineParameter(key, value) {
+    if (!(key in state)) return false;
+
+    if (limits[key]) {
+      state[key] = clamp(value, key);
+    } else {
+      state[key] = value;
+    }
+
+    syncParameterUi(key);
+    applyParameter(key);
+    return true;
   }
 
   function createSlider(key, min, max, step) {
@@ -1276,6 +1381,23 @@
       if (action === "panic") panicStop();
     });
   }
+
+  window.MerrinLabAudio = {
+    start: startAudio,
+    noteOn: midiNoteOn,
+    noteOff: midiNoteOff,
+    pitchBend: setMidiPitchBend,
+    setParameter: setEngineParameter,
+    panic: panicStop,
+    getState() {
+      return {
+        midiNote: midiCurrentNote,
+        pitchBend: midiPitchBend,
+        heldNotes: midiHeldNotes.map(entry => entry.note),
+        audioState: audioContext?.state || "stopped"
+      };
+    }
+  };
 
   document.addEventListener("DOMContentLoaded", createPanel);
 })();
