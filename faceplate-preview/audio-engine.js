@@ -22,7 +22,7 @@
     noiseType: "white",
     whiteNoiseLevel: 0,
     cutoff: 900,
-    resonance: 0.7,
+    resonance: 0,
     lfo1Rate: 0.8,
     lfo1Mod: 0,
     sampleHoldRate: 2,
@@ -97,7 +97,7 @@
     vco3Level: [0, 0.4],
     whiteNoiseLevel: [0, 0.35],
     cutoff: [120, 6500],
-    resonance: [0.1, 12],
+    resonance: [0, 12],
     lfo1Rate: [0.05, 12],
     lfo1Mod: [0, 1],
     sampleHoldRate: [0.1, 20],
@@ -1296,7 +1296,7 @@
       createGroup(
         "Filter",
         createSlider("cutoff", 120, 6500, 1),
-        createSlider("resonance", 0.1, 12, 0.1),
+        createSlider("resonance", 0, 12, 0.1),
       ),
       createGroup(
         "Filter Modulation",
