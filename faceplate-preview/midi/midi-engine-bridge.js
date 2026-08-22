@@ -7,7 +7,7 @@
     22: ["vco2Level", 0, 0.45],
     23: ["vco3Level", 0, 0.4],
     24: ["cutoff", 120, 6500],
-    25: ["resonance", 0.1, 4, "curve"],
+    25: ["resonance", 0.1, 12, "curve"],
     26: ["lfo1Rate", 0.05, 12],
     27: ["lfo1Mod", 0, 1],
     28: ["delayMix", 0, 1]
