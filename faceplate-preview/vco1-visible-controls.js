@@ -14,6 +14,19 @@
     ["on", "On"],
   ];
 
+  const sampleHoldInputOptions = [
+    ["noise", "Noise"],
+    ["lfo1", "LFO-1"],
+    ["vco1", "VCO-1"],
+  ];
+
+  const sampleHoldModeOptions = [
+    ["sample", "Sample & Hold"],
+    ["track", "Track & Hold"],
+  ];
+
+  let sampleHoldLedTimerId = null;
+
   const noteOptions = buildNoteOptions(33, 81);
   const centsOptions = buildCentsOptions();
 
@@ -232,6 +245,20 @@
       unit: "Hz",
     },
     {
+      key: "sampleHoldInput",
+      moduleSelector: ".sample-hold-module",
+      label: "Input",
+      type: "select",
+      options: sampleHoldInputOptions,
+    },
+    {
+      key: "sampleHoldMode",
+      moduleSelector: ".sample-hold-module",
+      label: "Mode",
+      type: "select",
+      options: sampleHoldModeOptions,
+    },
+    {
       key: "sampleHoldRate",
       moduleSelector: ".sample-hold-module",
       label: "Sample Rate",
@@ -245,6 +272,18 @@
       key: "sampleHoldMod",
       moduleSelector: ".sample-hold-module",
       label: "Filter Amount",
+      type: "range",
+      min: 0,
+      max: 100,
+      step: 1,
+      unit: "%",
+      fromSourceValue: (value) => Number(value) * 100,
+      toSourceValue: (value) => Number(value) / 100,
+    },
+    {
+      key: "sampleHoldGlide",
+      moduleSelector: ".sample-hold-module",
+      label: "Glide",
       type: "range",
       min: 0,
       max: 100,
@@ -405,7 +444,7 @@
     }
 
     const number = Number(value);
-    const percentKeys = ["vcoLevel", "vco2Level", "vco3Level", "whiteNoiseLevel", "filterEnvelopeMod", "lfo1Mod", "sampleHoldMod", "lfo2Mod", "delayMix", "delayFeedback"];
+    const percentKeys = ["vcoLevel", "vco2Level", "vco3Level", "whiteNoiseLevel", "filterEnvelopeMod", "lfo1Mod", "sampleHoldMod", "sampleHoldGlide", "lfo2Mod", "delayMix", "delayFeedback"];
     const fineTuneKeys = ["fineCents", "vco2FineCents", "vco3FineCents"];
 
     if (config.key === "repeatGateRate") return `${number.toFixed(0)} ${config.unit}`;
@@ -444,6 +483,68 @@
       ultimateGrid.append(delayModule);
     }
 
+    return true;
+  }
+
+  function updateSampleHoldRuntimeUi(detail = {}) {
+    const value = Number(detail.value) || 0;
+    const output = document.querySelector("[data-sample-hold-cv-output]");
+    if (output) output.textContent = `${value >= 0 ? "+" : ""}${value.toFixed(2)} CV`;
+
+    const led = document.querySelector(".sample-hold-module .led-light");
+    if (!led) return;
+
+    if (sampleHoldLedTimerId !== null) {
+      window.clearTimeout(sampleHoldLedTimerId);
+      sampleHoldLedTimerId = null;
+    }
+
+    led.classList.toggle("is-tracking", Boolean(detail.tracking));
+    led.classList.toggle("is-active", Boolean(detail.tracking || detail.captured));
+
+    if (detail.captured && !detail.tracking) {
+      sampleHoldLedTimerId = window.setTimeout(() => {
+        led.classList.remove("is-active");
+        sampleHoldLedTimerId = null;
+      }, 140);
+    }
+  }
+
+  function installSampleHoldRuntimeUi() {
+    const module = document.querySelector(".sample-hold-module");
+    if (!module) return false;
+
+    const outputControl = findControlByLabel(module, "CV-Out");
+    if (outputControl && !outputControl.querySelector("[data-sample-hold-cv-output]")) {
+      outputControl.classList.add("is-audio-linked", "sample-hold-cv-output-control");
+      const output = document.createElement("output");
+      output.className = "sample-hold-cv-output";
+      output.dataset.sampleHoldCvOutput = "";
+      output.textContent = "+0.00 CV";
+      outputControl.append(output);
+    }
+
+    const triggerControl = findControlByLabel(module, "Trig");
+    if (triggerControl && !triggerControl.querySelector("[data-sample-hold-trigger]")) {
+      triggerControl.classList.add("is-audio-linked", "sample-hold-trigger-control");
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "sample-hold-trigger";
+      button.dataset.sampleHoldTrigger = "";
+      button.textContent = "Capture";
+      button.addEventListener("click", async () => {
+        button.disabled = true;
+        try {
+          await window.MerrinLabAudio?.triggerSampleHold?.();
+        } finally {
+          button.disabled = false;
+        }
+      });
+      triggerControl.append(button);
+    }
+
+    const ledControl = findControlByLabel(module, "LED");
+    if (ledControl) ledControl.classList.add("sample-hold-led-control");
     return true;
   }
 
@@ -561,6 +662,48 @@
         display: none;
       }
 
+      .sample-hold-module .control.is-audio-linked > .jack-socket,
+      .sample-hold-module .control.is-audio-linked > .switch-control {
+        display: none;
+      }
+
+      .sample-hold-cv-output,
+      .sample-hold-trigger {
+        box-sizing: border-box;
+        display: block;
+        margin-top: 8px;
+        width: 100%;
+      }
+
+      .sample-hold-cv-output {
+        color: #d6c8b5;
+        font-size: 0.68rem;
+        font-variant-numeric: tabular-nums;
+        text-align: center;
+      }
+
+      .sample-hold-trigger {
+        background: #211913;
+        border: 1px solid rgba(215, 184, 132, 0.45);
+        border-radius: 999px;
+        color: #f3e8da;
+        cursor: pointer;
+        font: inherit;
+        font-size: 0.62rem;
+        padding: 5px 8px;
+        text-transform: uppercase;
+      }
+
+      .sample-hold-module .led-light.is-active {
+        background: #e8bd56;
+        box-shadow: 0 0 12px rgba(232, 189, 86, 0.85);
+      }
+
+      .sample-hold-module .led-light.is-tracking {
+        background: #93d36c;
+        box-shadow: 0 0 12px rgba(147, 211, 108, 0.85);
+      }
+
       .visible-audio-control-wrap {
         display: grid;
         grid-template-columns: minmax(0, 1fr);
@@ -619,6 +762,7 @@
 
     ensureDelayFaceplateModule();
     visibleControlConfigs.forEach(addVisibleControl);
+    installSampleHoldRuntimeUi();
 
     sourcePanel.addEventListener("input", (event) => {
       const sourceControl = event.target.closest("[data-audio-control]");
@@ -631,6 +775,10 @@
 
     syncFromExistingControls();
   }
+
+  document.addEventListener("merrinlab:sample-hold-value", (event) => {
+    updateSampleHoldRuntimeUi(event.detail);
+  });
 
   document.addEventListener("DOMContentLoaded", initVisibleOscillatorControls);
 })();
