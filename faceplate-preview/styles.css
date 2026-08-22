@@ -610,17 +610,38 @@ body {
   letter-spacing: 0.035em;
 }
 
-.vco-jack-grid {
+.vco-core-controls {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 18px 10px;
-  margin-top: 6px;
+  gap: 12px;
 }
 
-.vco-jack-grid .control-label {
+.vco-core-controls .vertical-control {
+  margin-bottom: 0;
+}
+
+.vco-mod-section {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(215, 184, 132, 0.22);
+}
+
+.vco-subtitle {
+  margin-bottom: 12px;
+  color: #d7b884;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.vco-mod-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.vco-mod-grid .control-label {
   min-height: auto;
-  font-size: 0.66rem;
-  letter-spacing: 0.03em;
 }
 
 .mixer-noise-outputs {

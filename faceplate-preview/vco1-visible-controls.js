@@ -59,7 +59,6 @@
   let sampleHoldLedTimerId = null;
 
   const noteOptions = buildNoteOptions(33, 81);
-  const centsOptions = buildCentsOptions();
 
   const visibleControlConfigs = [
     {
@@ -69,14 +68,17 @@
       type: "select",
       options: noteOptions,
       matchNearestOption: true,
+      hideReadout: true,
     },
     {
       key: "fineCents",
       moduleSelector: ".vco-bank .vco-module:first-child",
       label: "Fine Freq",
-      type: "select",
-      options: centsOptions,
-      matchNearestOption: true,
+      type: "range",
+      min: -100,
+      max: 100,
+      step: 1,
+      unit: "cent",
     },
     {
       key: "waveform",
@@ -84,6 +86,7 @@
       label: "Waveform",
       type: "select",
       options: waveOptions,
+      hideReadout: true,
     },
     {
       key: "pulseWidth",
@@ -92,6 +95,60 @@
       type: "range",
       min: 10,
       max: 90,
+      step: 1,
+      unit: "%",
+    },
+    {
+      key: "vco1PitchModSource",
+      moduleSelector: ".vco-bank .vco-module:first-child",
+      label: "Pitch Mod Source",
+      type: "select",
+      options: modulationSourceOptions,
+      hideReadout: true,
+    },
+    {
+      key: "vco1PitchModDepth",
+      moduleSelector: ".vco-bank .vco-module:first-child",
+      label: "Pitch Depth",
+      type: "range",
+      min: 0,
+      max: 24,
+      step: 0.1,
+      unit: "st",
+    },
+    {
+      key: "vco1LinearFmSource",
+      moduleSelector: ".vco-bank .vco-module:first-child",
+      label: "Linear FM Source",
+      type: "select",
+      options: modulationSourceOptions,
+      hideReadout: true,
+    },
+    {
+      key: "vco1LinearFmDepth",
+      moduleSelector: ".vco-bank .vco-module:first-child",
+      label: "FM Depth",
+      type: "range",
+      min: 0,
+      max: 500,
+      step: 1,
+      unit: "Hz",
+    },
+    {
+      key: "vco1PwmSource",
+      moduleSelector: ".vco-bank .vco-module:first-child",
+      label: "PWM Source",
+      type: "select",
+      options: modulationSourceOptions,
+      hideReadout: true,
+    },
+    {
+      key: "vco1PwmDepth",
+      moduleSelector: ".vco-bank .vco-module:first-child",
+      label: "PWM Depth",
+      type: "range",
+      min: 0,
+      max: 40,
       step: 1,
       unit: "%",
     },
@@ -114,14 +171,17 @@
       type: "select",
       options: noteOptions,
       matchNearestOption: true,
+      hideReadout: true,
     },
     {
       key: "vco2FineCents",
       moduleSelector: ".vco-bank .vco-module:nth-child(2)",
       label: "Fine Freq",
-      type: "select",
-      options: centsOptions,
-      matchNearestOption: true,
+      type: "range",
+      min: -100,
+      max: 100,
+      step: 1,
+      unit: "cent",
     },
     {
       key: "vco2Waveform",
@@ -129,6 +189,7 @@
       label: "Waveform",
       type: "select",
       options: waveOptions,
+      hideReadout: true,
     },
     {
       key: "vco2PulseWidth",
@@ -137,6 +198,60 @@
       type: "range",
       min: 10,
       max: 90,
+      step: 1,
+      unit: "%",
+    },
+    {
+      key: "vco2PitchModSource",
+      moduleSelector: ".vco-bank .vco-module:nth-child(2)",
+      label: "Pitch Mod Source",
+      type: "select",
+      options: modulationSourceOptions,
+      hideReadout: true,
+    },
+    {
+      key: "vco2PitchModDepth",
+      moduleSelector: ".vco-bank .vco-module:nth-child(2)",
+      label: "Pitch Depth",
+      type: "range",
+      min: 0,
+      max: 24,
+      step: 0.1,
+      unit: "st",
+    },
+    {
+      key: "vco2LinearFmSource",
+      moduleSelector: ".vco-bank .vco-module:nth-child(2)",
+      label: "Linear FM Source",
+      type: "select",
+      options: modulationSourceOptions,
+      hideReadout: true,
+    },
+    {
+      key: "vco2LinearFmDepth",
+      moduleSelector: ".vco-bank .vco-module:nth-child(2)",
+      label: "FM Depth",
+      type: "range",
+      min: 0,
+      max: 500,
+      step: 1,
+      unit: "Hz",
+    },
+    {
+      key: "vco2PwmSource",
+      moduleSelector: ".vco-bank .vco-module:nth-child(2)",
+      label: "PWM Source",
+      type: "select",
+      options: modulationSourceOptions,
+      hideReadout: true,
+    },
+    {
+      key: "vco2PwmDepth",
+      moduleSelector: ".vco-bank .vco-module:nth-child(2)",
+      label: "PWM Depth",
+      type: "range",
+      min: 0,
+      max: 40,
       step: 1,
       unit: "%",
     },
@@ -159,14 +274,17 @@
       type: "select",
       options: noteOptions,
       matchNearestOption: true,
+      hideReadout: true,
     },
     {
       key: "vco3FineCents",
       moduleSelector: ".vco-bank .vco-module:nth-child(3)",
       label: "Fine Freq",
-      type: "select",
-      options: centsOptions,
-      matchNearestOption: true,
+      type: "range",
+      min: -100,
+      max: 100,
+      step: 1,
+      unit: "cent",
     },
     {
       key: "vco3Waveform",
@@ -174,6 +292,7 @@
       label: "Waveform",
       type: "select",
       options: waveOptions,
+      hideReadout: true,
     },
     {
       key: "vco3PulseWidth",
@@ -182,6 +301,60 @@
       type: "range",
       min: 10,
       max: 90,
+      step: 1,
+      unit: "%",
+    },
+    {
+      key: "vco3PitchModSource",
+      moduleSelector: ".vco-bank .vco-module:nth-child(3)",
+      label: "Pitch Mod Source",
+      type: "select",
+      options: modulationSourceOptions,
+      hideReadout: true,
+    },
+    {
+      key: "vco3PitchModDepth",
+      moduleSelector: ".vco-bank .vco-module:nth-child(3)",
+      label: "Pitch Depth",
+      type: "range",
+      min: 0,
+      max: 24,
+      step: 0.1,
+      unit: "st",
+    },
+    {
+      key: "vco3LinearFmSource",
+      moduleSelector: ".vco-bank .vco-module:nth-child(3)",
+      label: "Linear FM Source",
+      type: "select",
+      options: modulationSourceOptions,
+      hideReadout: true,
+    },
+    {
+      key: "vco3LinearFmDepth",
+      moduleSelector: ".vco-bank .vco-module:nth-child(3)",
+      label: "FM Depth",
+      type: "range",
+      min: 0,
+      max: 500,
+      step: 1,
+      unit: "Hz",
+    },
+    {
+      key: "vco3PwmSource",
+      moduleSelector: ".vco-bank .vco-module:nth-child(3)",
+      label: "PWM Source",
+      type: "select",
+      options: modulationSourceOptions,
+      hideReadout: true,
+    },
+    {
+      key: "vco3PwmDepth",
+      moduleSelector: ".vco-bank .vco-module:nth-child(3)",
+      label: "PWM Depth",
+      type: "range",
+      min: 0,
+      max: 40,
       step: 1,
       unit: "%",
     },
@@ -511,13 +684,6 @@
     return options;
   }
 
-  function buildCentsOptions() {
-    return [-50, -25, -12, -7, -5, -3, 0, 3, 5, 7, 12, 25, 50].map((value) => {
-      const sign = value > 0 ? "+" : "";
-      return [String(value), `${sign}${value} cent`];
-    });
-  }
-
   function findNearestOptionValue(options, value) {
     const target = Number(value);
     let nearest = options[0]?.[0] || value;
@@ -572,6 +738,8 @@
     const number = Number(value);
     const percentKeys = ["vcoLevel", "vco2Level", "vco3Level", "whiteNoiseLevel", "filterEnvelopeMod", "lfo1Mod", "sampleHoldMod", "sampleHoldGlide", "vcaInitialLevel", "vcaEnvelopeMod", "lfo2Mod", "auxVcaInitialAmp", "auxVcaCvAmount", "delayMix", "delayFeedback"];
     const fineTuneKeys = ["fineCents", "vco2FineCents", "vco3FineCents"];
+    const pitchDepthKeys = ["vco1PitchModDepth", "vco2PitchModDepth", "vco3PitchModDepth"];
+    const pwmDepthKeys = ["vco1PwmDepth", "vco2PwmDepth", "vco3PwmDepth"];
 
     if (config.key === "repeatGateRate") return `${number.toFixed(0)} ${config.unit}`;
     if (config.key === "lfo1Rate") return `${number.toFixed(2)} ${config.unit}`;
@@ -582,6 +750,8 @@
     if (config.key === "filterExtCv" || config.key === "vcaExtCv") return `${number >= 0 ? "+" : ""}${number.toFixed(0)}%`;
     if (percentKeys.includes(config.key)) return `${number.toFixed(0)}%`;
     if (fineTuneKeys.includes(config.key)) return `${number.toFixed(0)} ${config.unit}`;
+    if (pitchDepthKeys.includes(config.key)) return `${number.toFixed(1)} ${config.unit}`;
+    if (pwmDepthKeys.includes(config.key)) return `${number.toFixed(0)}%`;
     return `${number.toFixed(0)} ${config.unit}`.trim();
   }
 
@@ -689,6 +859,27 @@
       const faceSwitch = wrapper?.parentElement?.querySelector(".switch-control");
       if (faceSwitch) faceSwitch.textContent = formatReadout(config, visibleValue);
     }
+
+    if (["waveform", "vco2Waveform", "vco3Waveform"].includes(config.key)) {
+      updatePulseControlAvailability();
+    }
+  }
+
+  function updatePulseControlAvailability() {
+    [
+      { waveform: "waveform", controls: ["pulseWidth", "vco1PwmSource", "vco1PwmDepth"] },
+      { waveform: "vco2Waveform", controls: ["vco2PulseWidth", "vco2PwmSource", "vco2PwmDepth"] },
+      { waveform: "vco3Waveform", controls: ["vco3PulseWidth", "vco3PwmSource", "vco3PwmDepth"] },
+    ].forEach((group) => {
+      const waveformControl = document.querySelector(`[data-visible-audio-control="${group.waveform}"]`);
+      const enabled = waveformControl?.value === "pulse";
+      group.controls.forEach((key) => {
+        const control = document.querySelector(`[data-visible-audio-control="${key}"]`);
+        if (!control) return;
+        control.disabled = !enabled;
+        control.closest(".control")?.classList.toggle("is-audio-conditional-disabled", !enabled);
+      });
+    });
   }
 
   function sendToExistingAudioControl(config, visibleValue) {
@@ -752,7 +943,8 @@
     readout.className = "visible-audio-readout";
     readout.textContent = formatReadout(config, getVisibleValue(config, sourceControl.value));
 
-    wrapper.append(input, readout);
+    wrapper.append(input);
+    if (!config.hideReadout) wrapper.append(readout);
     control.append(wrapper);
 
     updateVisibleControl(config, sourceControl.value);
@@ -776,6 +968,15 @@
         color: #93d36c;
         font-size: 0.58em;
         letter-spacing: 0.08em;
+      }
+
+      .vco-module .control.is-audio-conditional-disabled {
+        opacity: 0.42;
+      }
+
+      .vco-module .control.is-audio-conditional-disabled .control-label::after {
+        content: " PULSE ONLY";
+        color: #bda98d;
       }
 
       .control.is-audio-linked > .knob,
@@ -889,6 +1090,7 @@
     ensureDelayFaceplateModule();
     visibleControlConfigs.forEach(addVisibleControl);
     installSampleHoldRuntimeUi();
+    updatePulseControlAvailability();
 
     sourcePanel.addEventListener("input", (event) => {
       const sourceControl = event.target.closest("[data-audio-control]");
