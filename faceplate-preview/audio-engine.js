@@ -30,6 +30,9 @@
     sampleHoldRate: 2,
     sampleHoldMod: 0,
     sampleHoldPitchMod: 0,
+    sampleHoldInput: "noise",
+    sampleHoldMode: "sample",
+    sampleHoldGlide: 0,
     lfo2Rate: 1.2,
     lfo2Mod: 0,
     envelopeMode: "ar",
@@ -102,6 +105,7 @@
     sampleHoldRate: [0.1, 20],
     sampleHoldMod: [0, 1],
     sampleHoldPitchMod: [0, 1],
+    sampleHoldGlide: [0, 1],
     lfo2Rate: [0.05, 12],
     lfo2Mod: [0, 1],
     repeatGateRate: [0.1, 12],
@@ -144,6 +148,9 @@
     sampleHoldRate: "S&H Rate",
     sampleHoldMod: "S&H Mod",
     sampleHoldPitchMod: "S&H Pitch Mod",
+    sampleHoldInput: "S&H Input",
+    sampleHoldMode: "S&H Mode",
+    sampleHoldGlide: "S&H Glide",
     lfo2Rate: "LFO 2 Rate",
     lfo2Mod: "LFO-2 Mod",
     envelopeMode: "Envelope Mode",
@@ -184,6 +191,7 @@
     sampleHoldRate: "Hz",
     sampleHoldMod: "%",
     sampleHoldPitchMod: "%",
+    sampleHoldGlide: "%",
     lfo2Rate: "Hz",
     lfo2Mod: "%",
     repeatGateRate: "Hz",
@@ -221,6 +229,17 @@
   const repeatGateModes = [
     ["off", "Off"],
     ["on", "On"],
+  ];
+
+  const sampleHoldInputs = [
+    ["noise", "Noise"],
+    ["lfo1", "LFO-1"],
+    ["vco1", "VCO-1"],
+  ];
+
+  const sampleHoldModes = [
+    ["sample", "Sample & Hold"],
+    ["track", "Track & Hold"],
   ];
 
   function clamp(value, key) {
@@ -327,9 +346,9 @@
     return Math.max(30, Math.min(intervalMs * 0.45, intervalMs - 20));
   }
 
-  function applyVco1Frequency() {
+  function applyVco1Frequency(rampTime = 0.015) {
     if (!audioContext || !oscillator) return;
-    safeRamp(oscillator.frequency, getVcoFrequency(), audioContext.currentTime, 0.015);
+    safeRamp(oscillator.frequency, getVcoFrequency(), audioContext.currentTime, rampTime);
   }
 
   function applyAllVcoFrequencies() {
@@ -390,35 +409,56 @@
     filter.frequency.linearRampToValueAtTime(getFilterBaseCutoff(), now + release);
   }
 
-  function updateSampleHoldValue() {
-    if (!audioContext || !isSampleHoldActive()) return;
+  function getSampleHoldInputValue() {
+    if (!audioContext) return 0;
+    const phaseTime = audioContext.currentTime * Math.PI * 2;
+    if (state.sampleHoldInput === "lfo1") return Math.sin(phaseTime * clamp(state.lfo1Rate, "lfo1Rate"));
+    if (state.sampleHoldInput === "vco1") return Math.sin(phaseTime * getVcoFrequency());
+    return Math.random() * 2 - 1;
+  }
 
-    sampleHoldValue = Math.random() * 2 - 1;
+  function getSampleHoldGlideTime() {
+    return clamp(state.sampleHoldGlide, "sampleHoldGlide");
+  }
+
+  function notifySampleHoldUi(isTracking = false, captured = false) {
+    document.dispatchEvent(new CustomEvent("merrinlab:sample-hold-value", {
+      detail: {
+        value: sampleHoldValue,
+        mode: state.sampleHoldMode,
+        tracking: Boolean(isTracking),
+        captured: Boolean(captured),
+      },
+    }));
+  }
+
+  function updateSampleHoldValue() {
+    if (!audioContext) return;
+
+    sampleHoldValue = getSampleHoldInputValue();
     const now = audioContext.currentTime;
+    const glideTime = getSampleHoldGlideTime();
 
     if (sampleHoldFilterSource && clamp(state.sampleHoldMod, "sampleHoldMod") > 0) {
-      safeRamp(sampleHoldFilterSource.offset, sampleHoldValue * getSafeSampleHoldDepth(), now, 0.01);
+      if (glideTime === 0) {
+        sampleHoldFilterSource.offset.cancelScheduledValues(now);
+        sampleHoldFilterSource.offset.setValueAtTime(sampleHoldValue * getSafeSampleHoldDepth(), now);
+      } else {
+        safeRamp(sampleHoldFilterSource.offset, sampleHoldValue * getSafeSampleHoldDepth(), now, glideTime);
+      }
     }
 
     if (clamp(state.sampleHoldPitchMod, "sampleHoldPitchMod") > 0) {
-      applyVco1Frequency();
+      applyVco1Frequency(glideTime === 0 ? 0.001 : glideTime);
     }
+
+    const isTracking = state.sampleHoldMode === "track" && document.body.classList.contains("is-audio-gated");
+    notifySampleHoldUi(isTracking, true);
   }
 
   function isSampleHoldActive() {
     return clamp(state.sampleHoldMod, "sampleHoldMod") > 0 ||
       clamp(state.sampleHoldPitchMod, "sampleHoldPitchMod") > 0;
-  }
-
-  function resetSampleHoldModulation() {
-    sampleHoldValue = 0;
-    if (!audioContext) return;
-
-    if (sampleHoldFilterSource) {
-      safeRamp(sampleHoldFilterSource.offset, 0, audioContext.currentTime, 0.01);
-    }
-
-    applyVco1Frequency();
   }
 
   function stopSampleHoldTimer() {
@@ -431,8 +471,14 @@
   function startSampleHoldTimer() {
     stopSampleHoldTimer();
 
-    if (!isSampleHoldActive()) {
-      resetSampleHoldModulation();
+    if (state.sampleHoldMode === "track") {
+      if (!document.body.classList.contains("is-audio-gated")) {
+        notifySampleHoldUi(false);
+        return;
+      }
+
+      updateSampleHoldValue();
+      sampleHoldTimerId = window.setInterval(updateSampleHoldValue, 25);
       return;
     }
 
@@ -440,6 +486,12 @@
     const intervalMs = Math.max(40, 1000 / rate);
     updateSampleHoldValue();
     sampleHoldTimerId = window.setInterval(updateSampleHoldValue, intervalMs);
+  }
+
+  async function triggerSampleHold() {
+    await startAudio();
+    updateSampleHoldValue();
+    setStatus(`${state.sampleHoldMode === "track" ? "Track" : "Sample"} captured · ${state.sampleHoldInput.toUpperCase()} input`);
   }
 
   function stopRepeatGateTimer(releaseGate = false) {
@@ -749,6 +801,7 @@
     mainVca.gain.cancelScheduledValues(now);
     mainVca.gain.setValueAtTime(Math.max(0, mainVca.gain.value), now);
     triggerFilterEnvelopeOn(now);
+    if (state.sampleHoldMode === "track") startSampleHoldTimer();
 
     if (state.envelopeMode === "adsr") {
       const attack = clamp(state.adsrAttack, "adsrAttack");
@@ -784,6 +837,10 @@
     mainVca.gain.setValueAtTime(Math.max(0, mainVca.gain.value), now);
     mainVca.gain.linearRampToValueAtTime(0, now + release);
     triggerFilterEnvelopeOff(now, release);
+    if (state.sampleHoldMode === "track") {
+      stopSampleHoldTimer();
+      notifySampleHoldUi(false);
+    }
     setStatus(statusMessage || (state.envelopeMode === "adsr" ? "Gate released · ADSR release" : "Gate released · AR release"));
   }
 
@@ -956,6 +1013,9 @@
       "sampleHoldRate",
       "sampleHoldMod",
       "sampleHoldPitchMod",
+      "sampleHoldInput",
+      "sampleHoldMode",
+      "sampleHoldGlide",
       "lfo2Rate",
       "lfo2Mod",
       "envelopeMode",
@@ -1021,8 +1081,13 @@
       safeRamp(lfo1Oscillator.frequency, clamp(state.lfo1Rate, "lfo1Rate"), now, 0.04);
     }
 
-    if (key === "sampleHoldRate" || key === "sampleHoldMod" || key === "sampleHoldPitchMod") {
+    if (key === "sampleHoldRate" || key === "sampleHoldMod" || key === "sampleHoldPitchMod" || key === "sampleHoldInput" || key === "sampleHoldMode") {
       startSampleHoldTimer();
+    }
+
+    if (key === "sampleHoldGlide" && isSampleHoldActive()) {
+      applyFilterCutoffAndModulators();
+      if (clamp(state.sampleHoldPitchMod, "sampleHoldPitchMod") > 0) applyVco1Frequency(getSampleHoldGlideTime() || 0.001);
     }
 
     if (key === "lfo2Rate" && lfo2Oscillator) {
@@ -1072,7 +1137,7 @@
     if (key === "pulseWidth" || key === "vco2PulseWidth" || key === "vco3PulseWidth") return `${Number(value).toFixed(0)} ${units[key]}`;
     if (key === "lfo1Rate" || key === "lfo2Rate" || key === "sampleHoldRate" || key === "repeatGateRate") return `${Number(value).toFixed(2)} ${units[key]}`;
     if (key === "delayTime") return `${Number(value).toFixed(2)} ${units[key]}`;
-    if (key === "lfo1Mod" || key === "lfo2Mod" || key === "sampleHoldMod" || key === "sampleHoldPitchMod" || key === "filterEnvelopeMod" || key === "adsrSustain" || key === "delayMix" || key === "delayFeedback") return `${Math.round(Number(value) * 100)} ${units[key]}`;
+    if (key === "lfo1Mod" || key === "lfo2Mod" || key === "sampleHoldMod" || key === "sampleHoldPitchMod" || key === "sampleHoldGlide" || key === "filterEnvelopeMod" || key === "adsrSustain" || key === "delayMix" || key === "delayFeedback") return `${Math.round(Number(value) * 100)} ${units[key]}`;
     if (key === "filterExtCv") return `${Number(value) >= 0 ? "+" : ""}${Math.round(Number(value) * 100)} ${units[key]}`;
     if (key === "attack" || key === "release" || key === "adsrAttack" || key === "adsrDecay" || key === "adsrRelease") return `${Number(value).toFixed(2)} ${units[key]}`;
     if (key === "resonance") return `${Number(value).toFixed(1)} ${units[key]}`;
@@ -1339,8 +1404,11 @@
         "Filter Modulation",
         createSlider("lfo1Rate", 0.05, 12, 0.01),
         createSlider("lfo1Mod", 0, 1, 0.01),
+        createSelect("sampleHoldInput", sampleHoldInputs),
+        createSelect("sampleHoldMode", sampleHoldModes),
         createSlider("sampleHoldRate", 0.1, 20, 0.1),
         createSlider("sampleHoldMod", 0, 1, 0.01),
+        createSlider("sampleHoldGlide", 0, 1, 0.01),
       ),
       createGroup(
         "VCO 1 Pitch Modulation",
@@ -1426,6 +1494,7 @@
     pitchBend: setMidiPitchBend,
     setParameter: setEngineParameter,
     panic: panicStop,
+    triggerSampleHold,
     getState() {
       return {
         midiNote: midiCurrentNote,
