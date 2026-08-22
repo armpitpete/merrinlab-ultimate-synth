@@ -23,6 +23,8 @@
     whiteNoiseLevel: 0,
     cutoff: 900,
     resonance: 0,
+    filterEnvelopeMod: 0,
+    filterExtCv: 0,
     lfo1Rate: 0.8,
     lfo1Mod: 0,
     sampleHoldRate: 2,
@@ -93,6 +95,8 @@
     whiteNoiseLevel: [0, 0.35],
     cutoff: [120, 6500],
     resonance: [0, 12],
+    filterEnvelopeMod: [0, 1],
+    filterExtCv: [-1, 1],
     lfo1Rate: [0.05, 12],
     lfo1Mod: [0, 1],
     sampleHoldRate: [0.1, 20],
@@ -133,6 +137,8 @@
     whiteNoiseLevel: "White NS Level",
     cutoff: "Filter Cutoff",
     resonance: "Resonance",
+    filterEnvelopeMod: "Filter Envelope Mod",
+    filterExtCv: "Filter Ext CV",
     lfo1Rate: "LFO 1 Rate",
     lfo1Mod: "LFO-1 Mod",
     sampleHoldRate: "S&H Rate",
@@ -171,6 +177,8 @@
     whiteNoiseLevel: "",
     cutoff: "Hz",
     resonance: "Q",
+    filterEnvelopeMod: "%",
+    filterExtCv: "%",
     lfo1Rate: "Hz",
     lfo1Mod: "%",
     sampleHoldRate: "Hz",
@@ -266,11 +274,30 @@
     return getTrackedOscillatorFrequency("vco3CoarseFreq", "vco3FineCents");
   }
 
-  function getFilterHeadroom() {
+  function getFilterBaseCutoff() {
     const baseCutoff = clamp(state.cutoff, "cutoff");
+    const extCv = clamp(state.filterExtCv, "filterExtCv");
+    if (extCv >= 0) return baseCutoff + extCv * (limits.cutoff[1] - baseCutoff);
+    return baseCutoff + extCv * (baseCutoff - limits.cutoff[0]);
+  }
+
+  function getFilterHeadroom() {
+    const baseCutoff = getFilterBaseCutoff();
     const lowHeadroom = Math.max(0, baseCutoff - limits.cutoff[0]);
     const highHeadroom = Math.max(0, limits.cutoff[1] - baseCutoff);
     return Math.min(lowHeadroom, highHeadroom);
+  }
+
+  function getFilterEnvelopeDepth() {
+    const baseCutoff = getFilterBaseCutoff();
+    return clamp(state.filterEnvelopeMod, "filterEnvelopeMod") * Math.max(0, limits.cutoff[1] - baseCutoff);
+  }
+
+  function getFilterEnvelopeTarget() {
+    const baseCutoff = getFilterBaseCutoff();
+    if (!document.body.classList.contains("is-audio-gated")) return baseCutoff;
+    const envelopeLevel = state.envelopeMode === "adsr" ? clamp(state.adsrSustain, "adsrSustain") : 1;
+    return Math.min(limits.cutoff[1], baseCutoff + getFilterEnvelopeDepth() * envelopeLevel);
   }
 
   function getSafeLfoDepth() {
@@ -317,7 +344,7 @@
     if (!audioContext || !filter) return;
 
     const now = audioContext.currentTime;
-    safeRamp(filter.frequency, clamp(state.cutoff, "cutoff"), now, 0.025);
+    safeRamp(filter.frequency, getFilterEnvelopeTarget(), now, 0.025);
 
     if (lfo1Gain) {
       safeRamp(lfo1Gain.gain, getSafeLfoDepth(), now, 0.04);
@@ -334,6 +361,33 @@
       time: clamp(state.delayTime, "delayTime"),
       feedback: clamp(state.delayFeedback, "delayFeedback"),
     });
+  }
+
+  function triggerFilterEnvelopeOn(now) {
+    if (!filter) return;
+
+    const baseCutoff = getFilterBaseCutoff();
+    const depth = getFilterEnvelopeDepth();
+    filter.frequency.cancelScheduledValues(now);
+    filter.frequency.setValueAtTime(Math.max(limits.cutoff[0], filter.frequency.value), now);
+
+    if (state.envelopeMode === "adsr") {
+      const attack = clamp(state.adsrAttack, "adsrAttack");
+      const decay = clamp(state.adsrDecay, "adsrDecay");
+      const sustainTarget = baseCutoff + depth * clamp(state.adsrSustain, "adsrSustain");
+      filter.frequency.linearRampToValueAtTime(Math.min(limits.cutoff[1], baseCutoff + depth), now + attack);
+      filter.frequency.linearRampToValueAtTime(Math.min(limits.cutoff[1], sustainTarget), now + attack + decay);
+      return;
+    }
+
+    filter.frequency.linearRampToValueAtTime(Math.min(limits.cutoff[1], baseCutoff + depth), now + clamp(state.attack, "attack"));
+  }
+
+  function triggerFilterEnvelopeOff(now, release) {
+    if (!filter) return;
+    filter.frequency.cancelScheduledValues(now);
+    filter.frequency.setValueAtTime(Math.max(limits.cutoff[0], filter.frequency.value), now);
+    filter.frequency.linearRampToValueAtTime(getFilterBaseCutoff(), now + release);
   }
 
   function updateSampleHoldValue() {
@@ -694,6 +748,7 @@
     document.body.classList.add("is-audio-gated");
     mainVca.gain.cancelScheduledValues(now);
     mainVca.gain.setValueAtTime(Math.max(0, mainVca.gain.value), now);
+    triggerFilterEnvelopeOn(now);
 
     if (state.envelopeMode === "adsr") {
       const attack = clamp(state.adsrAttack, "adsrAttack");
@@ -728,6 +783,7 @@
     mainVca.gain.cancelScheduledValues(now);
     mainVca.gain.setValueAtTime(Math.max(0, mainVca.gain.value), now);
     mainVca.gain.linearRampToValueAtTime(0, now + release);
+    triggerFilterEnvelopeOff(now, release);
     setStatus(statusMessage || (state.envelopeMode === "adsr" ? "Gate released · ADSR release" : "Gate released · AR release"));
   }
 
@@ -893,6 +949,8 @@
       "whiteNoiseLevel",
       "cutoff",
       "resonance",
+      "filterEnvelopeMod",
+      "filterExtCv",
       "lfo1Rate",
       "lfo1Mod",
       "sampleHoldRate",
@@ -951,7 +1009,7 @@
       safeRamp(noiseGain.gain, clamp(state.whiteNoiseLevel, "whiteNoiseLevel"), now, 0.02);
     }
 
-    if (key === "cutoff" || key === "lfo1Mod" || key === "sampleHoldMod") {
+    if (key === "cutoff" || key === "filterEnvelopeMod" || key === "filterExtCv" || key === "lfo1Mod" || key === "sampleHoldMod") {
       applyFilterCutoffAndModulators();
     }
 
@@ -1014,7 +1072,8 @@
     if (key === "pulseWidth" || key === "vco2PulseWidth" || key === "vco3PulseWidth") return `${Number(value).toFixed(0)} ${units[key]}`;
     if (key === "lfo1Rate" || key === "lfo2Rate" || key === "sampleHoldRate" || key === "repeatGateRate") return `${Number(value).toFixed(2)} ${units[key]}`;
     if (key === "delayTime") return `${Number(value).toFixed(2)} ${units[key]}`;
-    if (key === "lfo1Mod" || key === "lfo2Mod" || key === "sampleHoldMod" || key === "sampleHoldPitchMod" || key === "adsrSustain" || key === "delayMix" || key === "delayFeedback") return `${Math.round(Number(value) * 100)} ${units[key]}`;
+    if (key === "lfo1Mod" || key === "lfo2Mod" || key === "sampleHoldMod" || key === "sampleHoldPitchMod" || key === "filterEnvelopeMod" || key === "adsrSustain" || key === "delayMix" || key === "delayFeedback") return `${Math.round(Number(value) * 100)} ${units[key]}`;
+    if (key === "filterExtCv") return `${Number(value) >= 0 ? "+" : ""}${Math.round(Number(value) * 100)} ${units[key]}`;
     if (key === "attack" || key === "release" || key === "adsrAttack" || key === "adsrDecay" || key === "adsrRelease") return `${Number(value).toFixed(2)} ${units[key]}`;
     if (key === "resonance") return `${Number(value).toFixed(1)} ${units[key]}`;
     return Number(value).toFixed(2);
@@ -1273,6 +1332,8 @@
         "Filter",
         createSlider("cutoff", 120, 6500, 1),
         createSlider("resonance", 0, 12, 0.1),
+        createSlider("filterEnvelopeMod", 0, 1, 0.01),
+        createSlider("filterExtCv", -1, 1, 0.01),
       ),
       createGroup(
         "Filter Modulation",
