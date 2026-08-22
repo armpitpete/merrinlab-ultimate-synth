@@ -238,35 +238,29 @@
     }
   }
 
-  function svfCutoffMax(mode) {
-    return mode === "bandpass" ? 16000 : 8500;
-  }
-
   function applySvf(graph) {
     const values = state.svf;
     const mode = ["highpass", "bandpass", "lowpass"].includes(values.mode) ? values.mode : "bandpass";
-    const cutoff = clamp(values.cutoff, 90, svfCutoffMax(mode), 900);
-    const resonance = clamp(values.resonance, 0.1, 24, 0.7);
-    const amount = clamp((resonance - 0.1) / 23.9, 0, 1, 0);
+    const cutoff = clamp(values.cutoff, 90, 16000, 900);
+    const resonance = clamp(values.resonance, 0, 12, 0.7);
     const width = clamp(values.bpWidth, 0, 1, 0.55);
     const level = clamp(values.level, 0, 1, 0);
-    const position = clamp((Math.log(cutoff) - Math.log(90)) / (Math.log(svfCutoffMax(mode)) - Math.log(90)), 0, 1, 0);
     const octaveWidth = 0.05 + Math.pow(width, 1.15) * 3.1;
     const ratio = Math.pow(2, octaveWidth / 2);
     const isBandpass = mode === "bandpass";
 
     graph.svf.modeFilter.type = mode;
     safeParam(graph.svf.modeFilter.frequency, cutoff, graph.context);
-    safeParam(graph.svf.modeFilter.Q, isBandpass ? 0.707 : 0.7 + Math.pow(amount, 1.2) * 12, graph.context);
+    safeParam(graph.svf.modeFilter.Q, isBandpass ? 0.707 : resonance, graph.context);
     safeParam(graph.svf.modeFilterGain.gain, isBandpass ? 0 : 1, graph.context);
     safeParam(graph.svf.bpHighpass.frequency, clamp(cutoff / ratio, 90, 16000, 90), graph.context);
     safeParam(graph.svf.bpHighpass.Q, 0.72, graph.context);
     safeParam(graph.svf.bpLowpass.frequency, clamp(cutoff * ratio, 90, 16000, 16000), graph.context);
     safeParam(graph.svf.bpLowpass.Q, 0.72, graph.context);
     safeParam(graph.svf.bpPeak.frequency, cutoff, graph.context);
-    safeParam(graph.svf.bpPeak.Q, 0.8 + Math.pow(amount, 1.1) * 15, graph.context);
-    safeParam(graph.svf.bpPeak.gain, Math.pow(amount, 0.9) * 16, graph.context);
-    safeParam(graph.svf.bpGain.gain, isBandpass ? (0.08 + Math.pow(width, 0.7) * 0.55 + amount * 0.12) * (0.65 + position * 1.6) : 0, graph.context);
+    safeParam(graph.svf.bpPeak.Q, Math.max(0.7, resonance), graph.context);
+    safeParam(graph.svf.bpPeak.gain, resonance, graph.context);
+    safeParam(graph.svf.bpGain.gain, isBandpass ? 1 : 0, graph.context);
     safeParam(graph.svf.dryGain.gain, 1 - level, graph.context);
     safeParam(graph.svf.wetGain.gain, level, graph.context);
   }
@@ -355,6 +349,7 @@
       active: Boolean(activeGraph),
       destinationConnections: activeGraph?.destinationConnections || 0,
       order: ["drive", "chorus", "delay", "reverb", "svf", "master", "limiter", "destination"],
+      svf: { ...state.svf },
     };
   }
 
