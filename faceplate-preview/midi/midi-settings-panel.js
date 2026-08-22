@@ -85,11 +85,18 @@
     const inputs = [...midiAccess.inputs.values()].filter(input => input.state !== "disconnected");
     if (!inputs.length) return null;
 
-    const matcher = window.MerrinLabLaunchkey25?.nameMatch;
-    if (matcher) {
-      const match = inputs.find(input => matcher.test(input.name || ""));
-      if (match) return match;
+    const profile = window.MerrinLabLaunchkey25;
+    const matcher = profile?.nameMatch;
+    const exclude = profile?.inputExclude;
+    const matching = matcher
+      ? inputs.filter(input => matcher.test(input.name || ""))
+      : inputs;
+
+    if (matching.length) {
+      const preferred = matching.find(input => !exclude || !exclude.test(input.name || ""));
+      return preferred || matching[0];
     }
+
     return inputs[0];
   }
 
@@ -104,8 +111,11 @@
     }
 
     input.onmidimessage = event => {
+      const data = Array.from(event.data);
+      const statusByte = data[0] || 0;
+      channel.textContent = `Channel: ${(statusByte & 0x0f) + 1}`;
       window.dispatchEvent(new CustomEvent("merrinlab-midi", {
-        detail: Array.from(event.data)
+        detail: data
       }));
     };
 
