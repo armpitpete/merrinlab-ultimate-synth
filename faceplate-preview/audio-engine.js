@@ -63,7 +63,6 @@
   let lfo2Gain = null;
   let lfo2Offset = null;
   let filter = null;
-  let filterCompensationGain = null;
   let mainVca = null;
   let tremoloGain = null;
   let delayNode = null;
@@ -589,9 +588,6 @@
     filter.frequency.value = state.cutoff;
     filter.Q.value = state.resonance;
 
-    filterCompensationGain = audioContext.createGain();
-    filterCompensationGain.gain.value = Math.pow(10, -state.resonance / 20);
-
     lfo1Oscillator = audioContext.createOscillator();
     lfo1Oscillator.type = "sine";
     lfo1Oscillator.frequency.value = state.lfo1Rate;
@@ -660,8 +656,7 @@
     lfo2Gain.connect(tremoloGain.gain);
     lfo2Offset.connect(tremoloGain.gain);
 
-    filter.connect(filterCompensationGain);
-    filterCompensationGain.connect(mainVca);
+    filter.connect(mainVca);
     mainVca.connect(tremoloGain);
     tremoloGain.connect(delayDryGain);
     tremoloGain.connect(delayNode);
@@ -888,7 +883,6 @@
     lfo2Gain = null;
     lfo2Offset = null;
     filter = null;
-    filterCompensationGain = null;
     mainVca = null;
     tremoloGain = null;
     delayNode = null;
@@ -985,10 +979,8 @@
       applyFilterCutoffAndModulators();
     }
 
-    if (key === "resonance" && filter && filterCompensationGain) {
-      const resonance = clamp(state.resonance, "resonance");
-      safeRamp(filter.Q, resonance, now, 0.025);
-      safeRamp(filterCompensationGain.gain, Math.pow(10, -resonance / 20), now, 0.025);
+    if (key === "resonance" && filter) {
+      safeRamp(filter.Q, clamp(state.resonance, "resonance"), now, 0.025);
     }
 
     if (key === "lfo1Rate" && lfo1Oscillator) {
