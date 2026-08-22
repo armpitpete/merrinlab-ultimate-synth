@@ -176,6 +176,18 @@
       unit: "Hz",
     },
     {
+      key: "filterEnvelopeMod",
+      moduleSelector: ".filter-lp-module",
+      label: "AR Mod",
+      type: "range",
+      min: 0,
+      max: 100,
+      step: 1,
+      unit: "%",
+      fromSourceValue: (value) => Number(value) * 100,
+      toSourceValue: (value) => Number(value) / 100,
+    },
+    {
       key: "lfo1Mod",
       moduleSelector: ".filter-lp-module",
       label: "LFO-1 Mod",
@@ -196,6 +208,18 @@
       max: 12,
       step: 0.1,
       unit: "Q",
+    },
+    {
+      key: "filterExtCv",
+      moduleSelector: ".filter-lp-module",
+      label: "Ext CV",
+      type: "range",
+      min: -100,
+      max: 100,
+      step: 1,
+      unit: "%",
+      fromSourceValue: (value) => Number(value) * 100,
+      toSourceValue: (value) => Number(value) / 100,
     },
     {
       key: "lfo1Rate",
@@ -381,7 +405,7 @@
     }
 
     const number = Number(value);
-    const percentKeys = ["vcoLevel", "vco2Level", "vco3Level", "whiteNoiseLevel", "lfo1Mod", "sampleHoldMod", "lfo2Mod", "delayMix", "delayFeedback"];
+    const percentKeys = ["vcoLevel", "vco2Level", "vco3Level", "whiteNoiseLevel", "filterEnvelopeMod", "lfo1Mod", "sampleHoldMod", "lfo2Mod", "delayMix", "delayFeedback"];
     const fineTuneKeys = ["fineCents", "vco2FineCents", "vco3FineCents"];
 
     if (config.key === "repeatGateRate") return `${number.toFixed(0)} ${config.unit}`;
@@ -390,6 +414,7 @@
     if (config.key === "delayTime") return `${number.toFixed(2)} ${config.unit}`;
     if (config.key === "sampleHoldRate") return `${number.toFixed(1)} ${config.unit}`;
     if (config.key === "resonance") return `${number.toFixed(1)} ${config.unit}`;
+    if (config.key === "filterExtCv") return `${number >= 0 ? "+" : ""}${number.toFixed(0)}%`;
     if (percentKeys.includes(config.key)) return `${number.toFixed(0)}%`;
     if (fineTuneKeys.includes(config.key)) return `${number.toFixed(0)} ${config.unit}`;
     return `${number.toFixed(0)} ${config.unit}`.trim();
@@ -524,6 +549,16 @@
         color: #93d36c;
         font-size: 0.58em;
         letter-spacing: 0.08em;
+      }
+
+      .control.is-audio-linked > .knob,
+      .control.is-audio-linked > .knob-small,
+      .control.is-audio-linked > .knob-large {
+        display: none;
+      }
+
+      .filter-lp-module .lowpass-ext-cv.is-audio-linked .jack-stack {
+        display: none;
       }
 
       .visible-audio-control-wrap {
