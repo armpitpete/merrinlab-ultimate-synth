@@ -382,12 +382,11 @@ body {
 
 .expander-vca-grid {
   display: grid;
-  grid-template-columns: 0.75fr 0.75fr 1.05fr;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   grid-template-areas:
-    "out input amp"
-    "cv2 cv1 amp";
+    "input amp cv1 cv2 out";
   gap: 12px 14px;
-  align-items: center;
+  align-items: start;
 }
 
 .vca-out { grid-area: out; }
@@ -435,7 +434,7 @@ body {
 
 .attenuator-channel {
   display: grid;
-  grid-template-rows: auto 1fr 1fr auto;
+  grid-template-rows: auto 1fr 1fr 1fr auto;
   gap: 8px;
   min-width: 0;
   padding: 8px;
@@ -463,6 +462,18 @@ body {
   accent-color: #d7b884;
 }
 
+.attenuator-control select {
+  grid-column: 1 / -1;
+  min-width: 0;
+  width: 100%;
+  border: 1px solid rgba(215, 184, 132, 0.38);
+  border-radius: 999px;
+  padding: 4px 5px;
+  background: #211913;
+  color: #f3e8da;
+  font: inherit;
+}
+
 .attenuator-control output,
 .attenuator-output output {
   color: #d6c8b5;
@@ -470,7 +481,8 @@ body {
   text-align: right;
 }
 
-.attenuator-output {
+.attenuator-output,
+.attenuator-route {
   display: flex;
   justify-content: space-between;
   gap: 5px;
@@ -479,6 +491,26 @@ body {
   color: var(--text);
   font-size: 0.58rem;
   letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.attenuator-route {
+  display: block;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.panel-button {
+  border: 1px solid rgba(215, 184, 132, 0.45);
+  border-radius: 999px;
+  padding: 5px 8px;
+  background: #211913;
+  color: #f3e8da;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.62rem;
   text-transform: uppercase;
 }
 

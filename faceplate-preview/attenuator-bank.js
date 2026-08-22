@@ -3,15 +3,7 @@
 
   const CHANNEL_COUNT = 6;
   const listeners = new Set();
-  const channels = Array.from({ length: CHANNEL_COUNT }, () => ({
-    input: 0,
-    amount: 1,
-    output: 0,
-  }));
-
-  function clamp(value, min, max) {
-    return Math.min(max, Math.max(min, Number(value) || 0));
-  }
+  const channels = Array.from({ length: CHANNEL_COUNT }, () => ({ source: "off", amount: 1, destination: "off" }));
 
   function getChannelIndex(channelNumber) {
     const index = Number(channelNumber) - 1;
@@ -22,8 +14,7 @@
   }
 
   function snapshot(channelNumber) {
-    const channel = channels[getChannelIndex(channelNumber)];
-    return { channel: Number(channelNumber), ...channel };
+    return { channel: Number(channelNumber), ...channels[getChannelIndex(channelNumber)] };
   }
 
   function notify(channelNumber) {
@@ -32,22 +23,30 @@
     return state;
   }
 
-  function updateOutput(channel) {
-    channel.output = channel.input * channel.amount;
+  function sendRoute(channelNumber) {
+    const state = snapshot(channelNumber);
+    window.MerrinLabAudio?.setAttenuatorRoute?.(channelNumber, state);
+    return notify(channelNumber);
   }
 
-  function setInput(channelNumber, value) {
-    const channel = channels[getChannelIndex(channelNumber)];
-    channel.input = clamp(value, -1, 1);
-    updateOutput(channel);
-    return notify(channelNumber);
+  function setSource(channelNumber, source) {
+    channels[getChannelIndex(channelNumber)].source = String(source || "off");
+    return sendRoute(channelNumber);
   }
 
   function setAmount(channelNumber, value) {
-    const channel = channels[getChannelIndex(channelNumber)];
-    channel.amount = clamp(value, 0, 1);
-    updateOutput(channel);
-    return notify(channelNumber);
+    const amount = Number(value);
+    channels[getChannelIndex(channelNumber)].amount = Number.isFinite(amount) ? Math.min(1, Math.max(-1, amount)) : 0;
+    return sendRoute(channelNumber);
+  }
+
+  function setDestination(channelNumber, destination) {
+    channels[getChannelIndex(channelNumber)].destination = String(destination || "off");
+    return sendRoute(channelNumber);
+  }
+
+  function syncAll() {
+    channels.forEach((_channel, index) => sendRoute(index + 1));
   }
 
   function getState() {
@@ -60,11 +59,5 @@
     return () => listeners.delete(listener);
   }
 
-  window.MerrinLabAttenuators = {
-    setInput,
-    setAmount,
-    getChannel: snapshot,
-    getState,
-    subscribe,
-  };
+  window.MerrinLabAttenuators = { setSource, setAmount, setDestination, syncAll, getChannel: snapshot, getState, subscribe };
 })();

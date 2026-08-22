@@ -26,6 +26,8 @@
     filterEnvelopeMod: 0,
     filterExtCv: 0,
     lfo1Rate: 0.8,
+    lfo1Shape: "sine",
+    lfo1Range: "low",
     lfo1Mod: 0,
     sampleHoldRate: 2,
     sampleHoldMod: 0,
@@ -37,10 +39,19 @@
     vcaEnvelopeMod: 1,
     vcaExtCv: 0,
     lfo2Rate: 1.2,
+    lfo2Shape: "sine",
+    lfo2Range: "low",
     lfo2Mod: 0,
     envelopeMode: "ar",
+    adsrRange: "short",
     repeatGate: "off",
     repeatGateRate: 2,
+    repeatGateTarget: "envelope",
+    auxVcaInput: "off",
+    auxVcaCv: "off",
+    auxVcaInitialAmp: 0,
+    auxVcaCvAmount: 0,
+    auxVcaDestination: "filter",
     attack: 0.03,
     release: 0.45,
     adsrAttack: 0.05,
@@ -65,6 +76,7 @@
   let lfo1Oscillator = null;
   let lfo1Gain = null;
   let sampleHoldFilterSource = null;
+  let sampleHoldCvSource = null;
   let sampleHoldTimerId = null;
   let sampleHoldValue = 0;
   let lfo2Oscillator = null;
@@ -73,6 +85,14 @@
   let filter = null;
   let mainVca = null;
   let tremoloGain = null;
+  let envelopeCvSource = null;
+  let gateCvSource = null;
+  let auxVca = null;
+  let auxVcaCvGain = null;
+  let auxVcaConnectedInput = null;
+  let auxVcaConnectedCv = null;
+  let auxVcaConnectedDestination = null;
+  let attenuatorRouteNodes = [];
   let effectsOutputGraph = null;
   let repeatGateTimerId = null;
   let repeatGateReleaseTimerId = null;
@@ -121,6 +141,8 @@
     adsrDecay: [0.005, 3],
     adsrSustain: [0, 1],
     adsrRelease: [0.02, 4],
+    auxVcaInitialAmp: [0, 1],
+    auxVcaCvAmount: [0, 1],
     delayMix: [0, 1],
     delayTime: [0.05, 0.8],
     delayFeedback: [0, 0.45],
@@ -150,6 +172,8 @@
     filterEnvelopeMod: "Filter Envelope Mod",
     filterExtCv: "Filter Ext CV",
     lfo1Rate: "LFO 1 Rate",
+    lfo1Shape: "LFO 1 Shape",
+    lfo1Range: "LFO 1 Range",
     lfo1Mod: "LFO-1 Mod",
     sampleHoldRate: "S&H Rate",
     sampleHoldMod: "S&H Mod",
@@ -161,10 +185,19 @@
     vcaEnvelopeMod: "VCA Envelope Mod",
     vcaExtCv: "VCA Ext CV",
     lfo2Rate: "LFO 2 Rate",
+    lfo2Shape: "LFO 2 Shape",
+    lfo2Range: "LFO 2 Range",
     lfo2Mod: "LFO-2 Mod",
     envelopeMode: "Envelope Mode",
+    adsrRange: "ADSR Range",
     repeatGate: "Repeat Gate",
     repeatGateRate: "Repeat Gate Rate",
+    repeatGateTarget: "Repeat Gate Target",
+    auxVcaInput: "AUX VCA Input",
+    auxVcaCv: "AUX VCA CV",
+    auxVcaInitialAmp: "AUX VCA Initial Amp",
+    auxVcaCvAmount: "AUX VCA CV Amount",
+    auxVcaDestination: "AUX VCA Destination",
     attack: "AR Attack",
     release: "AR Release",
     adsrAttack: "ADSR Attack",
@@ -213,6 +246,8 @@
     adsrDecay: "s",
     adsrSustain: "%",
     adsrRelease: "s",
+    auxVcaInitialAmp: "%",
+    auxVcaCvAmount: "%",
     delayMix: "%",
     delayTime: "s",
     delayFeedback: "%",
@@ -243,6 +278,68 @@
     ["on", "On"],
   ];
 
+  const lfoShapes = [
+    ["sine", "Sine"],
+    ["triangle", "Triangle"],
+    ["square", "Square"],
+    ["rampUp", "Ramp Up"],
+    ["rampDown", "Ramp Down"],
+  ];
+
+  const lfoRanges = [
+    ["low", "Low"],
+    ["high", "High"],
+  ];
+
+  const adsrRanges = [
+    ["short", "Short"],
+    ["long", "Long"],
+  ];
+
+  const repeatGateTargets = [
+    ["envelope", "Envelope"],
+    ["sampleHold", "S&H Trigger"],
+    ["both", "Envelope + S&H"],
+  ];
+
+  const auxVcaInputs = [
+    ["off", "Off"],
+    ["vco1", "VCO 1"],
+    ["vco2", "VCO 2"],
+    ["vco3", "VCO 3"],
+    ["noise", "Noise"],
+  ];
+
+  const modulationSources = [
+    ["off", "Off"],
+    ["lfo1", "LFO 1"],
+    ["lfo2", "LFO 2"],
+    ["envelope", "Envelope"],
+    ["sampleHold", "Sample & Hold"],
+    ["gate", "Gate"],
+    ["noise", "Noise"],
+  ];
+
+  const modulationDestinations = [
+    ["off", "Off"],
+    ["filterCutoff", "Filter Cutoff"],
+    ["vco1Pitch", "VCO 1 Pitch"],
+    ["vco2Pitch", "VCO 2 Pitch"],
+    ["vco3Pitch", "VCO 3 Pitch"],
+    ["mainVca", "Main VCA"],
+  ];
+
+  const auxVcaDestinations = [
+    ["filter", "Filter Input"],
+    ["mainVca", "Main VCA Input"],
+  ];
+
+  const attenuatorRoutes = Array.from({ length: 6 }, () => ({
+    source: "off",
+    amount: 1,
+    destination: "off",
+  }));
+
   const sampleHoldInputs = [
     ["noise", "Noise"],
     ["lfo1", "LFO-1"],
@@ -262,6 +359,179 @@
   function safeRamp(param, value, time, rampTime = 0.02) {
     param.cancelScheduledValues(time);
     param.setTargetAtTime(value, time, rampTime);
+  }
+
+  function getEffectiveLfoRate(which) {
+    const rateKey = which === "lfo1" ? "lfo1Rate" : "lfo2Rate";
+    const rangeKey = which === "lfo1" ? "lfo1Range" : "lfo2Range";
+    const multiplier = state[rangeKey] === "high" ? 4 : 1;
+    return Math.min(40, clamp(state[rateKey], rateKey) * multiplier);
+  }
+
+  function createRampWave(inverted = false) {
+    const harmonicCount = 64;
+    const real = new Float32Array(harmonicCount + 1);
+    const imag = new Float32Array(harmonicCount + 1);
+
+    for (let harmonic = 1; harmonic <= harmonicCount; harmonic += 1) {
+      const sign = harmonic % 2 === 0 ? -1 : 1;
+      imag[harmonic] = (inverted ? -1 : 1) * sign * (2 / (harmonic * Math.PI));
+    }
+
+    return audioContext.createPeriodicWave(real, imag, { disableNormalization: false });
+  }
+
+  function applyLfoShape(which) {
+    const target = which === "lfo1" ? lfo1Oscillator : lfo2Oscillator;
+    const shape = state[which === "lfo1" ? "lfo1Shape" : "lfo2Shape"];
+    if (!target || !audioContext) return;
+
+    if (shape === "rampUp") {
+      target.setPeriodicWave(createRampWave(false));
+    } else if (shape === "rampDown") {
+      target.setPeriodicWave(createRampWave(true));
+    } else {
+      target.type = shape;
+    }
+  }
+
+  function getEnvelopeTime(key) {
+    const multiplier = state.adsrRange === "long" ? 4 : 1;
+    return clamp(state[key], key) * multiplier;
+  }
+
+  function getModulationSourceNode(source) {
+    if (source === "lfo1") return lfo1Oscillator;
+    if (source === "lfo2") return lfo2Oscillator;
+    if (source === "envelope") return envelopeCvSource;
+    if (source === "sampleHold") return sampleHoldCvSource;
+    if (source === "gate") return gateCvSource;
+    if (source === "noise") return noiseSource;
+    return null;
+  }
+
+  function getModulationDestination(destination) {
+    if (destination === "filterCutoff" && filter) return { param: filter.detune, scale: 2400 };
+    if (destination === "vco1Pitch" && oscillator) return { param: oscillator.detune, scale: 1200 };
+    if (destination === "vco2Pitch" && oscillator2) return { param: oscillator2.detune, scale: 1200 };
+    if (destination === "vco3Pitch" && oscillator3) return { param: oscillator3.detune, scale: 1200 };
+    if (destination === "mainVca" && tremoloGain) return { param: tremoloGain.gain, scale: 0.45 };
+    return null;
+  }
+
+  function disconnectAttenuatorRoute(index) {
+    const routeNode = attenuatorRouteNodes[index];
+    if (!routeNode) return;
+
+    try {
+      if (routeNode.source) routeNode.source.disconnect(routeNode.gain);
+    } catch (_error) {}
+
+    try {
+      routeNode.gain.disconnect();
+    } catch (_error) {}
+
+    routeNode.source = null;
+    routeNode.destination = null;
+  }
+
+  function applyAttenuatorRoute(index) {
+    if (!audioContext) return;
+    const route = attenuatorRoutes[index];
+    const routeNode = attenuatorRouteNodes[index];
+    if (!route || !routeNode) return;
+
+    disconnectAttenuatorRoute(index);
+    const source = getModulationSourceNode(route.source);
+    const destination = getModulationDestination(route.destination);
+    if (!source || !destination) {
+      routeNode.gain.gain.value = 0;
+      return;
+    }
+
+    routeNode.gain.gain.value = Math.max(0, Math.min(1, Number(route.amount))) * destination.scale;
+    source.connect(routeNode.gain);
+    routeNode.gain.connect(destination.param);
+    routeNode.source = source;
+    routeNode.destination = destination.param;
+  }
+
+  function applyAllAttenuatorRoutes() {
+    attenuatorRoutes.forEach((_route, index) => applyAttenuatorRoute(index));
+  }
+
+  function setAttenuatorRoute(channelNumber, patch = {}) {
+    const index = Number(channelNumber) - 1;
+    if (!Number.isInteger(index) || index < 0 || index >= attenuatorRoutes.length) return null;
+
+    const route = attenuatorRoutes[index];
+    const allowedSources = new Set(modulationSources.map(([value]) => value));
+    const allowedDestinations = new Set(modulationDestinations.map(([value]) => value));
+    if (patch.source !== undefined && allowedSources.has(patch.source)) route.source = patch.source;
+    if (patch.destination !== undefined && allowedDestinations.has(patch.destination)) route.destination = patch.destination;
+    if (patch.amount !== undefined) route.amount = Math.max(0, Math.min(1, Number(patch.amount) || 0));
+    applyAttenuatorRoute(index);
+    return { channel: index + 1, ...route };
+  }
+
+  function getAuxVcaInputNode() {
+    if (state.auxVcaInput === "vco1") return vcoGain;
+    if (state.auxVcaInput === "vco2") return vco2Gain;
+    if (state.auxVcaInput === "vco3") return vco3Gain;
+    if (state.auxVcaInput === "noise") return noiseGain;
+    return null;
+  }
+
+  function getAuxVcaDestinationNode() {
+    if (state.auxVcaDestination === "mainVca") return mainVca;
+    if (state.auxVcaDestination === "filter") return filter;
+    return null;
+  }
+
+  function disconnectAuxVcaRouting() {
+    try {
+      if (auxVcaConnectedInput && auxVca) auxVcaConnectedInput.disconnect(auxVca);
+    } catch (_error) {}
+    try {
+      if (auxVcaConnectedCv && auxVcaCvGain) auxVcaConnectedCv.disconnect(auxVcaCvGain);
+    } catch (_error) {}
+    try {
+      if (auxVcaCvGain) auxVcaCvGain.disconnect();
+    } catch (_error) {}
+    try {
+      if (auxVca) auxVca.disconnect();
+    } catch (_error) {}
+    auxVcaConnectedInput = null;
+    auxVcaConnectedCv = null;
+    auxVcaConnectedDestination = null;
+  }
+
+  function applyAuxVcaRouting() {
+    if (!audioContext || !auxVca || !auxVcaCvGain) return;
+    disconnectAuxVcaRouting();
+
+    const input = getAuxVcaInputNode();
+    const cv = getModulationSourceNode(state.auxVcaCv);
+    const destination = getAuxVcaDestinationNode();
+    const now = audioContext.currentTime;
+    const cvAmount = clamp(state.auxVcaCvAmount, "auxVcaCvAmount");
+    const usesBipolarCv = state.auxVcaCv === "lfo1" || state.auxVcaCv === "lfo2" || state.auxVcaCv === "sampleHold" || state.auxVcaCv === "noise";
+    const cvScale = usesBipolarCv ? cvAmount / 2 : cvAmount;
+    const cvOffset = usesBipolarCv ? cvAmount / 2 : 0;
+    safeRamp(auxVca.gain, clamp(state.auxVcaInitialAmp, "auxVcaInitialAmp") + cvOffset, now, 0.02);
+    safeRamp(auxVcaCvGain.gain, cvScale, now, 0.02);
+
+    if (!input || !destination) return;
+    input.connect(auxVca);
+    auxVca.connect(destination);
+    auxVcaConnectedInput = input;
+    auxVcaConnectedDestination = destination;
+
+    if (cv) {
+      cv.connect(auxVcaCvGain);
+      auxVcaCvGain.connect(auxVca.gain);
+      auxVcaConnectedCv = cv;
+    }
   }
 
   function getOscillatorFrequency(coarseKey, fineKey) {
@@ -420,8 +690,8 @@
     filter.frequency.setValueAtTime(Math.max(limits.cutoff[0], filter.frequency.value), now);
 
     if (state.envelopeMode === "adsr") {
-      const attack = clamp(state.adsrAttack, "adsrAttack");
-      const decay = clamp(state.adsrDecay, "adsrDecay");
+      const attack = getEnvelopeTime("adsrAttack");
+      const decay = getEnvelopeTime("adsrDecay");
       const sustainTarget = baseCutoff + depth * clamp(state.adsrSustain, "adsrSustain");
       filter.frequency.linearRampToValueAtTime(Math.min(limits.cutoff[1], baseCutoff + depth), now + attack);
       filter.frequency.linearRampToValueAtTime(Math.min(limits.cutoff[1], sustainTarget), now + attack + decay);
@@ -467,6 +737,15 @@
     sampleHoldValue = getSampleHoldInputValue();
     const now = audioContext.currentTime;
     const glideTime = getSampleHoldGlideTime();
+
+    if (sampleHoldCvSource) {
+      if (glideTime === 0) {
+        sampleHoldCvSource.offset.cancelScheduledValues(now);
+        sampleHoldCvSource.offset.setValueAtTime(sampleHoldValue, now);
+      } else {
+        safeRamp(sampleHoldCvSource.offset, sampleHoldValue, now, glideTime);
+      }
+    }
 
     if (sampleHoldFilterSource && clamp(state.sampleHoldMod, "sampleHoldMod") > 0) {
       if (glideTime === 0) {
@@ -542,14 +821,22 @@
   }
 
   function triggerRepeatGateCycle() {
-    if (!audioContext || !mainVca || state.repeatGate !== "on") return;
+    if (!audioContext || state.repeatGate !== "on") return;
 
     if (repeatGateReleaseTimerId !== null) {
       window.clearTimeout(repeatGateReleaseTimerId);
       repeatGateReleaseTimerId = null;
     }
 
-    triggerGateOn("Repeat Gate trigger · envelope active");
+    const triggersEnvelope = state.repeatGateTarget === "envelope" || state.repeatGateTarget === "both";
+    const triggersSampleHold = state.repeatGateTarget === "sampleHold" || state.repeatGateTarget === "both";
+    if (triggersSampleHold) updateSampleHoldValue();
+    if (!triggersEnvelope || !mainVca) {
+      setStatus("Repeat Gate trigger · Sample & Hold captured");
+      return;
+    }
+
+    triggerGateOn(triggersSampleHold ? "Repeat Gate trigger · envelope + S&H" : "Repeat Gate trigger · envelope active");
     isRepeatGateHoldingGate = true;
 
     repeatGateReleaseTimerId = window.setTimeout(() => {
@@ -673,6 +960,7 @@
     noiseSource = createNoiseSource();
     noiseSource.connect(noiseGain);
     noiseSource.start();
+    applyAllAttenuatorRoutes();
   }
 
   function applyOscillatorWaveform(targetOscillator, waveform, pulseWidth, pulseWidthKey) {
@@ -741,14 +1029,23 @@
     filter.Q.value = state.resonance;
 
     lfo1Oscillator = audioContext.createOscillator();
-    lfo1Oscillator.type = "sine";
-    lfo1Oscillator.frequency.value = state.lfo1Rate;
+    lfo1Oscillator.frequency.value = getEffectiveLfoRate("lfo1");
+    applyLfoShape("lfo1");
 
     lfo1Gain = audioContext.createGain();
     lfo1Gain.gain.value = getSafeLfoDepth();
 
     sampleHoldFilterSource = audioContext.createConstantSource();
     sampleHoldFilterSource.offset.value = 0;
+
+    sampleHoldCvSource = audioContext.createConstantSource();
+    sampleHoldCvSource.offset.value = 0;
+
+    envelopeCvSource = audioContext.createConstantSource();
+    envelopeCvSource.offset.value = 0;
+
+    gateCvSource = audioContext.createConstantSource();
+    gateCvSource.offset.value = 0;
 
     mainVca = audioContext.createGain();
     mainVca.gain.value = 0;
@@ -757,14 +1054,26 @@
     tremoloGain.gain.value = 0;
 
     lfo2Oscillator = audioContext.createOscillator();
-    lfo2Oscillator.type = "sine";
-    lfo2Oscillator.frequency.value = state.lfo2Rate;
+    lfo2Oscillator.frequency.value = getEffectiveLfoRate("lfo2");
+    applyLfoShape("lfo2");
 
     lfo2Gain = audioContext.createGain();
     lfo2Gain.gain.value = getSafeTremoloDepth() / 2;
 
     lfo2Offset = audioContext.createConstantSource();
     lfo2Offset.offset.value = 1 - getSafeTremoloDepth() / 2;
+
+    auxVca = audioContext.createGain();
+    auxVca.gain.value = state.auxVcaInitialAmp;
+
+    auxVcaCvGain = audioContext.createGain();
+    auxVcaCvGain.gain.value = state.auxVcaCvAmount;
+
+    attenuatorRouteNodes = attenuatorRoutes.map(() => ({
+      gain: audioContext.createGain(),
+      source: null,
+      destination: null,
+    }));
 
     effectsOutputGraph = window.MerrinLabEffectsOutputGraph?.create(audioContext) || null;
     if (!effectsOutputGraph) {
@@ -796,12 +1105,18 @@
     mainVca.connect(tremoloGain);
     tremoloGain.connect(effectsOutputGraph.input);
 
+    applyAuxVcaRouting();
+    applyAllAttenuatorRoutes();
+
     oscillator.start();
     oscillator2.start();
     oscillator3.start();
     noiseSource.start();
     lfo1Oscillator.start();
     sampleHoldFilterSource.start();
+    sampleHoldCvSource.start();
+    envelopeCvSource.start();
+    gateCvSource.start();
     startSampleHoldTimer();
     lfo2Oscillator.start();
     lfo2Offset.start();
@@ -827,15 +1142,26 @@
     const target = getVcaTarget(1);
 
     document.body.classList.add("is-audio-gated");
+    document.dispatchEvent(new CustomEvent("merrinlab:gate-state", { detail: { gated: true } }));
+    if (gateCvSource) {
+      gateCvSource.offset.cancelScheduledValues(now);
+      gateCvSource.offset.setValueAtTime(1, now);
+    }
     mainVca.gain.cancelScheduledValues(now);
     mainVca.gain.setValueAtTime(Math.max(0, mainVca.gain.value), now);
     triggerFilterEnvelopeOn(now);
     if (state.sampleHoldMode === "track") startSampleHoldTimer();
 
     if (state.envelopeMode === "adsr") {
-      const attack = clamp(state.adsrAttack, "adsrAttack");
-      const decay = clamp(state.adsrDecay, "adsrDecay");
+      const attack = getEnvelopeTime("adsrAttack");
+      const decay = getEnvelopeTime("adsrDecay");
       const sustain = getVcaTarget(clamp(state.adsrSustain, "adsrSustain"));
+      if (envelopeCvSource) {
+        envelopeCvSource.offset.cancelScheduledValues(now);
+        envelopeCvSource.offset.setValueAtTime(Math.max(0, envelopeCvSource.offset.value), now);
+        envelopeCvSource.offset.linearRampToValueAtTime(1, now + attack);
+        envelopeCvSource.offset.linearRampToValueAtTime(clamp(state.adsrSustain, "adsrSustain"), now + attack + decay);
+      }
       mainVca.gain.linearRampToValueAtTime(target, now + attack);
       mainVca.gain.linearRampToValueAtTime(sustain, now + attack + decay);
       setStatus(statusMessage || "Gate open · ADSR envelope active");
@@ -843,6 +1169,11 @@
     }
 
     const attack = clamp(state.attack, "attack");
+    if (envelopeCvSource) {
+      envelopeCvSource.offset.cancelScheduledValues(now);
+      envelopeCvSource.offset.setValueAtTime(Math.max(0, envelopeCvSource.offset.value), now);
+      envelopeCvSource.offset.linearRampToValueAtTime(1, now + attack);
+    }
     mainVca.gain.linearRampToValueAtTime(target, now + attack);
     setStatus(statusMessage || "Gate open · AR envelope active");
   }
@@ -858,10 +1189,20 @@
 
     const now = audioContext.currentTime;
     const release = state.envelopeMode === "adsr"
-      ? clamp(state.adsrRelease, "adsrRelease")
+      ? getEnvelopeTime("adsrRelease")
       : clamp(state.release, "release");
 
     document.body.classList.remove("is-audio-gated");
+    document.dispatchEvent(new CustomEvent("merrinlab:gate-state", { detail: { gated: false } }));
+    if (gateCvSource) {
+      gateCvSource.offset.cancelScheduledValues(now);
+      gateCvSource.offset.setValueAtTime(0, now);
+    }
+    if (envelopeCvSource) {
+      envelopeCvSource.offset.cancelScheduledValues(now);
+      envelopeCvSource.offset.setValueAtTime(Math.max(0, envelopeCvSource.offset.value), now);
+      envelopeCvSource.offset.linearRampToValueAtTime(0, now + release);
+    }
     mainVca.gain.cancelScheduledValues(now);
     mainVca.gain.setValueAtTime(Math.max(0, mainVca.gain.value), now);
     mainVca.gain.linearRampToValueAtTime(0, now + release);
@@ -971,9 +1312,23 @@
       tremoloGain.gain.setValueAtTime(0, audioContext.currentTime);
     }
 
+    if (auxVca && audioContext) {
+      auxVca.gain.cancelScheduledValues(audioContext.currentTime);
+      auxVca.gain.setValueAtTime(0, audioContext.currentTime);
+    }
+
+    [sampleHoldCvSource, envelopeCvSource, gateCvSource].forEach((source) => {
+      if (!source || !audioContext) return;
+      source.offset.cancelScheduledValues(audioContext.currentTime);
+      source.offset.setValueAtTime(0, audioContext.currentTime);
+    });
+
+    attenuatorRouteNodes.forEach((_routeNode, index) => disconnectAttenuatorRoute(index));
+    disconnectAuxVcaRouting();
+
     window.MerrinLabEffectsOutputGraph?.mute();
 
-    [oscillator, oscillator2, oscillator3, noiseSource, lfo1Oscillator, sampleHoldFilterSource, lfo2Oscillator, lfo2Offset].forEach((source) => {
+    [oscillator, oscillator2, oscillator3, noiseSource, lfo1Oscillator, sampleHoldFilterSource, sampleHoldCvSource, envelopeCvSource, gateCvSource, lfo2Oscillator, lfo2Offset].forEach((source) => {
       try {
         if (source) source.stop();
       } catch (_error) {
@@ -1002,15 +1357,25 @@
     lfo1Oscillator = null;
     lfo1Gain = null;
     sampleHoldFilterSource = null;
+    sampleHoldCvSource = null;
     lfo2Oscillator = null;
     lfo2Gain = null;
     lfo2Offset = null;
     filter = null;
     mainVca = null;
     tremoloGain = null;
+    envelopeCvSource = null;
+    gateCvSource = null;
+    auxVca = null;
+    auxVcaCvGain = null;
+    auxVcaConnectedInput = null;
+    auxVcaConnectedCv = null;
+    auxVcaConnectedDestination = null;
+    attenuatorRouteNodes = [];
     effectsOutputGraph = null;
 
     setStatus("Panic stopped · silent");
+    document.dispatchEvent(new CustomEvent("merrinlab:gate-state", { detail: { gated: false } }));
   }
 
   function applyAllParameters() {
@@ -1038,6 +1403,8 @@
       "filterEnvelopeMod",
       "filterExtCv",
       "lfo1Rate",
+      "lfo1Shape",
+      "lfo1Range",
       "lfo1Mod",
       "sampleHoldRate",
       "sampleHoldMod",
@@ -1049,10 +1416,19 @@
       "vcaEnvelopeMod",
       "vcaExtCv",
       "lfo2Rate",
+      "lfo2Shape",
+      "lfo2Range",
       "lfo2Mod",
       "envelopeMode",
+      "adsrRange",
       "repeatGate",
       "repeatGateRate",
+      "repeatGateTarget",
+      "auxVcaInput",
+      "auxVcaCv",
+      "auxVcaInitialAmp",
+      "auxVcaCvAmount",
+      "auxVcaDestination",
       "delayMix",
       "delayTime",
       "delayFeedback",
@@ -1109,8 +1485,12 @@
       safeRamp(filter.Q, clamp(state.resonance, "resonance"), now, 0.025);
     }
 
-    if (key === "lfo1Rate" && lfo1Oscillator) {
-      safeRamp(lfo1Oscillator.frequency, clamp(state.lfo1Rate, "lfo1Rate"), now, 0.04);
+    if ((key === "lfo1Rate" || key === "lfo1Range") && lfo1Oscillator) {
+      safeRamp(lfo1Oscillator.frequency, getEffectiveLfoRate("lfo1"), now, 0.04);
+    }
+
+    if (key === "lfo1Shape") {
+      applyLfoShape("lfo1");
     }
 
     if (key === "sampleHoldRate" || key === "sampleHoldMod" || key === "sampleHoldPitchMod" || key === "sampleHoldInput" || key === "sampleHoldMode") {
@@ -1122,8 +1502,12 @@
       if (clamp(state.sampleHoldPitchMod, "sampleHoldPitchMod") > 0) applyVco1Frequency(getSampleHoldGlideTime() || 0.001);
     }
 
-    if (key === "lfo2Rate" && lfo2Oscillator) {
-      safeRamp(lfo2Oscillator.frequency, clamp(state.lfo2Rate, "lfo2Rate"), now, 0.04);
+    if ((key === "lfo2Rate" || key === "lfo2Range") && lfo2Oscillator) {
+      safeRamp(lfo2Oscillator.frequency, getEffectiveLfoRate("lfo2"), now, 0.04);
+    }
+
+    if (key === "lfo2Shape") {
+      applyLfoShape("lfo2");
     }
 
     if (key === "lfo2Mod") {
@@ -1134,9 +1518,9 @@
       applyVcaControlParameters();
     }
 
-    if (key === "envelopeMode") {
+    if (key === "envelopeMode" || key === "adsrRange") {
       applyVcaControlParameters();
-      setStatus(`Envelope mode changed · ${state.envelopeMode.toUpperCase()}`);
+      setStatus(`Envelope changed · ${state.envelopeMode.toUpperCase()} · ${state.adsrRange}`);
     }
 
     if (key === "repeatGate") {
@@ -1152,6 +1536,15 @@
     if (key === "repeatGateRate" && state.repeatGate === "on") {
       startRepeatGateTimer();
       setStatus(`Repeat Gate rate changed · ${formatValue("repeatGateRate", state.repeatGateRate)}`);
+    }
+
+    if (key === "repeatGateTarget" && state.repeatGate === "on") {
+      startRepeatGateTimer();
+      setStatus(`Repeat Gate target · ${state.repeatGateTarget}`);
+    }
+
+    if (key === "auxVcaInput" || key === "auxVcaCv" || key === "auxVcaInitialAmp" || key === "auxVcaCvAmount" || key === "auxVcaDestination") {
+      applyAuxVcaRouting();
     }
 
     if (key === "delayMix" || key === "delayTime" || key === "delayFeedback") {
@@ -1174,7 +1567,7 @@
     if (key === "pulseWidth" || key === "vco2PulseWidth" || key === "vco3PulseWidth") return `${Number(value).toFixed(0)} ${units[key]}`;
     if (key === "lfo1Rate" || key === "lfo2Rate" || key === "sampleHoldRate" || key === "repeatGateRate") return `${Number(value).toFixed(2)} ${units[key]}`;
     if (key === "delayTime") return `${Number(value).toFixed(2)} ${units[key]}`;
-    if (key === "lfo1Mod" || key === "lfo2Mod" || key === "sampleHoldMod" || key === "sampleHoldPitchMod" || key === "sampleHoldGlide" || key === "vcaInitialLevel" || key === "vcaEnvelopeMod" || key === "filterEnvelopeMod" || key === "adsrSustain" || key === "delayMix" || key === "delayFeedback") return `${Math.round(Number(value) * 100)} ${units[key]}`;
+    if (key === "lfo1Mod" || key === "lfo2Mod" || key === "sampleHoldMod" || key === "sampleHoldPitchMod" || key === "sampleHoldGlide" || key === "vcaInitialLevel" || key === "vcaEnvelopeMod" || key === "filterEnvelopeMod" || key === "adsrSustain" || key === "auxVcaInitialAmp" || key === "auxVcaCvAmount" || key === "delayMix" || key === "delayFeedback") return `${Math.round(Number(value) * 100)} ${units[key]}`;
     if (key === "filterExtCv" || key === "vcaExtCv") return `${Number(value) >= 0 ? "+" : ""}${Math.round(Number(value) * 100)} ${units[key]}`;
     if (key === "attack" || key === "release" || key === "adsrAttack" || key === "adsrDecay" || key === "adsrRelease") return `${Number(value).toFixed(2)} ${units[key]}`;
     if (key === "resonance") return `${Number(value).toFixed(1)} ${units[key]}`;
@@ -1440,6 +1833,8 @@
       createGroup(
         "Filter Modulation",
         createSlider("lfo1Rate", 0.05, 12, 0.01),
+        createSelect("lfo1Shape", lfoShapes),
+        createSelect("lfo1Range", lfoRanges),
         createSlider("lfo1Mod", 0, 1, 0.01),
         createSelect("sampleHoldInput", sampleHoldInputs),
         createSelect("sampleHoldMode", sampleHoldModes),
@@ -1454,6 +1849,8 @@
       createGroup(
         "Amplitude / Envelope",
         createSlider("lfo2Rate", 0.05, 12, 0.01),
+        createSelect("lfo2Shape", lfoShapes),
+        createSelect("lfo2Range", lfoRanges),
         createSlider("lfo2Mod", 0, 1, 0.01),
         createSlider("vcaInitialLevel", 0, 1, 0.01),
         createSlider("vcaEnvelopeMod", 0, 1, 0.01),
@@ -1465,11 +1862,21 @@
         createSlider("adsrDecay", 0.005, 3, 0.005),
         createSlider("adsrSustain", 0, 1, 0.01),
         createSlider("adsrRelease", 0.02, 4, 0.01),
+        createSelect("adsrRange", adsrRanges),
+      ),
+      createGroup(
+        "AUX VCA",
+        createSelect("auxVcaInput", auxVcaInputs),
+        createSlider("auxVcaInitialAmp", 0, 1, 0.01),
+        createSelect("auxVcaCv", modulationSources),
+        createSlider("auxVcaCvAmount", 0, 1, 0.01),
+        createSelect("auxVcaDestination", auxVcaDestinations),
       ),
       createGroup(
         "Repeat Gate",
         createSelect("repeatGate", repeatGateModes),
         createSlider("repeatGateRate", 0.1, 12, 0.1),
+        createSelect("repeatGateTarget", repeatGateTargets),
       ),
       createGroup(
         "Delay",
@@ -1527,12 +1934,27 @@
     });
   }
 
+  async function triggerOnce() {
+    await gateOn();
+    window.setTimeout(() => triggerGateOff("Manual trigger release"), 80);
+  }
+
   window.MerrinLabAudio = {
     start: startAudio,
+    gateOn,
+    gateOff,
+    trigger: triggerOnce,
     noteOn: midiNoteOn,
     noteOff: midiNoteOff,
     pitchBend: setMidiPitchBend,
     setParameter: setEngineParameter,
+    setAttenuatorRoute,
+    getRoutingOptions() {
+      return {
+        sources: modulationSources.map(([value, label]) => ({ value, label })),
+        destinations: modulationDestinations.map(([value, label]) => ({ value, label })),
+      };
+    },
     panic: panicStop,
     triggerSampleHold,
     getState() {
@@ -1541,6 +1963,8 @@
         pitchBend: midiPitchBend,
         heldNotes: midiHeldNotes.map(entry => entry.note),
         audioState: audioContext?.state || "stopped",
+        parameters: { ...state },
+        attenuators: attenuatorRoutes.map((route, index) => ({ channel: index + 1, ...route })),
         effectsGraph: window.MerrinLabEffectsOutputGraph?.getDebugState() || null,
       };
     }

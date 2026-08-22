@@ -17,7 +17,7 @@ for (const filename of activeScripts) {
 
 const combinedSource = [...sources.values()].join("\n");
 assert.doesNotMatch(combinedSource, /AudioNode\.prototype\.connect\s*=/, "active scripts must not patch AudioNode.connect");
-assert.doesNotMatch(combinedSource, /AudioContextClass\.prototype\.(createGain|createBiquadFilter)\s*=/, "active scripts must not patch AudioContext factories");
+assert.doesNotMatch(combinedSource, /AudioContextClass\.prototype\.(createGain|createBiquadFilter|createOscillator)\s*=/, "active scripts must not patch AudioContext factories");
 
 const destinationConnections = [...combinedSource.matchAll(/\.connect\(context\.destination\)/g)];
 assert.equal(destinationConnections.length, 1, "the active graph must own exactly one destination connection");
@@ -46,30 +46,67 @@ assert.match(sources.get("audio-engine.js"), /const extCvScale = 1 \+ clamp\(sta
 assert.match(sources.get("vco1-visible-controls.js"), /key: "vcaInitialLevel"/, "the Main VCA Initial Level slider must be visible");
 assert.match(sources.get("vco1-visible-controls.js"), /key: "vcaEnvelopeMod"/, "the Main VCA AR Mod slider must be visible");
 assert.match(sources.get("vco1-visible-controls.js"), /key: "vcaExtCv"/, "the Main VCA Ext CV slider must be visible");
+assert.match(sources.get("audio-engine.js"), /function setAttenuatorRoute\(channelNumber, patch = \{\}\)/, "attenuator routes must reach the audio engine");
+assert.match(sources.get("audio-engine.js"), /source\.connect\(routeNode\.gain\);\s+routeNode\.gain\.connect\(destination\.param\)/, "attenuators must connect a real modulation source through a GainNode to an AudioParam");
+assert.match(sources.get("audio-engine.js"), /if \(destination === "mainVca" && tremoloGain\)/, "attenuator VCA modulation must stay downstream of the release gate");
+assert.doesNotMatch(sources.get("lfo-shape-controls.js"), /prototype\.createOscillator/, "LFO shape controls must not monkey-patch oscillator creation");
+assert.match(sources.get("lfo-shape-controls.js"), /script\.src = "adsr-visible-controls\.js"/, "the LFO bridge must continue the ADSR interface load chain");
+assert.match(sources.get("audio-engine.js"), /applyLfoShape\("lfo1"\)/, "LFO-1 shape must be owned by the engine");
+assert.match(sources.get("audio-engine.js"), /applyLfoShape\("lfo2"\)/, "LFO-2 shape must be owned by the engine");
+assert.match(sources.get("audio-engine.js"), /function applyAuxVcaRouting\(\)/, "AUX VCA must own an explicit route");
+assert.match(sources.get("audio-engine.js"), /if \(state\.auxVcaDestination === "mainVca"\) return mainVca/, "AUX VCA must route through the release-controlled Main VCA");
+assert.match(sources.get("audio-engine.js"), /const cvOffset = usesBipolarCv \? cvAmount \/ 2 : 0/, "AUX VCA bipolar CV sources must be shifted into a non-negative gain range");
+assert.match(sources.get("vco1-visible-controls.js"), /key: "repeatGateTarget"/, "Repeat Gate target selection must be visible");
+assert.match(sources.get("audio-engine.js"), /state\.repeatGateTarget === "sampleHold"/, "Repeat Gate must be able to trigger Sample & Hold");
+assert.match(sources.get("audio-engine.js"), /merrinlab:gate-state/, "the envelope interface must receive gate state");
 
-const attenuatorWindow = {};
+const routed = [];
+const attenuatorWindow = { MerrinLabAudio: { setAttenuatorRoute: (...args) => routed.push(args) } };
 vm.runInNewContext(sources.get("attenuator-bank.js"), { window: attenuatorWindow });
 const attenuators = attenuatorWindow.MerrinLabAttenuators;
 assert.equal(attenuators.getState().length, 6, "the attenuator bank must expose six channels");
-attenuators.setInput(1, -1);
+attenuators.setSource(1, "lfo1");
 attenuators.setAmount(1, 0.5);
-assert.equal(attenuators.getChannel(1).output, -0.5, "an attenuator must preserve polarity while reducing magnitude");
-attenuators.setInput(6, 1);
-attenuators.setAmount(6, 0);
-assert.equal(attenuators.getChannel(6).output, 0, "zero attenuation amount must silence the utility output");
-attenuators.setAmount(6, 1);
-assert.equal(attenuators.getChannel(6).output, 1, "full attenuation amount must pass the utility input unchanged");
+attenuators.setDestination(1, "filterCutoff");
+assert.equal(JSON.stringify(attenuators.getChannel(1)), JSON.stringify({ channel: 1, source: "lfo1", amount: 0.5, destination: "filterCutoff" }), "an attenuator must store a real source, amount and destination route");
+assert.equal(routed.at(-1)[0], 1, "attenuator channel updates must reach the same engine channel");
+assert.equal(routed.at(-1)[1].destination, "filterCutoff", "attenuator destination updates must reach the engine");
 
 const index = await readFile(join(previewDirectory.pathname, "index.html"), "utf8");
+const entryScripts = [...index.matchAll(/<script\s+src="([^"]+)"/g)].map((match) => match[1]);
+const reachableScripts = new Set(entryScripts);
+const pendingScripts = [...entryScripts];
+while (pendingScripts.length) {
+  const filename = pendingScripts.shift();
+  const source = sources.get(filename) || "";
+  for (const match of source.matchAll(/script\.src\s*=\s*"([^"]+)"/g)) {
+    const dependency = match[1];
+    assert.ok(sources.has(dependency), `${filename} must only load an existing script (${dependency})`);
+    if (!reachableScripts.has(dependency)) {
+      reachableScripts.add(dependency);
+      pendingScripts.push(dependency);
+    }
+  }
+}
+for (const requiredScript of ["lfo-shape-controls.js", "adsr-visible-controls.js", "envelope-mode-visible-controls.js", "envelope-io-controls.js"]) {
+  assert.ok(reachableScripts.has(requiredScript), `${requiredScript} must remain reachable from index.html`);
+}
 const sampleHoldMarkup = index.match(/<article class="module sample-hold-module">([\s\S]*?)<\/article>/)?.[1] || "";
 assert.doesNotMatch(sampleHoldMarkup, /class="knob/, "the Sample & Hold module must not render decorative dials");
 const mainVcaMarkup = index.match(/<article class="module main-vca-module[^"]*">([\s\S]*?)<\/article>/)?.[1] || "";
 assert.doesNotMatch(mainVcaMarkup, /class="(?:knob|jack)/, "the Main VCA module must not render decorative dials or jacks");
 const attenuatorMarkup = index.match(/<article class="module attenuators-module[^"]*">([\s\S]*?)<\/article>/)?.[1] || "";
 assert.doesNotMatch(attenuatorMarkup, /class="(?:knob|jack)/, "the attenuator bank must not render decorative dials or jacks");
-assert.equal((attenuatorMarkup.match(/data-attenuator-input=/g) || []).length, 6, "the attenuator bank must expose six bipolar input sliders");
+assert.equal((attenuatorMarkup.match(/data-attenuator-source=/g) || []).length, 6, "the attenuator bank must expose six source selectors");
 assert.equal((attenuatorMarkup.match(/data-attenuator-amount=/g) || []).length, 6, "the attenuator bank must expose six amount sliders");
-assert.equal((attenuatorMarkup.match(/data-attenuator-output=/g) || []).length, 6, "the attenuator bank must expose six output readouts");
+assert.equal((attenuatorMarkup.match(/data-attenuator-destination=/g) || []).length, 6, "the attenuator bank must expose six destination selectors");
+assert.doesNotMatch(attenuatorMarkup, /data-attenuator-input=/, "the attenuator bank must not expose a fake manual input calculator");
+const auxVcaMarkup = index.match(/<article class="module aux-vca-module[^>]*>([\s\S]*?)<\/article>/)?.[1] || "";
+assert.doesNotMatch(auxVcaMarkup, /class="(?:knob|jack)/, "the AUX VCA must not render decorative dials or jacks");
+const lfoMarkup = index.match(/<article class="module lfo-module lfo1-module[^>]*>([\s\S]*?)<\/article>/)?.[1] || "";
+assert.doesNotMatch(lfoMarkup, /class="(?:knob|jack)/, "LFO modules must use live controls rather than decorative dials or jacks");
+const adsrMarkup = index.match(/<article class="module adsr-module[^>]*>([\s\S]*?)<\/article>/)?.[1] || "";
+assert.doesNotMatch(adsrMarkup, /class="(?:knob|jack)/, "the ADSR module must use live sliders and buttons rather than decorative dials or jacks");
 assert.ok(index.indexOf('src="attenuator-bank.js"') < index.indexOf('src="attenuator-visible-controls.js"'), "the attenuator engine must load before its interface");
 assert.ok(index.indexOf('src="effects-output-graph.js"') < index.indexOf('src="audio-engine.js"'), "the graph must load before the engine");
 assert.doesNotMatch(index, /filter-self-resonance-layer\.js/, "the synthetic resonance layer must stay unloaded");

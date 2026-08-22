@@ -14,6 +14,37 @@
     ["on", "On"],
   ];
 
+  const repeatGateTargetOptions = [
+    ["envelope", "Envelope"],
+    ["sampleHold", "Sample & Hold"],
+    ["both", "Both"],
+  ];
+
+  const auxVcaInputOptions = [
+    ["off", "Off"],
+    ["vco1", "VCO-1"],
+    ["vco2", "VCO-2"],
+    ["vco3", "VCO-3"],
+    ["noise", "Noise"],
+  ];
+
+  const modulationSourceOptions = [
+    ["off", "Off"],
+    ["lfo1", "LFO-1"],
+    ["lfo2", "LFO-2"],
+    ["envelope", "Envelope"],
+    ["sampleHold", "Sample & Hold"],
+    ["gate", "Gate"],
+    ["noise", "Noise"],
+  ];
+
+  const auxVcaDestinationOptions = [
+    ["filter", "Filter"],
+    ["mainVca", "Main VCA"],
+  ];
+
+  const adsrRangeOptions = [["short", "Short"], ["long", "Long"]];
+
   const sampleHoldInputOptions = [
     ["noise", "Noise"],
     ["lfo1", "LFO-1"],
@@ -351,9 +382,61 @@
       unit: "Hz",
     },
     {
+      key: "adsrRange",
+      moduleSelector: ".adsr-module",
+      label: "ADSR Range",
+      type: "select",
+      options: adsrRangeOptions,
+    },
+    {
+      key: "auxVcaInput",
+      moduleSelector: ".aux-vca-module",
+      label: "Input",
+      type: "select",
+      options: auxVcaInputOptions,
+    },
+    {
+      key: "auxVcaInitialAmp",
+      moduleSelector: ".aux-vca-module",
+      label: "Initial Amp",
+      type: "range",
+      min: 0,
+      max: 100,
+      step: 1,
+      unit: "%",
+      fromSourceValue: (value) => Number(value) * 100,
+      toSourceValue: (value) => Number(value) / 100,
+    },
+    {
+      key: "auxVcaCv",
+      moduleSelector: ".aux-vca-module",
+      label: "CV Source",
+      type: "select",
+      options: modulationSourceOptions,
+    },
+    {
+      key: "auxVcaCvAmount",
+      moduleSelector: ".aux-vca-module",
+      label: "CV Amount",
+      type: "range",
+      min: 0,
+      max: 100,
+      step: 1,
+      unit: "%",
+      fromSourceValue: (value) => Number(value) * 100,
+      toSourceValue: (value) => Number(value) / 100,
+    },
+    {
+      key: "auxVcaDestination",
+      moduleSelector: ".aux-vca-module",
+      label: "Destination",
+      type: "select",
+      options: auxVcaDestinationOptions,
+    },
+    {
       key: "repeatGate",
       moduleSelector: ".repeat-module",
-      label: "Gate LED",
+      label: "Gate",
       type: "select",
       options: repeatGateOptions,
     },
@@ -368,6 +451,13 @@
       unit: "BPM",
       fromSourceValue: (value) => Number(value) * 60,
       toSourceValue: (value) => Number(value) / 60,
+    },
+    {
+      key: "repeatGateTarget",
+      moduleSelector: ".repeat-module",
+      label: "Target",
+      type: "select",
+      options: repeatGateTargetOptions,
     },
     {
       key: "delayMix",
@@ -480,7 +570,7 @@
     }
 
     const number = Number(value);
-    const percentKeys = ["vcoLevel", "vco2Level", "vco3Level", "whiteNoiseLevel", "filterEnvelopeMod", "lfo1Mod", "sampleHoldMod", "sampleHoldGlide", "vcaInitialLevel", "vcaEnvelopeMod", "lfo2Mod", "delayMix", "delayFeedback"];
+    const percentKeys = ["vcoLevel", "vco2Level", "vco3Level", "whiteNoiseLevel", "filterEnvelopeMod", "lfo1Mod", "sampleHoldMod", "sampleHoldGlide", "vcaInitialLevel", "vcaEnvelopeMod", "lfo2Mod", "auxVcaInitialAmp", "auxVcaCvAmount", "delayMix", "delayFeedback"];
     const fineTuneKeys = ["fineCents", "vco2FineCents", "vco3FineCents"];
 
     if (config.key === "repeatGateRate") return `${number.toFixed(0)} ${config.unit}`;

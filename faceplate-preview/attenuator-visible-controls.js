@@ -3,56 +3,77 @@
 
   const CHANNEL_COUNT = 6;
 
-  function formatSignedPercent(value) {
-    const percent = Math.round(Number(value) * 100);
-    return `${percent >= 0 ? "+" : ""}${percent}%`;
+  function populateOptions(select, options) {
+    if (!select || select.options.length) return;
+    options.forEach(({ value, label }) => {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = label;
+      select.append(option);
+    });
+  }
+
+  function optionLabel(select, value) {
+    return Array.from(select?.options || []).find((option) => option.value === value)?.textContent || value;
   }
 
   function updateChannel(module, state) {
-    const input = module.querySelector(`[data-attenuator-input="${state.channel}"]`);
+    const source = module.querySelector(`[data-attenuator-source="${state.channel}"]`);
     const amount = module.querySelector(`[data-attenuator-amount="${state.channel}"]`);
-    const inputReadout = module.querySelector(`[data-attenuator-input-readout="${state.channel}"]`);
     const amountReadout = module.querySelector(`[data-attenuator-amount-readout="${state.channel}"]`);
-    const outputReadout = module.querySelector(`[data-attenuator-output="${state.channel}"]`);
+    const destination = module.querySelector(`[data-attenuator-destination="${state.channel}"]`);
+    const routeReadout = module.querySelector(`[data-attenuator-route="${state.channel}"]`);
 
-    if (input) input.value = String(Math.round(state.input * 100));
+    if (source) source.value = state.source;
     if (amount) amount.value = String(Math.round(state.amount * 100));
-    if (inputReadout) inputReadout.textContent = formatSignedPercent(state.input);
     if (amountReadout) amountReadout.textContent = `${Math.round(state.amount * 100)}%`;
-    if (outputReadout) outputReadout.textContent = formatSignedPercent(state.output);
+    if (destination) destination.value = state.destination;
 
-    const channel = module.querySelector(`[data-attenuator-channel="${state.channel}"]`);
-    channel?.classList.toggle("is-attenuating", Math.abs(state.input) > 0.0001 && state.amount < 0.9999);
-    const hasSignal = window.MerrinLabAttenuators.getState().some((item) => Math.abs(item.input) > 0.0001);
-    module.classList.toggle("is-processing", hasSignal);
+    const active = state.source !== "off" && state.destination !== "off" && Math.abs(state.amount) > 0.0001;
+    if (routeReadout) {
+      routeReadout.textContent = active
+        ? `${optionLabel(source, state.source)} → ${optionLabel(destination, state.destination)}`
+        : "Route off";
+    }
+
+    module.querySelector(`[data-attenuator-channel="${state.channel}"]`)?.classList.toggle("is-attenuating", active);
+    module.classList.toggle("is-processing", window.MerrinLabAttenuators.getState().some((route) => (
+      route.source !== "off" && route.destination !== "off" && Math.abs(route.amount) > 0.0001
+    )));
   }
 
   function initAttenuators() {
     const module = document.querySelector(".attenuators-module");
     const bank = window.MerrinLabAttenuators;
-    if (!module || !bank) return;
+    const routing = window.MerrinLabAudio?.getRoutingOptions?.();
+    if (!module || !bank || !routing) return;
 
+    module.querySelectorAll("[data-attenuator-source]").forEach((select) => populateOptions(select, routing.sources));
+    module.querySelectorAll("[data-attenuator-destination]").forEach((select) => populateOptions(select, routing.destinations));
     bank.subscribe((state) => updateChannel(module, state));
 
     module.addEventListener("input", (event) => {
-      const input = event.target.closest("[data-attenuator-input]");
-      if (input) {
-        bank.setInput(input.dataset.attenuatorInput, Number(input.value) / 100);
+      const source = event.target.closest("[data-attenuator-source]");
+      if (source) {
+        bank.setSource(source.dataset.attenuatorSource, source.value);
         return;
       }
-
       const amount = event.target.closest("[data-attenuator-amount]");
-      if (amount) bank.setAmount(amount.dataset.attenuatorAmount, Number(amount.value) / 100);
+      if (amount) {
+        bank.setAmount(amount.dataset.attenuatorAmount, Number(amount.value) / 100);
+        return;
+      }
+      const destination = event.target.closest("[data-attenuator-destination]");
+      if (destination) bank.setDestination(destination.dataset.attenuatorDestination, destination.value);
     });
 
     module.addEventListener("change", (event) => {
-      const control = event.target.closest("[data-attenuator-input], [data-attenuator-amount]");
+      const control = event.target.closest("[data-attenuator-source], [data-attenuator-amount], [data-attenuator-destination]");
       if (control) control.dispatchEvent(new Event("input", { bubbles: true }));
     });
 
-    for (let channel = 1; channel <= CHANNEL_COUNT; channel += 1) {
-      updateChannel(module, bank.getChannel(channel));
-    }
+    for (let channel = 1; channel <= CHANNEL_COUNT; channel += 1) updateChannel(module, bank.getChannel(channel));
+    bank.syncAll();
   }
 
   document.addEventListener("DOMContentLoaded", initAttenuators);

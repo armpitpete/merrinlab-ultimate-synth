@@ -170,7 +170,27 @@
       }
 
       .adsr-module.adsr-vertical-module .adsr-io-row {
-        display: none !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 7px;
+        margin-top: 0;
+      }
+
+      .adsr-module.adsr-vertical-module .adsr-io-row .control {
+        align-items: center;
+        display: grid;
+        grid-template-columns: 64px minmax(0, 1fr);
+        gap: 6px;
+        min-width: 0;
+      }
+
+      .adsr-module.adsr-vertical-module .adsr-io-row .control-label {
+        min-height: 0;
+        text-align: left;
+      }
+
+      .adsr-module.adsr-vertical-module .adsr-io-row .visible-audio-control-wrap {
+        margin-top: 0;
       }
 
       .adsr-module.main-envelope-module .status-light {
