@@ -7,7 +7,7 @@
     22: ["vco2Level", 0, 0.45],
     23: ["vco3Level", 0, 0.4],
     24: ["cutoff", 120, 6500],
-    25: ["resonance", 0.1, 12],
+    25: ["resonance", 0.1, 4, "curve"],
     26: ["lfo1Rate", 0.05, 12],
     27: ["lfo1Mod", 0, 1],
     28: ["delayMix", 0, 1]
@@ -28,9 +28,10 @@
     const mapping = ccMap[cc];
     if (!mapping) return null;
 
-    const [key, min, max] = mapping;
+    const [key, min, max, curve] = mapping;
     const normalized = Math.max(0, Math.min(127, value)) / 127;
-    return [key, min + normalized * (max - min)];
+    const scaled = curve === "curve" ? Math.pow(normalized, 2) : normalized;
+    return [key, min + scaled * (max - min)];
   }
 
   window.addEventListener("merrinlab-midi", event => {
