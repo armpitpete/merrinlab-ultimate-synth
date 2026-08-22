@@ -292,15 +292,6 @@
     document.head.append(script);
   }
 
-  function loadMidiRuntime() {
-    if (document.querySelector('script[src="midi-runtime-loader.js"]')) return;
-
-    const script = document.createElement("script");
-    script.src = "midi-runtime-loader.js";
-    script.defer = true;
-    document.head.append(script);
-  }
-
   patchAudioConnectForReverb();
   document.addEventListener("input", handleReverbInput);
   document.addEventListener("change", handleReverbInput);
@@ -310,6 +301,5 @@
     installReverbUi();
     loadDebugEnginePanelCollapse();
     loadArGeneratorBridge();
-    loadMidiRuntime();
   });
 })();
