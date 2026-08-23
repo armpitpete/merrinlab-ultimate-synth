@@ -29,6 +29,17 @@ assert.doesNotMatch(sources.get("audio-engine.js"), /tremoloGain\.connect\(effec
 assert.match(sources.get("audio-engine.js"), /const useMix = state\.signalMixerLineOut === "mix"/, "the line-out selector must switch explicitly between VCA and MIX");
 assert.match(sources.get("audio-engine.js"), /safeRamp\(routeNode\.gain\.gain, level \* 0\.35/, "Signal Mixer channels must retain safe per-channel headroom");
 assert.match(sources.get("audio-engine.js"), /merrinlab:signal-mixer-meter/, "the Signal Mixer interface must receive live mix-output level data");
+assert.match(sources.get("audio-engine.js"), /analogMultiplierX: "off",\s+analogMultiplierY: "off"/, "the Analog Multiplier must be default-off");
+assert.match(sources.get("audio-engine.js"), /analogMultiplierYGain\.connect\(analogMultiplier\.gain\)/, "Y must modulate the multiplier GainNode AudioParam");
+assert.match(sources.get("audio-engine.js"), /x\.connect\(analogMultiplier\);\s+y\.connect\(analogMultiplierYGain\)/, "X and Y must connect to independent multiplier inputs");
+assert.match(sources.get("audio-engine.js"), /analogMultiplierOutputGain\.gain\.value = 0\.7/, "XY output must keep fixed headroom before routing");
+assert.match(sources.get("audio-engine.js"), /analogMultiplier\.connect\(analogMultiplierOutputGain\);\s+analogMultiplierOutputGain\.connect\(analogMultiplierAnalyser\)/, "XY multiplication must feed its own metered output tap");
+assert.match(sources.get("audio-engine.js"), /if \(source === "analogMultiplier"\) return analogMultiplierAnalyser/, "XY-OUT must enter the accepted Signal Mixer as a selectable source");
+assert.match(sources.get("audio-engine.js"), /\["analogMultiplier", "XY Multiplier"\]/, "the Signal Mixer source list must expose XY-OUT");
+assert.match(sources.get("audio-engine.js"), /function getVcoOutputNode\(index\)/, "the multiplier must use a dedicated raw VCO output tap");
+assert.match(sources.get("audio-engine.js"), /state\[processor\.waveformKey\] === "pulse" \? processor\.pulseShaper : processor\.oscillator/, "raw VCO multiplier taps must preserve pulse waveform selection");
+assert.match(sources.get("audio-engine.js"), /merrinlab:analog-multiplier-meter/, "the Analog Multiplier interface must receive live XY-OUT level data");
+assert.match(sources.get("audio-engine.js"), /disconnectAnalogMultiplierRouting\(\)/, "Panic and rerouting must be able to disconnect Analog Multiplier sources");
 assert.match(sources.get("effects-output-graph.js"), /reverb\.output\.connect\(svf\.input\)/, "the State Variable VCF must remain inside the explicit effects/output graph");
 assert.match(sources.get("effects-output-graph.js"), /modeFilter\.Q, isBandpass \? 0\.707 : resonance/, "LP and HP resonance must use the Biquad Q directly");
 assert.match(sources.get("effects-output-graph.js"), /bpGain\.gain, isBandpass \? 1 : 0/, "band-pass level must not use cutoff-dependent gain compensation");
@@ -140,7 +151,7 @@ while (pendingScripts.length) {
     }
   }
 }
-for (const requiredScript of ["lfo-shape-controls.js", "adsr-visible-controls.js", "envelope-mode-visible-controls.js", "envelope-io-controls.js", "signal-mixer-layer.js"]) {
+for (const requiredScript of ["lfo-shape-controls.js", "adsr-visible-controls.js", "envelope-mode-visible-controls.js", "envelope-io-controls.js", "signal-mixer-layer.js", "analog-multiplier-layer.js"]) {
   assert.ok(reachableScripts.has(requiredScript), `${requiredScript} must remain reachable from index.html`);
 }
 const sampleHoldMarkup = index.match(/<article class="module sample-hold-module">([\s\S]*?)<\/article>/)?.[1] || "";
@@ -189,6 +200,14 @@ assert.match(signalMixerMarkup, /data-signal-mixer-meter/, "the Signal Mixer mus
 assert.match(sources.get("signal-mixer-layer.js"), /getSignalMixerOptions/, "the Signal Mixer interface must populate its sources from the engine");
 assert.match(sources.get("signal-mixer-layer.js"), /signalMixerSource/, "Signal Mixer source changes must reach engine parameters");
 assert.match(sources.get("signal-mixer-layer.js"), /signalMixerLevel/, "Signal Mixer level changes must reach engine parameters");
+assert.match(sources.get("signal-mixer-layer.js"), /script\.src = "analog-multiplier-layer\.js"/, "the accepted Signal Mixer layer must load the Analog Multiplier interface");
+const analogMultiplierMarkup = index.match(/<article class="module utility-module analog-multiplier-module">([\s\S]*?)<\/article>/)?.[1] || "";
+assert.ok(analogMultiplierMarkup, "the Analog Multiplier panel position must remain present");
+assert.match(sources.get("analog-multiplier-layer.js"), /data-analog-multiplier-control="x"/, "the Analog Multiplier must expose a live X-IN source selector");
+assert.match(sources.get("analog-multiplier-layer.js"), /data-analog-multiplier-control="y"/, "the Analog Multiplier must expose a live Y-IN source selector");
+assert.match(sources.get("analog-multiplier-layer.js"), /data-analog-multiplier-meter/, "the Analog Multiplier must expose a live XY-OUT meter");
+assert.match(sources.get("analog-multiplier-layer.js"), /setParameter\?\.\(key, control\.value\)/, "X-IN and Y-IN changes must reach the engine");
+assert.doesNotMatch(sources.get("analog-multiplier-layer.js"), /jack-socket|class="knob|AudioNode\.prototype|AudioContextClass\.prototype/, "the live Analog Multiplier interface must not preserve fake sockets/dials or patch Web Audio prototypes");
 const lfoMarkup = index.match(/<article class="module lfo-module lfo1-module[^>]*>([\s\S]*?)<\/article>/)?.[1] || "";
 assert.doesNotMatch(lfoMarkup, /class="(?:knob|jack)/, "LFO modules must use live controls rather than decorative dials or jacks");
 const adsrMarkup = index.match(/<article class="module adsr-module[^>]*>([\s\S]*?)<\/article>/)?.[1] || "";
