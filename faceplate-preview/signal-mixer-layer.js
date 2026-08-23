@@ -31,6 +31,7 @@
       { value: "mainFilter", label: "Main VCF" },
       { value: "mainVca", label: "Main VCA" },
       { value: "auxVca", label: "AUX VCA" },
+      { value: "analogMultiplier", label: "XY Multiplier" },
     ];
   }
 
@@ -161,11 +162,20 @@
     document.head.append(style);
   }
 
+  function loadAnalogMultiplierLayer() {
+    if (document.querySelector('script[src="analog-multiplier-layer.js"]')) return;
+    const script = document.createElement("script");
+    script.src = "analog-multiplier-layer.js";
+    script.defer = true;
+    document.head.append(script);
+  }
+
   function init() {
     if (!moduleRoot()) return;
     addStyles();
     fillSourceSelectors();
     updateInterface();
+    loadAnalogMultiplierLayer();
   }
 
   document.addEventListener("input", handleControl);
