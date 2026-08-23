@@ -83,6 +83,8 @@
     signalMixerLevel3: 0,
     signalMixerLevel4: 0,
     signalMixerLineOut: "vca",
+    analogMultiplierX: "off",
+    analogMultiplierY: "off",
     attack: 0.03,
     release: 0.45,
     adsrAttack: 0.05,
@@ -116,6 +118,14 @@
   let signalMixerMeterData = null;
   let lineOutVcaGain = null;
   let lineOutMixGain = null;
+  let analogMultiplier = null;
+  let analogMultiplierYGain = null;
+  let analogMultiplierOutputGain = null;
+  let analogMultiplierAnalyser = null;
+  let analogMultiplierMeterTimerId = null;
+  let analogMultiplierMeterData = null;
+  let analogMultiplierConnectedX = null;
+  let analogMultiplierConnectedY = null;
   let lfo1Oscillator = null;
   let lfo1Gain = null;
   let sampleHoldFilterSource = null;
@@ -426,6 +436,20 @@
     ["mainVca", "Main VCA Input"],
   ];
 
+  const analogMultiplierSources = [
+    ["off", "Off"],
+    ["vco1", "VCO 1"],
+    ["vco2", "VCO 2"],
+    ["vco3", "VCO 3"],
+    ["noise", "Noise"],
+    ["lfo1", "LFO 1"],
+    ["lfo2", "LFO 2"],
+    ["envelope", "Envelope"],
+    ["sampleHold", "Sample & Hold"],
+    ["gate", "Gate"],
+    ["mainVca", "Main VCA"],
+  ];
+
   const signalMixerSources = [
     ["off", "Off"],
     ["vco1", "VCO 1"],
@@ -436,6 +460,7 @@
     ["mainFilter", "Main VCF"],
     ["mainVca", "Main VCA"],
     ["auxVca", "AUX VCA"],
+    ["analogMultiplier", "XY Multiplier"],
   ];
 
   const attenuatorRoutes = Array.from({ length: 6 }, () => ({
@@ -539,6 +564,41 @@
     signalMixerMeterData = new Float32Array(signalMixerAnalyser.fftSize);
     updateSignalMixerMeter();
     signalMixerMeterTimerId = window.setInterval(updateSignalMixerMeter, 50);
+  }
+
+  function stopAnalogMultiplierMeter() {
+    if (analogMultiplierMeterTimerId !== null) {
+      window.clearInterval(analogMultiplierMeterTimerId);
+      analogMultiplierMeterTimerId = null;
+    }
+    analogMultiplierMeterData = null;
+    document.dispatchEvent(new CustomEvent("merrinlab:analog-multiplier-meter", {
+      detail: { peak: 0, rms: 0, clipping: false },
+    }));
+  }
+
+  function updateAnalogMultiplierMeter() {
+    if (!analogMultiplierAnalyser || !analogMultiplierMeterData) return;
+    analogMultiplierAnalyser.getFloatTimeDomainData(analogMultiplierMeterData);
+    let peak = 0;
+    let sumSquares = 0;
+    for (let index = 0; index < analogMultiplierMeterData.length; index += 1) {
+      const sample = analogMultiplierMeterData[index];
+      peak = Math.max(peak, Math.abs(sample));
+      sumSquares += sample * sample;
+    }
+    const rms = Math.sqrt(sumSquares / analogMultiplierMeterData.length);
+    document.dispatchEvent(new CustomEvent("merrinlab:analog-multiplier-meter", {
+      detail: { peak, rms, clipping: peak >= 0.98 },
+    }));
+  }
+
+  function startAnalogMultiplierMeter() {
+    stopAnalogMultiplierMeter();
+    if (!analogMultiplierAnalyser) return;
+    analogMultiplierMeterData = new Float32Array(analogMultiplierAnalyser.fftSize);
+    updateAnalogMultiplierMeter();
+    analogMultiplierMeterTimerId = window.setInterval(updateAnalogMultiplierMeter, 50);
   }
 
   function getEffectiveLfoRate(which) {
@@ -647,6 +707,47 @@
     return { channel: index + 1, ...route };
   }
 
+  function getVcoOutputNode(index) {
+    const processor = vcoProcessors[index];
+    if (!processor) return null;
+    return state[processor.waveformKey] === "pulse" ? processor.pulseShaper : processor.oscillator;
+  }
+
+  function getAnalogMultiplierSourceNode(source) {
+    if (source === "vco1") return getVcoOutputNode(0);
+    if (source === "vco2") return getVcoOutputNode(1);
+    if (source === "vco3") return getVcoOutputNode(2);
+    if (source === "noise") return noiseSource;
+    if (source === "lfo1") return lfo1Oscillator;
+    if (source === "lfo2") return lfo2Oscillator;
+    if (source === "envelope") return envelopeCvSource;
+    if (source === "sampleHold") return sampleHoldCvSource;
+    if (source === "gate") return gateCvSource;
+    if (source === "mainVca") return tremoloGain;
+    return null;
+  }
+
+  function disconnectAnalogMultiplierRouting() {
+    try { if (analogMultiplierConnectedX && analogMultiplier) analogMultiplierConnectedX.disconnect(analogMultiplier); } catch (_error) {}
+    try { if (analogMultiplierConnectedY && analogMultiplierYGain) analogMultiplierConnectedY.disconnect(analogMultiplierYGain); } catch (_error) {}
+    analogMultiplierConnectedX = null;
+    analogMultiplierConnectedY = null;
+  }
+
+  function applyAnalogMultiplierRouting() {
+    if (!audioContext || !analogMultiplier || !analogMultiplierYGain) return;
+    disconnectAnalogMultiplierRouting();
+    const x = getAnalogMultiplierSourceNode(state.analogMultiplierX);
+    const y = getAnalogMultiplierSourceNode(state.analogMultiplierY);
+    analogMultiplier.gain.value = 0;
+    analogMultiplierYGain.gain.value = 1;
+    if (!x || !y) return;
+    x.connect(analogMultiplier);
+    y.connect(analogMultiplierYGain);
+    analogMultiplierConnectedX = x;
+    analogMultiplierConnectedY = y;
+  }
+
   function getSignalMixerSourceNode(source) {
     if (source === "vco1") return vcoGain;
     if (source === "vco2") return vco2Gain;
@@ -656,6 +757,7 @@
     if (source === "mainFilter") return filter;
     if (source === "mainVca") return tremoloGain;
     if (source === "auxVca") return auxVca;
+    if (source === "analogMultiplier") return analogMultiplierAnalyser;
     return null;
   }
 
@@ -1095,10 +1197,12 @@
       safeRamp(processor.pulseOffset.offset, (pulseWidth - 50) / 50, now, 0.01);
       processor.oscillator.connect(processor.pulseShaper);
       processor.pulseShaper.connect(processor.outputGain);
+      applyAnalogMultiplierRouting();
       return;
     }
     processor.oscillator.type = waveform;
     processor.oscillator.connect(processor.outputGain);
+    applyAnalogMultiplierRouting();
   }
 
   function disconnectVcoModulationSource(processor, route) {
@@ -1182,6 +1286,7 @@
     noiseSource.start();
     applyAllAttenuatorRoutes();
     applyAllVcoModulationRoutes();
+    applyAnalogMultiplierRouting();
   }
 
   function applyWaveform() { applyVcoSignalPath(vcoProcessors[0]); }
@@ -1268,6 +1373,15 @@
     auxVca.gain.value = state.auxVcaInitialAmp;
     auxVcaCvGain = audioContext.createGain();
     auxVcaCvGain.gain.value = state.auxVcaCvAmount;
+    analogMultiplier = audioContext.createGain();
+    analogMultiplier.gain.value = 0;
+    analogMultiplierYGain = audioContext.createGain();
+    analogMultiplierYGain.gain.value = 1;
+    analogMultiplierOutputGain = audioContext.createGain();
+    analogMultiplierOutputGain.gain.value = 0.7;
+    analogMultiplierAnalyser = audioContext.createAnalyser();
+    analogMultiplierAnalyser.fftSize = 256;
+    analogMultiplierAnalyser.smoothingTimeConstant = 0.72;
 
     attenuatorRouteNodes = attenuatorRoutes.map(() => ({ gain: audioContext.createGain(), source: null, destination: null }));
     signalMixerRouteNodes = Array.from({ length: 4 }, () => {
@@ -1300,6 +1414,9 @@
     mainVca.connect(tremoloGain);
     tremoloGain.connect(lineOutVcaGain);
     lineOutVcaGain.connect(effectsOutputGraph.input);
+    analogMultiplierYGain.connect(analogMultiplier.gain);
+    analogMultiplier.connect(analogMultiplierOutputGain);
+    analogMultiplierOutputGain.connect(analogMultiplierAnalyser);
     signalMixerBus.connect(signalMixerAnalyser);
     signalMixerAnalyser.connect(lineOutMixGain);
     lineOutMixGain.connect(effectsOutputGraph.input);
@@ -1307,6 +1424,7 @@
     applyAuxVcaRouting();
     applyAllAttenuatorRoutes();
     applyAllVcoModulationRoutes();
+    applyAnalogMultiplierRouting();
     applyAllSignalMixerRoutes();
     applySignalMixerLineOut();
 
@@ -1325,6 +1443,7 @@
     vcoProcessors.forEach((processor) => processor.pulseOffset.start());
     startMixerMeter();
     startSignalMixerMeter();
+    startAnalogMultiplierMeter();
     return true;
   }
 
@@ -1464,6 +1583,7 @@
     stopSampleHoldTimer();
     stopMixerMeter();
     stopSignalMixerMeter();
+    stopAnalogMultiplierMeter();
     stopRepeatGateTimer(false);
     sampleHoldValue = 0;
 
@@ -1477,6 +1597,7 @@
     if (auxVca && audioContext) { auxVca.gain.cancelScheduledValues(audioContext.currentTime); auxVca.gain.setValueAtTime(0, audioContext.currentTime); }
     if (lineOutVcaGain && audioContext) { lineOutVcaGain.gain.cancelScheduledValues(audioContext.currentTime); lineOutVcaGain.gain.setValueAtTime(0, audioContext.currentTime); }
     if (lineOutMixGain && audioContext) { lineOutMixGain.gain.cancelScheduledValues(audioContext.currentTime); lineOutMixGain.gain.setValueAtTime(0, audioContext.currentTime); }
+    if (analogMultiplierOutputGain && audioContext) { analogMultiplierOutputGain.gain.cancelScheduledValues(audioContext.currentTime); analogMultiplierOutputGain.gain.setValueAtTime(0, audioContext.currentTime); }
 
     [sampleHoldCvSource, envelopeCvSource, gateCvSource].forEach((source) => {
       if (!source || !audioContext) return;
@@ -1492,6 +1613,7 @@
         routeNode.gain.gain.setValueAtTime(0, audioContext.currentTime);
       }
     });
+    disconnectAnalogMultiplierRouting();
     vcoProcessors.forEach((processor) => {
       disconnectVcoModulationSource(processor, "PitchSource");
       disconnectVcoModulationSource(processor, "LinearFmSource");
@@ -1528,6 +1650,12 @@
     signalMixerRouteNodes = [];
     lineOutVcaGain = null;
     lineOutMixGain = null;
+    analogMultiplier = null;
+    analogMultiplierYGain = null;
+    analogMultiplierOutputGain = null;
+    analogMultiplierAnalyser = null;
+    analogMultiplierConnectedX = null;
+    analogMultiplierConnectedY = null;
     lfo1Oscillator = null;
     lfo1Gain = null;
     sampleHoldFilterSource = null;
@@ -1561,6 +1689,7 @@
       "sampleHoldRate", "sampleHoldMod", "sampleHoldPitchMod", "sampleHoldInput", "sampleHoldMode", "sampleHoldGlide", "vcaInitialLevel", "vcaEnvelopeMod", "vcaExtCv",
       "lfo2Rate", "lfo2Shape", "lfo2Range", "lfo2Mod", "envelopeMode", "adsrRange", "repeatGate", "repeatGateRate", "repeatGateTarget",
       "auxVcaInput", "auxVcaCv", "auxVcaInitialAmp", "auxVcaCvAmount", "auxVcaDestination",
+      "analogMultiplierX", "analogMultiplierY",
       "signalMixerSource1", "signalMixerSource2", "signalMixerSource3", "signalMixerSource4", "signalMixerLevel1", "signalMixerLevel2", "signalMixerLevel3", "signalMixerLevel4", "signalMixerLineOut",
       "delayMix", "delayTime", "delayFeedback", "output",
     ].forEach(applyParameter);
@@ -1609,6 +1738,7 @@
     if (key === "repeatGateRate" && state.repeatGate === "on") { startRepeatGateTimer(); setStatus(`Repeat Gate rate changed · ${formatValue("repeatGateRate", state.repeatGateRate)}`); }
     if (key === "repeatGateTarget" && state.repeatGate === "on") { startRepeatGateTimer(); setStatus(`Repeat Gate target · ${state.repeatGateTarget}`); }
     if (key === "auxVcaInput" || key === "auxVcaCv" || key === "auxVcaInitialAmp" || key === "auxVcaCvAmount" || key === "auxVcaDestination") applyAuxVcaRouting();
+    if (key === "analogMultiplierX" || key === "analogMultiplierY") applyAnalogMultiplierRouting();
 
     const sourceMatch = key.match(/^signalMixerSource([1-4])$/);
     const levelMatch = key.match(/^signalMixerLevel([1-4])$/);
@@ -1655,6 +1785,9 @@
       state[key] = allowed.has(value) ? value : "off";
     } else if (key === "signalMixerLineOut") {
       state[key] = value === "mix" ? "mix" : "vca";
+    } else if (key === "analogMultiplierX" || key === "analogMultiplierY") {
+      const allowed = new Set(analogMultiplierSources.map(([source]) => source));
+      state[key] = allowed.has(value) ? value : "off";
     } else if (limits[key]) state[key] = clamp(value, key);
     else state[key] = value;
     syncParameterUi(key);
@@ -1789,6 +1922,9 @@
     getSignalMixerOptions() {
       return signalMixerSources.map(([value, label]) => ({ value, label }));
     },
+    getAnalogMultiplierOptions() {
+      return analogMultiplierSources.map(([value, label]) => ({ value, label }));
+    },
     panic: panicStop,
     triggerSampleHold,
     getState() {
@@ -1799,6 +1935,11 @@
         audioState: audioContext?.state || "stopped",
         parameters: { ...state },
         attenuators: attenuatorRoutes.map((route, index) => ({ channel: index + 1, ...route })),
+        analogMultiplier: {
+          x: state.analogMultiplierX,
+          y: state.analogMultiplierY,
+          active: state.analogMultiplierX !== "off" && state.analogMultiplierY !== "off",
+        },
         signalMixer: {
           lineOut: state.signalMixerLineOut,
           channels: Array.from({ length: 4 }, (_entry, index) => ({
