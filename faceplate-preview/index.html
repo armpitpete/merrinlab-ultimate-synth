@@ -251,6 +251,18 @@
         <div class="signal-mixer-output-meter" aria-label="Signal Mixer output level"><span>Mix Out</span><meter min="0" max="1" value="0" data-signal-mixer-meter></meter><output data-signal-mixer-meter-readout>silent</output></div>
       </article>
       <article class="module utility-module analog-multiplier-module"><div class="module-header"><span class="status-light"></span><h2>Analog Multiplier</h2></div><div class="module-row"><div class="selector wide-selector">X · Y · XY</div></div><div class="module-divider"></div><div class="control-grid three-up"><div class="control"><div class="control-label">X In</div><div class="jack-socket"></div></div><div class="control"><div class="control-label">Y In</div><div class="jack-socket"></div></div><div class="control"><div class="control-label">XY Out</div><div class="jack-socket"></div></div></div></article>
+      <article class="module utility-module filter-ring-module" data-filter-ring-module>
+        <div class="module-header"><span class="status-light"></span><h2>Filter Ring Modulation</h2><output class="filter-ring-status" data-filter-ring-status>Off</output></div>
+        <div class="filter-ring-equation" aria-label="Filter 1 Output multiplied by Filter 2 Output">
+          <div class="filter-ring-source"><strong>Filter 1 Output</strong><span>Main low-pass filter</span></div>
+          <span class="filter-ring-multiply" aria-hidden="true">×</span>
+          <div class="filter-ring-source"><strong>Filter 2 Output</strong><span>State Variable VCF</span></div>
+        </div>
+        <div class="filter-ring-result">Filter 1 × Filter 2 → Master</div>
+        <label class="filter-ring-level"><span class="filter-ring-level-heading"><span>Ring Level</span><output data-filter-ring-level-readout>0%</output></span><input type="range" min="0" max="100" step="1" value="0" data-filter-ring-level aria-label="Filter Ring output level"></label>
+        <div class="filter-ring-output" aria-label="Filter Ring output level"><span>Ring Out</span><meter min="0" max="1" value="0" data-filter-ring-meter></meter><output data-filter-ring-meter-readout>silent</output></div>
+        <p class="filter-ring-note">The ring path uses Filter 2's selected response independently of the VCF Mix control.</p>
+      </article>
       <article class="module utility-module cv-inverter-module"><div class="module-header"><span class="status-light"></span><h2>CV Inverter</h2></div><div class="module-row"><div class="selector wide-selector">Positive · Invert</div></div><div class="module-divider"></div><div class="control-grid two-up"><div class="control"><div class="control-label">CV In</div><div class="jack-socket"></div></div><div class="control"><div class="control-label">CV Out</div><div class="jack-socket"></div></div></div></article>
       <article class="module utility-module cv-distributor-module"><div class="module-header"><span class="status-light"></span><h2>CV Distributor</h2></div><div class="module-row"><div class="selector wide-selector">CV Distributor</div></div><div class="module-divider"></div><div class="control-grid three-up"><div class="control"><div class="control-label">CV In</div><div class="jack-socket"></div></div><div class="control"><div class="control-label">CV Out</div><div class="jack-socket"></div></div><div class="control"><div class="control-label">CV Out</div><div class="jack-socket"></div></div></div></article>
       <article class="module utility-module ext-signal-buffer-module"><div class="module-header"><span class="status-light"></span><h2>Ext. Signal Buffer</h2></div><div class="module-row"><div class="wave-box">EXT</div></div><div class="module-divider"></div><div class="control-grid two-up"><div class="control"><div class="control-label">Signal Boost</div><div class="knob knob-large"></div></div><div class="control"><div class="control-label">Buffer Out</div><div class="jack-socket"></div></div></div></article>
@@ -268,5 +280,6 @@
   <script src="first-voice-panel-docking.js" defer></script>
   <script src="cathedral-reverb-layer.js" defer></script>
   <script src="signal-mixer-layer.js" defer></script>
+  <script src="filter-ring-layer.js" defer></script>
 </body>
 </html>
