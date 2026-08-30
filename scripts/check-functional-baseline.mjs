@@ -93,7 +93,7 @@ mustContain(midiBridge, 'ccMap', 'MIDI CC mapping');
 // Filter Ring v0.1 frozen behaviour.
 mustContain(index, 'Filter 1 × Filter 2 → Master', 'Filter Ring signal identity');
 mustContain(filterRing, 'data-filter-ring-level', 'Filter Ring live control');
-mustContain(filterRing, 'setFilterRingMix', 'Filter Ring graph control');
+mustContain(filterRing, 'setParameter?.("filterRingLevel"', 'Filter Ring audio-engine parameter bridge');
 mustContain(index, 'value="0" data-filter-ring-level', 'Filter Ring default off');
 
 // Parked/unaccepted paths must remain out of the production page.
