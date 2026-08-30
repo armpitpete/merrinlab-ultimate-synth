@@ -44,10 +44,16 @@ assert.match(sources.get("audio-engine.js"), /filterRingLevel: 0,/, "Filter Ring
 assert.match(sources.get("effects-output-graph.js"), /modeFilterGain\.connect\(ringTap\)/, "Filter 2 LP/HP output must reach the ring tap");
 assert.match(sources.get("effects-output-graph.js"), /bpGain\.connect\(ringTap\)/, "Filter 2 BP output must reach the ring tap");
 assert.match(sources.get("effects-output-graph.js"), /filterRingReturn\.connect\(masterGain\)/, "the Filter Ring return must enter after Filter 2 and before the protected master output");
+assert.match(sources.get("effects-output-graph.js"), /svf\.output\.connect\(filterRingDryGain\);\s+filterRingDryGain\.connect\(masterGain\)/, "the original output must pass through the Filter Ring dry morph gain");
+assert.doesNotMatch(sources.get("effects-output-graph.js"), /svf\.output\.connect\(masterGain\)/, "the original output must not bypass the Filter Ring morph");
+assert.match(sources.get("effects-output-graph.js"), /if \(name === "filterRingDryGain"\) return activeGraph\.filterRingDryGain/, "the engine must control the Filter Ring dry morph gain");
 assert.match(sources.get("effects-output-graph.js"), /if \(name === "filter2Output"\) return activeGraph\.svf\.ringTap/, "the engine must receive the selected raw Filter 2 output independently of VCF Mix");
 assert.match(sources.get("audio-engine.js"), /filter\.connect\(filterRingMultiplier\);\s+filter2Output\.connect\(filterRingYGain\);\s+filterRingYGain\.connect\(filterRingMultiplier\.gain\)/, "Filter Ring must multiply Filter 1 Output by Filter 2 Output");
 assert.match(sources.get("audio-engine.js"), /filterRingAnalyser\.connect\(filterRingReturn\)/, "Filter Ring must use its dedicated post-Filter-2 return without an input feedback loop");
-assert.match(sources.get("audio-engine.js"), /clamp\(state\.filterRingLevel, "filterRingLevel"\) \* 0\.7/, "Filter Ring level must retain fixed output headroom");
+assert.match(sources.get("audio-engine.js"), /Math\.cos\(clamp\(level, "filterRingLevel"\) \* Math\.PI \/ 2\)/, "Filter Ring dry level must use an equal-power fade to silence at 100%");
+assert.match(sources.get("audio-engine.js"), /Math\.sin\(clamp\(level, "filterRingLevel"\) \* Math\.PI \/ 2\) \* 0\.7/, "Filter Ring wet level must use an equal-power fade with fixed output headroom");
+assert.match(sources.get("audio-engine.js"), /safeRamp\(filterRingDryGain\.gain, getFilterRingDryLevel\(\)/, "Filter Ring level changes must fade the original output");
+assert.match(sources.get("audio-engine.js"), /safeRamp\(filterRingOutputGain\.gain, getFilterRingWetLevel\(\)/, "Filter Ring level changes must fade in the multiplied output");
 assert.match(sources.get("audio-engine.js"), /merrinlab:filter-ring-meter/, "the Filter Ring interface must receive live output level data");
 assert.match(sources.get("effects-output-graph.js"), /reverb\.output\.connect\(svf\.input\)/, "the State Variable VCF must remain inside the explicit effects/output graph");
 assert.match(sources.get("effects-output-graph.js"), /modeFilter\.Q, isBandpass \? 0\.707 : resonance/, "LP and HP resonance must use the Biquad Q directly");
