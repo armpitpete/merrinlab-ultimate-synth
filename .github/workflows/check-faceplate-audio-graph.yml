@@ -5,6 +5,10 @@ on:
     paths:
       - "faceplate-preview/**"
       - "scripts/check-audio-graph.mjs"
+      - "scripts/check-functional-baseline.mjs"
+      - "README.md"
+      - "docs/Functional_Baseline_v1.0.md"
+      - "docs/Module_Inventory_v1.0.md"
       - ".github/workflows/check-faceplate-audio-graph.yml"
 
 permissions:
@@ -19,6 +23,8 @@ jobs:
         with:
           node-version: 22
       - name: Check JavaScript syntax
-        run: find faceplate-preview -maxdepth 1 -name '*.js' -print0 | xargs -0 -n1 node --check
+        run: find faceplate-preview -name '*.js' -print0 | xargs -0 -n1 node --check
       - name: Check graph ownership
         run: node scripts/check-audio-graph.mjs
+      - name: Check Functional Baseline v1.0 contract
+        run: node scripts/check-functional-baseline.mjs
