@@ -27,6 +27,7 @@ The return position is deliberate. Returning the product to the effects input wo
 - Changing either filter changes the product spectrum immediately.
 - Closing either contributing filter removes the corresponding energy from the product.
 - The live Ring Out meter reports silence, level and clipping.
+- Filter Ring has its own clearly titled two-column module; it is not nested inside Analog Multiplier.
 - The existing general-purpose Analog Multiplier and Signal Mixer remain independent and unchanged.
 
 ## Acceptance evidence

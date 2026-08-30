@@ -145,6 +145,7 @@ assert.equal(routed.at(-1)[0], 1, "attenuator channel updates must reach the sam
 assert.equal(routed.at(-1)[1].destination, "filterCutoff", "attenuator destination updates must reach the engine");
 
 const index = await readFile(join(previewDirectory.pathname, "index.html"), "utf8");
+const styles = await readFile(join(previewDirectory.pathname, "styles.css"), "utf8");
 const entryScripts = [...index.matchAll(/<script\s+src="([^"]+)"/g)].map((match) => match[1]);
 const reachableScripts = new Set(entryScripts);
 const pendingScripts = [...entryScripts];
@@ -160,7 +161,7 @@ while (pendingScripts.length) {
     }
   }
 }
-for (const requiredScript of ["lfo-shape-controls.js", "adsr-visible-controls.js", "envelope-mode-visible-controls.js", "envelope-io-controls.js", "signal-mixer-layer.js", "analog-multiplier-layer.js"]) {
+for (const requiredScript of ["lfo-shape-controls.js", "adsr-visible-controls.js", "envelope-mode-visible-controls.js", "envelope-io-controls.js", "signal-mixer-layer.js", "analog-multiplier-layer.js", "filter-ring-layer.js"]) {
   assert.ok(reachableScripts.has(requiredScript), `${requiredScript} must remain reachable from index.html`);
 }
 const sampleHoldMarkup = index.match(/<article class="module sample-hold-module">([\s\S]*?)<\/article>/)?.[1] || "";
@@ -216,11 +217,19 @@ assert.match(sources.get("analog-multiplier-layer.js"), /data-analog-multiplier-
 assert.match(sources.get("analog-multiplier-layer.js"), /data-analog-multiplier-control="y"/, "the Analog Multiplier must expose a live Y-IN source selector");
 assert.match(sources.get("analog-multiplier-layer.js"), /data-analog-multiplier-meter/, "the Analog Multiplier must expose a live XY-OUT meter");
 assert.match(sources.get("analog-multiplier-layer.js"), /setParameter\?\.\(key, control\.value\)/, "X-IN and Y-IN changes must reach the engine");
-assert.match(sources.get("analog-multiplier-layer.js"), /FILTER 1 OUT[\s\S]*FILTER 2 OUT[\s\S]*MASTER/, "the Filter Ring signal path must be explicit in the interface");
-assert.match(sources.get("analog-multiplier-layer.js"), /data-filter-ring-level/, "the Filter Ring must expose a real output-level slider");
-assert.match(sources.get("analog-multiplier-layer.js"), /setParameter\?\.\("filterRingLevel"/, "Filter Ring level changes must reach the engine");
-assert.match(sources.get("analog-multiplier-layer.js"), /data-filter-ring-meter/, "the Filter Ring must expose a live output meter");
+assert.doesNotMatch(sources.get("analog-multiplier-layer.js"), /filter-ring|filterRing/, "Filter Ring must not remain buried inside Analog Multiplier");
 assert.doesNotMatch(sources.get("analog-multiplier-layer.js"), /jack-socket|class="knob|AudioNode\.prototype|AudioContextClass\.prototype/, "the live Analog Multiplier interface must not preserve fake sockets/dials or patch Web Audio prototypes");
+const filterRingMarkup = index.match(/<article class="module utility-module filter-ring-module"[^>]*>([\s\S]*?)<\/article>/)?.[1] || "";
+assert.ok(filterRingMarkup, "Filter Ring must have its own visible module");
+assert.match(filterRingMarkup, /<h2>Filter Ring Modulation<\/h2>/, "the Filter Ring module must be clearly titled");
+assert.match(filterRingMarkup, /Filter 1 Output[\s\S]*Filter 2 Output[\s\S]*Filter 1 × Filter 2 → Master/, "the Filter Ring signal path must name both filter outputs explicitly");
+assert.match(filterRingMarkup, /data-filter-ring-level/, "the Filter Ring must expose a real output-level slider");
+assert.match(filterRingMarkup, /data-filter-ring-meter/, "the Filter Ring must expose a live output meter");
+assert.match(sources.get("filter-ring-layer.js"), /setParameter\?\.\("filterRingLevel"/, "Filter Ring level changes must reach the engine");
+assert.match(sources.get("filter-ring-layer.js"), /merrinlab:filter-ring-meter/, "the dedicated Filter Ring module must receive its live meter event");
+assert.match(sources.get("filter-ring-layer.js"), /is-filter-ring-active/, "the dedicated Filter Ring module must expose its active state");
+assert.match(styles, /"ring ring follower follower outputs outputs"/, "the Filter Ring module must own a prominent two-column expander bay");
+assert.doesNotMatch(filterRingMarkup, /class="(?:knob|jack)/, "the Filter Ring module must use live controls rather than decorative dials or jacks");
 const lfoMarkup = index.match(/<article class="module lfo-module lfo1-module[^>]*>([\s\S]*?)<\/article>/)?.[1] || "";
 assert.doesNotMatch(lfoMarkup, /class="(?:knob|jack)/, "LFO modules must use live controls rather than decorative dials or jacks");
 const adsrMarkup = index.match(/<article class="module adsr-module[^>]*>([\s\S]*?)<\/article>/)?.[1] || "";

@@ -31,10 +31,6 @@
     return audioApi()?.getState?.()?.analogMultiplier || { x: "off", y: "off", active: false };
   }
 
-  function filterRingState() {
-    return audioApi()?.getState?.()?.filterRing || { level: 0, active: false };
-  }
-
   function sourceLabel(value) {
     return sourceOptions().find((option) => option.value === value)?.label || value;
   }
@@ -69,43 +65,14 @@
         : "Select X and Y · XY-OUT is silent";
     }
     root.classList.toggle("is-analog-multiplier-active", Boolean(state.active));
-
-    const ring = filterRingState();
-    const ringLevel = root.querySelector("[data-filter-ring-level]");
-    const ringLevelReadout = root.querySelector("[data-filter-ring-level-readout]");
-    if (ringLevel) ringLevel.value = String(Math.round((Number(ring.level) || 0) * 100));
-    if (ringLevelReadout) ringLevelReadout.textContent = ring.active ? `${Math.round(ring.level * 100)}%` : "Off";
-    root.classList.toggle("is-filter-ring-active", Boolean(ring.active));
   }
 
   function handleControl(event) {
-    const ringLevel = event.target.closest("[data-filter-ring-level]");
-    if (ringLevel) {
-      audioApi()?.setParameter?.("filterRingLevel", Math.min(1, Math.max(0, Number(ringLevel.value) / 100)));
-      updateInterface();
-      return;
-    }
     const control = event.target.closest("[data-analog-multiplier-control]");
     if (!control) return;
     const key = control.dataset.analogMultiplierControl === "x" ? "analogMultiplierX" : "analogMultiplierY";
     audioApi()?.setParameter?.(key, control.value);
     updateInterface();
-  }
-
-  function updateFilterRingMeter(event) {
-    const root = moduleRoot();
-    if (!root) return;
-    const detail = event.detail || {};
-    const level = Math.min(1, Math.max(0, Number(detail.peak) || 0));
-    const meter = root.querySelector("[data-filter-ring-meter]");
-    const readout = root.querySelector("[data-filter-ring-meter-readout]");
-    if (meter) meter.value = level;
-    if (readout) {
-      if (detail.clipping) readout.textContent = "CLIP";
-      else if (!filterRingState().active || level < 0.01) readout.textContent = "silent";
-      else readout.textContent = `${Math.round(level * 100)}%`;
-    }
-    root.classList.toggle("is-filter-ring-clipping", Boolean(detail.clipping));
   }
 
   function updateMeter(event) {
@@ -152,16 +119,6 @@
         <output data-analog-multiplier-meter-readout>silent</output>
       </div>
       <div class="analog-multiplier-route-note">Route XY-OUT by selecting <strong>XY Multiplier</strong> in the Signal Mixer.</div>
-      <section class="filter-ring-control" aria-label="Filter Ring Modulation">
-        <div class="filter-ring-title"><strong>Filter Ring</strong><output data-filter-ring-level-readout>Off</output></div>
-        <div class="filter-ring-path">FILTER 1 OUT <span aria-hidden="true">×</span> FILTER 2 OUT <span aria-hidden="true">→</span> MASTER</div>
-        <label class="filter-ring-level"><span>Ring Level</span><input type="range" min="0" max="100" step="1" value="0" data-filter-ring-level aria-label="Filter Ring output level"></label>
-        <div class="filter-ring-output" aria-label="Filter Ring output level">
-          <span>Ring Out</span>
-          <meter min="0" max="1" value="0" data-filter-ring-meter></meter>
-          <output data-filter-ring-meter-readout>silent</output>
-        </div>
-      </section>
     `;
   }
 
@@ -186,20 +143,6 @@
       .analog-multiplier-module.is-analog-multiplier-clipping .analog-multiplier-output output { color: #ff896f; font-weight: 800; }
       .analog-multiplier-route-note { color: #bdb1a1; font-size: 0.56rem; line-height: 1.35; text-align: center; }
       .analog-multiplier-route-note strong { color: #93d36c; }
-      .filter-ring-control { border-top: 1px solid rgba(215, 184, 132, 0.2); display: grid; gap: 7px; padding-top: 9px; }
-      .filter-ring-title { align-items: center; display: flex; justify-content: space-between; }
-      .filter-ring-title strong { color: #eee4d6; font-size: 0.66rem; letter-spacing: 0.06em; text-transform: uppercase; }
-      .filter-ring-title output { color: #d6c8b5; font-size: 0.58rem; font-weight: 700; text-transform: uppercase; }
-      .filter-ring-path { background: rgba(44, 25, 38, 0.52); border: 1px solid rgba(196, 112, 169, 0.3); border-radius: 8px; color: #d8bfd0; font-size: 0.56rem; font-weight: 700; letter-spacing: 0.04em; padding: 6px; text-align: center; }
-      .filter-ring-path span { color: #ef92ce; padding: 0 3px; }
-      .filter-ring-level { align-items: center; display: grid; gap: 7px; grid-template-columns: auto minmax(0, 1fr); }
-      .filter-ring-level > span, .filter-ring-output > span { color: #eee4d6; font-size: 0.58rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; }
-      .filter-ring-level input { accent-color: #ef92ce; min-width: 0; width: 100%; }
-      .filter-ring-output { align-items: center; display: grid; gap: 5px; grid-template-columns: auto minmax(0, 1fr) 38px; }
-      .filter-ring-output meter { accent-color: #ef92ce; height: 8px; width: 100%; }
-      .filter-ring-output output { color: #bdb1a1; font-size: 0.55rem; font-variant-numeric: tabular-nums; text-align: right; text-transform: uppercase; }
-      .analog-multiplier-module.is-filter-ring-active .filter-ring-title output { color: #ef92ce; }
-      .analog-multiplier-module.is-filter-ring-clipping .filter-ring-output output { color: #ff896f; font-weight: 800; }
     `;
     document.head.append(style);
   }
@@ -214,7 +157,6 @@
   document.addEventListener("input", handleControl);
   document.addEventListener("change", handleControl);
   document.addEventListener("merrinlab:analog-multiplier-meter", updateMeter);
-  document.addEventListener("merrinlab:filter-ring-meter", updateFilterRingMeter);
   document.addEventListener("merrinlab:gate-state", () => window.setTimeout(updateInterface, 0));
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
