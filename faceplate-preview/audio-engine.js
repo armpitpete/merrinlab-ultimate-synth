@@ -129,6 +129,7 @@
   let analogMultiplierConnectedY = null;
   let filterRingMultiplier = null;
   let filterRingYGain = null;
+  let filterRingDryGain = null;
   let filterRingOutputGain = null;
   let filterRingAnalyser = null;
   let filterRingMeterTimerId = null;
@@ -498,6 +499,14 @@
   function safeRamp(param, value, time, rampTime = 0.02) {
     param.cancelScheduledValues(time);
     param.setTargetAtTime(value, time, rampTime);
+  }
+
+  function getFilterRingDryLevel(level = state.filterRingLevel) {
+    return Math.cos(clamp(level, "filterRingLevel") * Math.PI / 2);
+  }
+
+  function getFilterRingWetLevel(level = state.filterRingLevel) {
+    return Math.sin(clamp(level, "filterRingLevel") * Math.PI / 2) * 0.7;
   }
 
   function getMixerChannelLevel(levelKey, muteKey) {
@@ -1432,7 +1441,7 @@
     filterRingYGain = audioContext.createGain();
     filterRingYGain.gain.value = 1;
     filterRingOutputGain = audioContext.createGain();
-    filterRingOutputGain.gain.value = clamp(state.filterRingLevel, "filterRingLevel") * 0.7;
+    filterRingOutputGain.gain.value = getFilterRingWetLevel();
     filterRingAnalyser = audioContext.createAnalyser();
     filterRingAnalyser.fftSize = 256;
     filterRingAnalyser.smoothingTimeConstant = 0.72;
@@ -1451,11 +1460,13 @@
       return false;
     }
     const filter2Output = window.MerrinLabEffectsOutputGraph?.getSignalNode("filter2Output");
+    filterRingDryGain = window.MerrinLabEffectsOutputGraph?.getSignalNode("filterRingDryGain");
     const filterRingReturn = window.MerrinLabEffectsOutputGraph?.getSignalNode("filterRingReturn");
-    if (!filter2Output || !filterRingReturn) {
+    if (!filter2Output || !filterRingDryGain || !filterRingReturn) {
       setStatus("Filter Ring graph unavailable");
       return false;
     }
+    filterRingDryGain.gain.value = getFilterRingDryLevel();
 
     vcoGain.connect(mixerBus);
     vco2Gain.connect(mixerBus);
@@ -1727,6 +1738,7 @@
     analogMultiplierConnectedY = null;
     filterRingMultiplier = null;
     filterRingYGain = null;
+    filterRingDryGain = null;
     filterRingOutputGain = null;
     filterRingAnalyser = null;
     lfo1Oscillator = null;
@@ -1813,7 +1825,10 @@
     if (key === "repeatGateTarget" && state.repeatGate === "on") { startRepeatGateTimer(); setStatus(`Repeat Gate target · ${state.repeatGateTarget}`); }
     if (key === "auxVcaInput" || key === "auxVcaCv" || key === "auxVcaInitialAmp" || key === "auxVcaCvAmount" || key === "auxVcaDestination") applyAuxVcaRouting();
     if (key === "analogMultiplierX" || key === "analogMultiplierY") applyAnalogMultiplierRouting();
-    if (key === "filterRingLevel" && filterRingOutputGain) safeRamp(filterRingOutputGain.gain, clamp(state.filterRingLevel, "filterRingLevel") * 0.7, now, 0.02);
+    if (key === "filterRingLevel") {
+      if (filterRingDryGain) safeRamp(filterRingDryGain.gain, getFilterRingDryLevel(), now, 0.02);
+      if (filterRingOutputGain) safeRamp(filterRingOutputGain.gain, getFilterRingWetLevel(), now, 0.02);
+    }
 
     const sourceMatch = key.match(/^signalMixerSource([1-4])$/);
     const levelMatch = key.match(/^signalMixerLevel([1-4])$/);

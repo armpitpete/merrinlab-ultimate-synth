@@ -289,6 +289,7 @@
     const reverb = createReverb(context);
     const svf = createSvf(context);
     const envelopeFollowerAnalyser = context.createAnalyser();
+    const filterRingDryGain = context.createGain();
     const filterRingReturn = context.createGain();
     const masterGain = context.createGain();
     const limiter = context.createDynamicsCompressor();
@@ -307,12 +308,14 @@
     delay.output.connect(reverb.input);
     reverb.output.connect(svf.input);
     svf.output.connect(envelopeFollowerAnalyser);
-    svf.output.connect(masterGain);
+    filterRingDryGain.gain.value = 1;
+    svf.output.connect(filterRingDryGain);
+    filterRingDryGain.connect(masterGain);
     filterRingReturn.connect(masterGain);
     masterGain.connect(limiter);
     limiter.connect(context.destination);
 
-    activeGraph = { context, input, drive, chorus, delay, reverb, svf, filterRingReturn, envelopeFollowerAnalyser, masterGain, limiter, destinationConnections: 1 };
+    activeGraph = { context, input, drive, chorus, delay, reverb, svf, filterRingDryGain, filterRingReturn, envelopeFollowerAnalyser, masterGain, limiter, destinationConnections: 1 };
     applyAll(activeGraph);
     window.dispatchEvent(new CustomEvent("merrinlab-effects-graph-ready"));
     return activeGraph;
@@ -339,6 +342,7 @@
   function getSignalNode(name) {
     if (!activeGraph) return null;
     if (name === "filter2Output") return activeGraph.svf.ringTap;
+    if (name === "filterRingDryGain") return activeGraph.filterRingDryGain;
     if (name === "filterRingReturn") return activeGraph.filterRingReturn;
     return null;
   }
