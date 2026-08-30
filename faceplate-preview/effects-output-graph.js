@@ -159,6 +159,7 @@
     const bpLowpass = context.createBiquadFilter();
     const bpPeak = context.createBiquadFilter();
     const bpGain = context.createGain();
+    const ringTap = context.createGain();
     const wetGain = context.createGain();
     const analyser = context.createAnalyser();
     const output = context.createGain();
@@ -176,15 +177,17 @@
     input.connect(modeFilter);
     modeFilter.connect(modeFilterGain);
     modeFilterGain.connect(wetGain);
+    modeFilterGain.connect(ringTap);
     input.connect(bpHighpass);
     bpHighpass.connect(bpLowpass);
     bpLowpass.connect(bpPeak);
     bpPeak.connect(bpGain);
     bpGain.connect(wetGain);
+    bpGain.connect(ringTap);
     wetGain.connect(analyser);
     analyser.connect(output);
 
-    return { input, dryGain, modeFilter, modeFilterGain, bpHighpass, bpLowpass, bpPeak, bpGain, wetGain, analyser, output };
+    return { input, dryGain, modeFilter, modeFilterGain, bpHighpass, bpLowpass, bpPeak, bpGain, ringTap, wetGain, analyser, output };
   }
 
   function applyDrive(graph) {
@@ -286,6 +289,7 @@
     const reverb = createReverb(context);
     const svf = createSvf(context);
     const envelopeFollowerAnalyser = context.createAnalyser();
+    const filterRingReturn = context.createGain();
     const masterGain = context.createGain();
     const limiter = context.createDynamicsCompressor();
 
@@ -304,10 +308,11 @@
     reverb.output.connect(svf.input);
     svf.output.connect(envelopeFollowerAnalyser);
     svf.output.connect(masterGain);
+    filterRingReturn.connect(masterGain);
     masterGain.connect(limiter);
     limiter.connect(context.destination);
 
-    activeGraph = { context, input, drive, chorus, delay, reverb, svf, envelopeFollowerAnalyser, masterGain, limiter, destinationConnections: 1 };
+    activeGraph = { context, input, drive, chorus, delay, reverb, svf, filterRingReturn, envelopeFollowerAnalyser, masterGain, limiter, destinationConnections: 1 };
     applyAll(activeGraph);
     window.dispatchEvent(new CustomEvent("merrinlab-effects-graph-ready"));
     return activeGraph;
@@ -328,6 +333,13 @@
     if (!activeGraph) return null;
     if (name === "svf") return activeGraph.svf.analyser;
     if (name === "envelopeFollower") return activeGraph.envelopeFollowerAnalyser;
+    return null;
+  }
+
+  function getSignalNode(name) {
+    if (!activeGraph) return null;
+    if (name === "filter2Output") return activeGraph.svf.ringTap;
+    if (name === "filterRingReturn") return activeGraph.filterRingReturn;
     return null;
   }
 
@@ -353,5 +365,5 @@
     };
   }
 
-  window.MerrinLabEffectsOutputGraph = { create, setParameter, setParameters, getAnalyser, mute, dispose, getDebugState };
+  window.MerrinLabEffectsOutputGraph = { create, setParameter, setParameters, getAnalyser, getSignalNode, mute, dispose, getDebugState };
 })();

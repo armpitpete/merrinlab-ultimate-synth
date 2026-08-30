@@ -85,6 +85,7 @@
     signalMixerLineOut: "vca",
     analogMultiplierX: "off",
     analogMultiplierY: "off",
+    filterRingLevel: 0,
     attack: 0.03,
     release: 0.45,
     adsrAttack: 0.05,
@@ -126,6 +127,12 @@
   let analogMultiplierMeterData = null;
   let analogMultiplierConnectedX = null;
   let analogMultiplierConnectedY = null;
+  let filterRingMultiplier = null;
+  let filterRingYGain = null;
+  let filterRingOutputGain = null;
+  let filterRingAnalyser = null;
+  let filterRingMeterTimerId = null;
+  let filterRingMeterData = null;
   let lfo1Oscillator = null;
   let lfo1Gain = null;
   let sampleHoldFilterSource = null;
@@ -209,6 +216,7 @@
     signalMixerLevel2: [0, 1],
     signalMixerLevel3: [0, 1],
     signalMixerLevel4: [0, 1],
+    filterRingLevel: [0, 1],
     delayMix: [0, 1],
     delayTime: [0.05, 0.8],
     delayFeedback: [0, 0.45],
@@ -286,6 +294,7 @@
     auxVcaInitialAmp: "AUX VCA Initial Amp",
     auxVcaCvAmount: "AUX VCA CV Amount",
     auxVcaDestination: "AUX VCA Destination",
+    filterRingLevel: "Filter Ring Level",
     attack: "AR Attack",
     release: "AR Release",
     adsrAttack: "ADSR Attack",
@@ -345,6 +354,7 @@
     adsrRelease: "s",
     auxVcaInitialAmp: "%",
     auxVcaCvAmount: "%",
+    filterRingLevel: "%",
     delayMix: "%",
     delayTime: "s",
     delayFeedback: "%",
@@ -599,6 +609,41 @@
     analogMultiplierMeterData = new Float32Array(analogMultiplierAnalyser.fftSize);
     updateAnalogMultiplierMeter();
     analogMultiplierMeterTimerId = window.setInterval(updateAnalogMultiplierMeter, 50);
+  }
+
+  function stopFilterRingMeter() {
+    if (filterRingMeterTimerId !== null) {
+      window.clearInterval(filterRingMeterTimerId);
+      filterRingMeterTimerId = null;
+    }
+    filterRingMeterData = null;
+    document.dispatchEvent(new CustomEvent("merrinlab:filter-ring-meter", {
+      detail: { peak: 0, rms: 0, clipping: false },
+    }));
+  }
+
+  function updateFilterRingMeter() {
+    if (!filterRingAnalyser || !filterRingMeterData) return;
+    filterRingAnalyser.getFloatTimeDomainData(filterRingMeterData);
+    let peak = 0;
+    let sumSquares = 0;
+    for (let index = 0; index < filterRingMeterData.length; index += 1) {
+      const sample = filterRingMeterData[index];
+      peak = Math.max(peak, Math.abs(sample));
+      sumSquares += sample * sample;
+    }
+    const rms = Math.sqrt(sumSquares / filterRingMeterData.length);
+    document.dispatchEvent(new CustomEvent("merrinlab:filter-ring-meter", {
+      detail: { peak, rms, clipping: peak >= 0.98 },
+    }));
+  }
+
+  function startFilterRingMeter() {
+    stopFilterRingMeter();
+    if (!filterRingAnalyser) return;
+    filterRingMeterData = new Float32Array(filterRingAnalyser.fftSize);
+    updateFilterRingMeter();
+    filterRingMeterTimerId = window.setInterval(updateFilterRingMeter, 50);
   }
 
   function getEffectiveLfoRate(which) {
@@ -1382,6 +1427,15 @@
     analogMultiplierAnalyser = audioContext.createAnalyser();
     analogMultiplierAnalyser.fftSize = 256;
     analogMultiplierAnalyser.smoothingTimeConstant = 0.72;
+    filterRingMultiplier = audioContext.createGain();
+    filterRingMultiplier.gain.value = 0;
+    filterRingYGain = audioContext.createGain();
+    filterRingYGain.gain.value = 1;
+    filterRingOutputGain = audioContext.createGain();
+    filterRingOutputGain.gain.value = clamp(state.filterRingLevel, "filterRingLevel") * 0.7;
+    filterRingAnalyser = audioContext.createAnalyser();
+    filterRingAnalyser.fftSize = 256;
+    filterRingAnalyser.smoothingTimeConstant = 0.72;
 
     attenuatorRouteNodes = attenuatorRoutes.map(() => ({ gain: audioContext.createGain(), source: null, destination: null }));
     signalMixerRouteNodes = Array.from({ length: 4 }, () => {
@@ -1394,6 +1448,12 @@
     effectsOutputGraph = window.MerrinLabEffectsOutputGraph?.create(audioContext) || null;
     if (!effectsOutputGraph) {
       setStatus("Effects/output graph unavailable");
+      return false;
+    }
+    const filter2Output = window.MerrinLabEffectsOutputGraph?.getSignalNode("filter2Output");
+    const filterRingReturn = window.MerrinLabEffectsOutputGraph?.getSignalNode("filterRingReturn");
+    if (!filter2Output || !filterRingReturn) {
+      setStatus("Filter Ring graph unavailable");
       return false;
     }
 
@@ -1417,6 +1477,12 @@
     analogMultiplierYGain.connect(analogMultiplier.gain);
     analogMultiplier.connect(analogMultiplierOutputGain);
     analogMultiplierOutputGain.connect(analogMultiplierAnalyser);
+    filter.connect(filterRingMultiplier);
+    filter2Output.connect(filterRingYGain);
+    filterRingYGain.connect(filterRingMultiplier.gain);
+    filterRingMultiplier.connect(filterRingOutputGain);
+    filterRingOutputGain.connect(filterRingAnalyser);
+    filterRingAnalyser.connect(filterRingReturn);
     signalMixerBus.connect(signalMixerAnalyser);
     signalMixerAnalyser.connect(lineOutMixGain);
     lineOutMixGain.connect(effectsOutputGraph.input);
@@ -1444,6 +1510,7 @@
     startMixerMeter();
     startSignalMixerMeter();
     startAnalogMultiplierMeter();
+    startFilterRingMeter();
     return true;
   }
 
@@ -1584,6 +1651,7 @@
     stopMixerMeter();
     stopSignalMixerMeter();
     stopAnalogMultiplierMeter();
+    stopFilterRingMeter();
     stopRepeatGateTimer(false);
     sampleHoldValue = 0;
 
@@ -1598,6 +1666,7 @@
     if (lineOutVcaGain && audioContext) { lineOutVcaGain.gain.cancelScheduledValues(audioContext.currentTime); lineOutVcaGain.gain.setValueAtTime(0, audioContext.currentTime); }
     if (lineOutMixGain && audioContext) { lineOutMixGain.gain.cancelScheduledValues(audioContext.currentTime); lineOutMixGain.gain.setValueAtTime(0, audioContext.currentTime); }
     if (analogMultiplierOutputGain && audioContext) { analogMultiplierOutputGain.gain.cancelScheduledValues(audioContext.currentTime); analogMultiplierOutputGain.gain.setValueAtTime(0, audioContext.currentTime); }
+    if (filterRingOutputGain && audioContext) { filterRingOutputGain.gain.cancelScheduledValues(audioContext.currentTime); filterRingOutputGain.gain.setValueAtTime(0, audioContext.currentTime); }
 
     [sampleHoldCvSource, envelopeCvSource, gateCvSource].forEach((source) => {
       if (!source || !audioContext) return;
@@ -1656,6 +1725,10 @@
     analogMultiplierAnalyser = null;
     analogMultiplierConnectedX = null;
     analogMultiplierConnectedY = null;
+    filterRingMultiplier = null;
+    filterRingYGain = null;
+    filterRingOutputGain = null;
+    filterRingAnalyser = null;
     lfo1Oscillator = null;
     lfo1Gain = null;
     sampleHoldFilterSource = null;
@@ -1690,6 +1763,7 @@
       "lfo2Rate", "lfo2Shape", "lfo2Range", "lfo2Mod", "envelopeMode", "adsrRange", "repeatGate", "repeatGateRate", "repeatGateTarget",
       "auxVcaInput", "auxVcaCv", "auxVcaInitialAmp", "auxVcaCvAmount", "auxVcaDestination",
       "analogMultiplierX", "analogMultiplierY",
+      "filterRingLevel",
       "signalMixerSource1", "signalMixerSource2", "signalMixerSource3", "signalMixerSource4", "signalMixerLevel1", "signalMixerLevel2", "signalMixerLevel3", "signalMixerLevel4", "signalMixerLineOut",
       "delayMix", "delayTime", "delayFeedback", "output",
     ].forEach(applyParameter);
@@ -1739,6 +1813,7 @@
     if (key === "repeatGateTarget" && state.repeatGate === "on") { startRepeatGateTimer(); setStatus(`Repeat Gate target · ${state.repeatGateTarget}`); }
     if (key === "auxVcaInput" || key === "auxVcaCv" || key === "auxVcaInitialAmp" || key === "auxVcaCvAmount" || key === "auxVcaDestination") applyAuxVcaRouting();
     if (key === "analogMultiplierX" || key === "analogMultiplierY") applyAnalogMultiplierRouting();
+    if (key === "filterRingLevel" && filterRingOutputGain) safeRamp(filterRingOutputGain.gain, clamp(state.filterRingLevel, "filterRingLevel") * 0.7, now, 0.02);
 
     const sourceMatch = key.match(/^signalMixerSource([1-4])$/);
     const levelMatch = key.match(/^signalMixerLevel([1-4])$/);
@@ -1764,7 +1839,7 @@
     if (key === "vco1PwmDepth" || key === "vco2PwmDepth" || key === "vco3PwmDepth") return `${Number(value).toFixed(0)} ${units[key]}`;
     if (key === "lfo1Rate" || key === "lfo2Rate" || key === "sampleHoldRate" || key === "repeatGateRate") return `${Number(value).toFixed(2)} ${units[key]}`;
     if (key === "delayTime") return `${Number(value).toFixed(2)} ${units[key]}`;
-    if (key === "lfo1Mod" || key === "lfo2Mod" || key === "sampleHoldMod" || key === "sampleHoldPitchMod" || key === "sampleHoldGlide" || key === "vcaInitialLevel" || key === "vcaEnvelopeMod" || key === "filterEnvelopeMod" || key === "adsrSustain" || key === "auxVcaInitialAmp" || key === "auxVcaCvAmount" || key === "delayMix" || key === "delayFeedback") return `${Math.round(Number(value) * 100)} ${units[key]}`;
+    if (key === "lfo1Mod" || key === "lfo2Mod" || key === "sampleHoldMod" || key === "sampleHoldPitchMod" || key === "sampleHoldGlide" || key === "vcaInitialLevel" || key === "vcaEnvelopeMod" || key === "filterEnvelopeMod" || key === "adsrSustain" || key === "auxVcaInitialAmp" || key === "auxVcaCvAmount" || key === "filterRingLevel" || key === "delayMix" || key === "delayFeedback") return `${Math.round(Number(value) * 100)} ${units[key]}`;
     if (key === "filterExtCv" || key === "vcaExtCv") return `${Number(value) >= 0 ? "+" : ""}${Math.round(Number(value) * 100)} ${units[key]}`;
     if (key === "attack" || key === "release" || key === "adsrAttack" || key === "adsrDecay" || key === "adsrRelease") return `${Number(value).toFixed(2)} ${units[key]}`;
     if (key === "resonance") return `${Number(value).toFixed(1)} ${units[key]}`;
@@ -1939,6 +2014,11 @@
           x: state.analogMultiplierX,
           y: state.analogMultiplierY,
           active: state.analogMultiplierX !== "off" && state.analogMultiplierY !== "off",
+        },
+        filterRing: {
+          level: state.filterRingLevel,
+          active: state.filterRingLevel > 0,
+          equation: "Filter 1 Output × Filter 2 Output",
         },
         signalMixer: {
           lineOut: state.signalMixerLineOut,

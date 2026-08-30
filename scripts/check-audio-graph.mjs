@@ -40,6 +40,15 @@ assert.match(sources.get("audio-engine.js"), /function getVcoOutputNode\(index\)
 assert.match(sources.get("audio-engine.js"), /state\[processor\.waveformKey\] === "pulse" \? processor\.pulseShaper : processor\.oscillator/, "raw VCO multiplier taps must preserve pulse waveform selection");
 assert.match(sources.get("audio-engine.js"), /merrinlab:analog-multiplier-meter/, "the Analog Multiplier interface must receive live XY-OUT level data");
 assert.match(sources.get("audio-engine.js"), /disconnectAnalogMultiplierRouting\(\)/, "Panic and rerouting must be able to disconnect Analog Multiplier sources");
+assert.match(sources.get("audio-engine.js"), /filterRingLevel: 0,/, "Filter Ring must be default-off");
+assert.match(sources.get("effects-output-graph.js"), /modeFilterGain\.connect\(ringTap\)/, "Filter 2 LP/HP output must reach the ring tap");
+assert.match(sources.get("effects-output-graph.js"), /bpGain\.connect\(ringTap\)/, "Filter 2 BP output must reach the ring tap");
+assert.match(sources.get("effects-output-graph.js"), /filterRingReturn\.connect\(masterGain\)/, "the Filter Ring return must enter after Filter 2 and before the protected master output");
+assert.match(sources.get("effects-output-graph.js"), /if \(name === "filter2Output"\) return activeGraph\.svf\.ringTap/, "the engine must receive the selected raw Filter 2 output independently of VCF Mix");
+assert.match(sources.get("audio-engine.js"), /filter\.connect\(filterRingMultiplier\);\s+filter2Output\.connect\(filterRingYGain\);\s+filterRingYGain\.connect\(filterRingMultiplier\.gain\)/, "Filter Ring must multiply Filter 1 Output by Filter 2 Output");
+assert.match(sources.get("audio-engine.js"), /filterRingAnalyser\.connect\(filterRingReturn\)/, "Filter Ring must use its dedicated post-Filter-2 return without an input feedback loop");
+assert.match(sources.get("audio-engine.js"), /clamp\(state\.filterRingLevel, "filterRingLevel"\) \* 0\.7/, "Filter Ring level must retain fixed output headroom");
+assert.match(sources.get("audio-engine.js"), /merrinlab:filter-ring-meter/, "the Filter Ring interface must receive live output level data");
 assert.match(sources.get("effects-output-graph.js"), /reverb\.output\.connect\(svf\.input\)/, "the State Variable VCF must remain inside the explicit effects/output graph");
 assert.match(sources.get("effects-output-graph.js"), /modeFilter\.Q, isBandpass \? 0\.707 : resonance/, "LP and HP resonance must use the Biquad Q directly");
 assert.match(sources.get("effects-output-graph.js"), /bpGain\.gain, isBandpass \? 1 : 0/, "band-pass level must not use cutoff-dependent gain compensation");
@@ -207,6 +216,10 @@ assert.match(sources.get("analog-multiplier-layer.js"), /data-analog-multiplier-
 assert.match(sources.get("analog-multiplier-layer.js"), /data-analog-multiplier-control="y"/, "the Analog Multiplier must expose a live Y-IN source selector");
 assert.match(sources.get("analog-multiplier-layer.js"), /data-analog-multiplier-meter/, "the Analog Multiplier must expose a live XY-OUT meter");
 assert.match(sources.get("analog-multiplier-layer.js"), /setParameter\?\.\(key, control\.value\)/, "X-IN and Y-IN changes must reach the engine");
+assert.match(sources.get("analog-multiplier-layer.js"), /FILTER 1 OUT[\s\S]*FILTER 2 OUT[\s\S]*MASTER/, "the Filter Ring signal path must be explicit in the interface");
+assert.match(sources.get("analog-multiplier-layer.js"), /data-filter-ring-level/, "the Filter Ring must expose a real output-level slider");
+assert.match(sources.get("analog-multiplier-layer.js"), /setParameter\?\.\("filterRingLevel"/, "Filter Ring level changes must reach the engine");
+assert.match(sources.get("analog-multiplier-layer.js"), /data-filter-ring-meter/, "the Filter Ring must expose a live output meter");
 assert.doesNotMatch(sources.get("analog-multiplier-layer.js"), /jack-socket|class="knob|AudioNode\.prototype|AudioContextClass\.prototype/, "the live Analog Multiplier interface must not preserve fake sockets/dials or patch Web Audio prototypes");
 const lfoMarkup = index.match(/<article class="module lfo-module lfo1-module[^>]*>([\s\S]*?)<\/article>/)?.[1] || "";
 assert.doesNotMatch(lfoMarkup, /class="(?:knob|jack)/, "LFO modules must use live controls rather than decorative dials or jacks");
